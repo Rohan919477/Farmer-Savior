@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://drlpywe06cea4"]
+
+[ext_resource type="Script" uid="uid://b3y8h2l1heo1s" path="res://scripts/managers/GameManager.gd" id="1_u1xfj"]
+[ext_resource type="Script" uid="uid://cp180w4ngieip" path="res://scripts/managers/TimeManager.gd" id="2_nha0i"]
+[ext_resource type="Script" uid="uid://dky8n67smggj0" path="res://scripts/managers/SaveManager.gd" id="3_q24mn"]
+[ext_resource type="Script" uid="uid://dyjk7bcorthyi" path="res://scripts/managers/SpawnManager.gd" id="4_gyg6b"]
+[ext_resource type="Script" uid="uid://dua2bdyon60ir" path="res://scripts/managers/ResourceManager.gd" id="5_sjxhf"]
+[ext_resource type="Script" uid="uid://clkpj7munxg5m" path="res://scripts/managers/UpgradeManager.gd" id="6_ko0rf"]
+[ext_resource type="Script" uid="uid://bx86l1xfgt3wk" path="res://scripts/managers/TelemetryManager.gd" id="7_ostsq"]
+
+[node name="Main" type="Node2D" unique_id=1618782487]
+
+[node name="GameManager" type="Node" parent="." unique_id=1702856493]
+script = ExtResource("1_u1xfj")
+
+[node name="TimeManager" type="Node" parent="." unique_id=428679080]
+script = ExtResource("2_nha0i")
+
+[node name="SaveManager" type="Node" parent="." unique_id=1792121914]
+script = ExtResource("3_q24mn")
+
+[node name="SpawnManager" type="Node" parent="." unique_id=1974434156]
+script = ExtResource("4_gyg6b")
+
+[node name="ResourceManager" type="Node" parent="." unique_id=1072858265]
+script = ExtResource("5_sjxhf")
+
+[node name="UpgradeManager" type="Node" parent="." unique_id=2000681890]
+script = ExtResource("6_ko0rf")
+
+[node name="TelemetryManager" type="Node" parent="." unique_id=35984836]
+script = ExtResource("7_ostsq")
+
+[node name="FarmMap" type="Node2D" parent="." unique_id=1435816667]
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=1786841730]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=425501435]
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=945311441]
