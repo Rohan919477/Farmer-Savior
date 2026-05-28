@@ -7,6 +7,8 @@
 [ext_resource type="Script" uid="uid://dua2bdyon60ir" path="res://scripts/managers/ResourceManager.gd" id="5_sjxhf"]
 [ext_resource type="Script" uid="uid://clkpj7munxg5m" path="res://scripts/managers/UpgradeManager.gd" id="6_ko0rf"]
 [ext_resource type="Script" uid="uid://bx86l1xfgt3wk" path="res://scripts/managers/TelemetryManager.gd" id="7_ostsq"]
+[ext_resource type="PackedScene" uid="uid://qoyigg8l6l66" path="res://scenes/maps/FarmMap_greybox.tscn" id="8_ko0rf"]
+[ext_resource type="PackedScene" uid="uid://cjbffm7mgxfw" path="res://scenes/player/player.tscn" id="9_ostsq"]
 
 [node name="Main" type="Node2D" unique_id=1618782487]
 
@@ -31,10 +33,8 @@ script = ExtResource("6_ko0rf")
 [node name="TelemetryManager" type="Node" parent="." unique_id=35984836]
 script = ExtResource("7_ostsq")
 
-[node name="FarmMap" type="Node2D" parent="." unique_id=1435816667]
-
-[node name="Player" type="CharacterBody2D" parent="." unique_id=1786841730]
-
-[node name="Camera2D" type="Camera2D" parent="." unique_id=425501435]
-
 [node name="HUD" type="CanvasLayer" parent="." unique_id=945311441]
+
+[node name="FarmMap" parent="." unique_id=1399892865 instance=ExtResource("8_ko0rf")]
+
+[node name="Player" parent="." unique_id=1647505724 instance=ExtResource("9_ostsq")]
