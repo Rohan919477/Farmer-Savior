@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://bx86l1xfgt3wk" path="res://scripts/managers/TelemetryManager.gd" id="7_ostsq"]
 [ext_resource type="PackedScene" uid="uid://qoyigg8l6l66" path="res://scenes/maps/FarmMap_greybox.tscn" id="8_ko0rf"]
 [ext_resource type="PackedScene" uid="uid://cjbffm7mgxfw" path="res://scenes/player/player.tscn" id="9_ostsq"]
+[ext_resource type="PackedScene" uid="uid://cdlgab547d6f2" path="res://scenes/enemies/TempEnemy.tscn" id="10_3km4f"]
 
 [node name="Main" type="Node2D" unique_id=1618782487]
 
@@ -38,3 +39,12 @@ script = ExtResource("7_ostsq")
 [node name="FarmMap" parent="." unique_id=1399892865 instance=ExtResource("8_ko0rf")]
 
 [node name="Player" parent="." unique_id=1647505724 instance=ExtResource("9_ostsq")]
+
+[node name="TempEnemy1" parent="." unique_id=1796729083 instance=ExtResource("10_3km4f")]
+position = Vector2(300, 100)
+
+[node name="TempEnemy2" parent="." unique_id=676455306 instance=ExtResource("10_3km4f")]
+position = Vector2(-300, 150)
+
+[node name="TempEnemy3" parent="." unique_id=1785316616 instance=ExtResource("10_3km4f")]
+position = Vector2(200, -250)

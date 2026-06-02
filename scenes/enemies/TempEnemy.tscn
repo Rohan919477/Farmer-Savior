@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://cdlgab547d6f2"]
+
+[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="1_2kfsl"]
+[ext_resource type="Script" uid="uid://cr5igmke2lglo" path="res://scripts/enemies/TempEnemy.gd" id="2_e1v0j"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e1v0j"]
+size = Vector2(32, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dtevv"]
+radius = 28.0
+
+[node name="TempEnemy" type="CharacterBody2D" unique_id=1796729083]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("2_e1v0j")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
+modulate = Color(0.5529412, 0.08235294, 0.21960784, 1)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("1_2kfsl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1537155070]
+shape = SubResource("RectangleShape2D_e1v0j")
+
+[node name="DamageArea" type="Area2D" parent="." unique_id=846397005]
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
+shape = SubResource("CircleShape2D_dtevv")
