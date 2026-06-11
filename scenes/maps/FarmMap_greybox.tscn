@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://qoyigg8l6l66"]
 
+[ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="1_tq17q"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5t2dp"]
 size = Vector2(2040, 40)
 
@@ -11,6 +13,9 @@ size = Vector2(40, 1440)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_v0suf"]
 size = Vector2(40, 1440)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yt4j7"]
+size = Vector2(110, 80)
 
 [node name="FarmMap_Greybox" type="Node2D" unique_id=1399892865]
 
@@ -94,3 +99,42 @@ offset_top = -700.0
 offset_right = 1000.0
 offset_bottom = 700.0
 color = Color(0.46536672, 0.36069107, 0.1124085, 1)
+
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=1156497663]
+
+[node name="DefaultSpawn" type="Marker2D" parent="SpawnPoints" unique_id=712798095]
+
+[node name="NightReturnSpawn" type="Marker2D" parent="SpawnPoints" unique_id=1279802351]
+position = Vector2(0, 80)
+
+[node name="MapTable" type="Area2D" parent="." unique_id=526044011]
+collision_layer = 32768
+collision_mask = 3
+script = ExtResource("1_tq17q")
+interaction_name = "Farm Map Table"
+
+[node name="HighlightVisual" type="ColorRect" parent="MapTable" unique_id=1435766972]
+visible = false
+offset_left = -50.0
+offset_top = -35.0
+offset_right = 50.0
+offset_bottom = 35.0
+color = Color(0.9843137, 1, 0.6509804, 1)
+
+[node name="Visual" type="ColorRect" parent="MapTable" unique_id=491994713]
+offset_left = -40.0
+offset_top = -25.0
+offset_right = 40.0
+offset_bottom = 25.0
+color = Color(0.39607844, 0.5764706, 0.6784314, 1)
+
+[node name="PromptLabel" type="Label" parent="MapTable" unique_id=774752335]
+offset_left = -50.0
+offset_top = -75.0
+offset_right = 91.0
+offset_bottom = -26.0
+text = "Map
+Press E to Interact"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MapTable" unique_id=2063716876]
+shape = SubResource("RectangleShape2D_yt4j7")

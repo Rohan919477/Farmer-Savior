@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://d4hnqicq4jwab"]
+
+[ext_resource type="Script" uid="uid://cehkii5aowdry" path="res://scripts/items/ResourceDrop.gd" id="1_maisx"]
+[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_ofv47"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_nobhe"]
+radius = 12.0
+
+[node name="SeedDrop" type="Area2D" unique_id=1782843920]
+visibility_layer = 16384
+scale = Vector2(0.07, 0.07)
+collision_layer = 32768
+script = ExtResource("1_maisx")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1227478324]
+modulate = Color(0.5803922, 1, 0.24705882, 1)
+scale = Vector2(0.07, 0.07)
+texture = ExtResource("2_ofv47")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=825204742]
+visibility_layer = 32768
+shape = SubResource("CircleShape2D_nobhe")

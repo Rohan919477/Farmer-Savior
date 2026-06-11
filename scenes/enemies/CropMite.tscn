@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://cd8rxxv1hpv4s"]
+
+[ext_resource type="Script" uid="uid://cn5fmu1pfn342" path="res://scripts/enemies/CropMite.gd" id="1_g0pbl"]
+[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_6oap1"]
+[ext_resource type="PackedScene" uid="uid://d4hnqicq4jwab" path="res://scenes/items/SeedDrop.tscn" id="2_jhbwk"]
+[ext_resource type="PackedScene" uid="uid://6vktlkqluj5r" path="res://scenes/items/ScrapDrop.tscn" id="3_3wn2q"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e1v0j"]
+size = Vector2(32, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dtevv"]
+radius = 28.0
+
+[node name="CropMite" type="CharacterBody2D" unique_id=1629791216]
+scale = Vector2(0.7, 0.7)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_g0pbl")
+seed_drop_scene = ExtResource("2_jhbwk")
+scrap_drop_scene = ExtResource("3_3wn2q")
+seed_drop_chance = 1.0
+scrap_drop_chance = 1.0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
+modulate = Color(0.79944247, 0.7986141, 0.027240464, 1)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("2_6oap1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1537155070]
+shape = SubResource("RectangleShape2D_e1v0j")
+
+[node name="DamageArea" type="Area2D" parent="." unique_id=846397005]
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
+shape = SubResource("CircleShape2D_dtevv")

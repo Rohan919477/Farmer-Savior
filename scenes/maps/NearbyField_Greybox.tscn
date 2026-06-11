@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://c08ccyc3an8ho"]
+
+[ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="1_epjd6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_epjd6"]
+size = Vector2(120, 90)
+
+[node name="NearbyField_Greybox" type="Node2D" unique_id=968322687]
+
+[node name="Ground" type="ColorRect" parent="." unique_id=286360057]
+offset_left = -800.0
+offset_top = -500.0
+offset_right = 800.0
+offset_bottom = 500.0
+color = Color(0, 0.7577947, 0.6476949, 1)
+
+[node name="TruckExit" type="Area2D" parent="." unique_id=1367292729]
+collision_layer = 32768
+script = ExtResource("1_epjd6")
+interaction_name = "Truck"
+
+[node name="HighlightVisual" type="ColorRect" parent="TruckExit" unique_id=1328548612]
+visible = false
+offset_left = -55.0
+offset_top = -40.0
+offset_right = 55.0
+offset_bottom = 40.0
+color = Color(0.9764706, 1, 0.56078434, 1)
+
+[node name="Visual" type="ColorRect" parent="TruckExit" unique_id=1033277137]
+offset_left = -45.0
+offset_top = -30.0
+offset_right = 45.0
+offset_bottom = 30.0
+color = Color(0.4117647, 0.43137255, 1, 1)
+
+[node name="PromptLabel" type="Label" parent="TruckExit" unique_id=2098245605]
+offset_left = -35.0
+offset_top = -80.0
+offset_right = 106.0
+offset_bottom = -31.0
+text = "Truck
+Press E to Interact"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TruckExit" unique_id=1452160787]
+shape = SubResource("RectangleShape2D_epjd6")
+
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=763968320]
+
+[node name="DefaultSpawn" type="Marker2D" parent="SpawnPoints" unique_id=2145204303]

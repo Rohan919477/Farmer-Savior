@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://6vktlkqluj5r"]
+
+[ext_resource type="Script" uid="uid://cehkii5aowdry" path="res://scripts/items/ResourceDrop.gd" id="1_edouk"]
+[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_tyrus"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_wkavd"]
+radius = 12.0
+
+[node name="ScrapDrop" type="Area2D" unique_id=1668592267]
+collision_layer = 32768
+script = ExtResource("1_edouk")
+resource_type = "scrap"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2046616989]
+shape = SubResource("CircleShape2D_wkavd")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1955191372]
+modulate = Color(0.59815633, 0.6181552, 0.61216116, 1)
+scale = Vector2(0.07, 0.07)
+texture = ExtResource("2_tyrus")

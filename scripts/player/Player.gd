@@ -9,6 +9,10 @@ var facing_direction: Vector2 = Vector2.RIGHT
 var can_melee_attack: bool = true
 var can_shoot: bool = true
 
+var seeds: int = 0
+var scrap: int = 0
+var mutant_seeds: int = 0
+
 @onready var hoe_hitbox: Area2D = $HoeHitbox
 @onready var hoe_collision: CollisionShape2D = $HoeHitbox/CollisionShape2D
 @onready var health_label: Label = $PlayerDebugUI/HealthLabel
@@ -89,6 +93,20 @@ func take_damage(amount: int) -> void:
 func update_debug_ui() -> void:
 	if health_label != null:
 		health_label.text = "HP: %s / %s" % [current_health, max_health]
+
+func add_resource(resource_type: String, amount: int) -> void:
+	match resource_type:
+		"seeds":
+			seeds += amount
+		"scrap":
+			scrap += amount
+		"mutant_seeds":
+			mutant_seeds += amount
+		_:
+			print("Unknown resource type: ", resource_type)
+			return
+
+	print("Resources | Seeds: ", seeds, " Scrap: ", scrap, " Mutant Seeds: ", mutant_seeds)
 		
 func die() -> void:
 	print("Player died.")
