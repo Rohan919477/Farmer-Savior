@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://7wa80ghpbegr"]
+
+[ext_resource type="Script" uid="uid://bto30scxia3iv" path="res://scripts/ui/HUD.gd" id="1_kw0id"]
+
+[sub_resource type="FontVariation" id="FontVariation_kw0id"]
+
+[node name="HUD" type="CanvasLayer" unique_id=1958078306]
+script = ExtResource("1_kw0id")
+
+[node name="TimeLabel" type="Label" parent="." unique_id=336425720]
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Day 1 | 06:00 | Day"
+
+[node name="NightWarningLabel" type="Label" parent="." unique_id=1040406249]
+visible = false
+offset_left = 120.0
+offset_top = 180.0
+offset_right = 232.0
+offset_bottom = 203.0
+rotation = -0.0017453292
+scale = Vector2(1.1, 1.1)
+theme_override_colors/font_color = Color(0.6117647, 0.007843138, 0.007843138, 1)
+theme_override_colors/font_shadow_color = Color(0.5019608, 0.015686275, 0.015686275, 0)
+theme_override_fonts/font = SubResource("FontVariation_kw0id")
+theme_override_font_sizes/font_size = 44
+text = "Night Warning"
+horizontal_alignment = 1
+vertical_alignment = 1
