@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://eeoq8rjeogc" path="res://scripts/farm/PesticideTurret.gd" id="1_nvrrb"]
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_77ox7"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_nvrrb"]
+radius = 180.0
+
 [node name="PesticideTurret" type="Node2D" unique_id=1304110094]
 z_index = 20
 script = ExtResource("1_nvrrb")
@@ -11,3 +14,10 @@ script = ExtResource("1_nvrrb")
 modulate = Color(0.16862746, 0.19607843, 1, 1)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("2_77ox7")
+
+[node name="RangeArea" type="Area2D" parent="." unique_id=759263508]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RangeArea" unique_id=1152726921]
+shape = SubResource("CircleShape2D_nvrrb")

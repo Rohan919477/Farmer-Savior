@@ -20,6 +20,9 @@ size = Vector2(256, 192)
 
 [node name="FarmMap_Greybox" type="Node2D" unique_id=1399892865]
 
+[node name="EnemyContainer" type="Node2D" parent="." unique_id=2130364705]
+z_index = 10
+
 [node name="Ground" type="ColorRect" parent="." unique_id=293795789]
 offset_left = -640.0
 offset_top = -448.0

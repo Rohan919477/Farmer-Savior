@@ -6,6 +6,9 @@ extends Node2D
 @onready var map_menu: Control = $MapMenu
 @onready var defense_manager: DefenseManager = $DefenseManager
 @onready var defense_placement_ui: DefensePlacementUI = $DefensePlacementUI
+@onready var spawn_manager: Node = $SpawnManager
+
+var dawn_transition_running: bool = false
 
 func _ready() -> void:
 	add_to_group("main")
@@ -15,6 +18,43 @@ func _ready() -> void:
 
 	if time_manager.has_signal("time_changed"):
 		time_manager.time_changed.connect(_on_time_changed)
+
+	if time_manager.has_signal("midnight_reached"):
+		time_manager.midnight_reached.connect(_on_midnight_reached)
+
+	if spawn_manager.has_signal("night_cleanup_cleared"):
+		spawn_manager.night_cleanup_cleared.connect(_on_night_cleanup_cleared)
+
+func _on_midnight_reached() -> void:
+	if spawn_manager.has_method("has_active_enemies"):
+		if spawn_manager.has_active_enemies():
+			if hud.has_method("show_warning_message"):
+				hud.show_warning_message("Clear the remaining enemies.")
+			return
+
+	start_dawn_transition()
+
+func _on_night_cleanup_cleared() -> void:
+	start_dawn_transition()
+
+func start_dawn_transition() -> void:
+	if dawn_transition_running:
+		return
+
+	dawn_transition_running = true
+
+	if hud.has_method("fade_to_black"):
+		await hud.fade_to_black(0.35)
+
+	if time_manager.has_method("complete_night_and_start_new_day"):
+		time_manager.complete_night_and_start_new_day()
+
+	await get_tree().create_timer(0.10).timeout
+
+	if hud.has_method("fade_from_black"):
+		await hud.fade_from_black(0.35)
+
+	dawn_transition_running = false
 
 func open_map_menu() -> void:
 	if time_manager.has_method("is_daytime") and not time_manager.is_daytime():
@@ -62,7 +102,11 @@ func _on_night_started() -> void:
 	map_manager.force_return_to_farm()
 	
 func is_gameplay_input_blocked() -> bool:
-	return map_menu.visible or defense_placement_ui.visible
+	return (
+		dawn_transition_running
+		or map_menu.visible
+		or defense_placement_ui.visible
+	)
 
 func _on_time_changed(day_number: int, hour: int, minute: int, phase: String) -> void:
 	if hud.has_method("update_time"):

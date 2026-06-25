@@ -21,6 +21,7 @@ var can_damage_player: bool = true
 @onready var damage_area: Area2D = $DamageArea
 
 func _ready() -> void:
+	add_to_group("enemies")
 	current_health = max_health
 	player = get_tree().get_first_node_in_group("player")
 
@@ -101,6 +102,27 @@ func drop_resources() -> void:
 
 	if scrap_drop_scene != null and randf() <= scrap_drop_chance:
 		spawn_drop(scrap_drop_scene)
+
+func apply_day_scaling(day_number: int) -> void:
+	var day_offset: int = day_number - 1
+
+	if day_offset < 0:
+		day_offset = 0
+
+	var health_multiplier: float = 1.0 + float(day_offset) * 0.10
+	var damage_multiplier: float = 1.0 + float(day_offset) * 0.05
+	var speed_multiplier: float = 1.0 + float(day_offset) * 0.03
+
+	max_health = int(round(float(max_health) * health_multiplier))
+	current_health = max_health
+
+	contact_damage = int(round(float(contact_damage) * damage_multiplier))
+	move_speed = move_speed * speed_multiplier
+
+	damage_cooldown = maxf(
+		0.35,
+		damage_cooldown - float(day_offset) * 0.03
+	)
 
 func spawn_drop(drop_scene: PackedScene) -> void:
 	var drop = drop_scene.instantiate()
