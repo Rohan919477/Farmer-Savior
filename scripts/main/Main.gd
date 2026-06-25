@@ -3,6 +3,7 @@ extends Node2D
 @onready var map_manager: Node = $MapManager
 @onready var time_manager: Node = $TimeManager
 @onready var hud: CanvasLayer = $HUD
+@onready var map_menu: Control = $MapMenu
 
 func _ready() -> void:
 	add_to_group("main")
@@ -22,7 +23,27 @@ func open_map_menu() -> void:
 
 	map_manager.open_map_menu()
 
+func travel_to_location(location_id: String) -> void:
+	if time_manager.has_method("is_daytime") and not time_manager.is_daytime():
+		print("Cannot travel at night.")
+		if hud.has_method("show_warning_message"):
+			hud.show_warning_message("It is too dangerous to travel at night.")
+		return
+
+	map_manager.travel_to_location(location_id)
+
+func open_defense_placement() -> void:
+	if time_manager.has_method("is_daytime") and not time_manager.is_daytime():
+		print("Cannot use war table at night.")
+		if hud.has_method("show_warning_message"):
+			hud.show_warning_message("There is no time to plan defenses now.")
+		return
+
+	print("Opened defense placement UI placeholder.")
+
 func _on_night_started() -> void:
+	map_manager.close_map_menu()
+
 	print("Main received night_started signal.")
 
 	if map_manager.current_location_id == "farm":
@@ -33,6 +54,9 @@ func _on_night_started() -> void:
 			hud.show_nightfall_message("It is getting late, I need to return.")
 
 	map_manager.force_return_to_farm()
+	
+func is_gameplay_input_blocked() -> bool:
+	return map_menu.visible
 
 func _on_time_changed(day_number: int, hour: int, minute: int, phase: String) -> void:
 	if hud.has_method("update_time"):

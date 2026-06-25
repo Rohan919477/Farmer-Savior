@@ -22,7 +22,23 @@ func _ready() -> void:
 	hoe_collision.disabled = true
 	update_debug_ui()
 
+func is_gameplay_input_blocked() -> bool:
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if main_node == null:
+		return false
+
+	if main_node.has_method("is_gameplay_input_blocked"):
+		return bool(main_node.call("is_gameplay_input_blocked"))
+
+	return false
+
 func _physics_process(_delta: float) -> void:
+	if is_gameplay_input_blocked():
+		velocity = Vector2.ZERO
+		hoe_collision.disabled = true
+		return
+
 	handle_movement()
 	handle_combat_input()
 

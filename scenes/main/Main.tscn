@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://bx86l1xfgt3wk" path="res://scripts/managers/TelemetryManager.gd" id="7_ostsq"]
 [ext_resource type="PackedScene" uid="uid://qoyigg8l6l66" path="res://scenes/maps/FarmMap_greybox.tscn" id="8_ko0rf"]
 [ext_resource type="PackedScene" uid="uid://cjbffm7mgxfw" path="res://scenes/player/player.tscn" id="9_ostsq"]
+[ext_resource type="PackedScene" uid="uid://c063t17x2gye3" path="res://scenes/maps/HouseInterior_Greybox.tscn" id="11_tck0d"]
 [ext_resource type="PackedScene" uid="uid://c08ccyc3an8ho" path="res://scenes/maps/NearbyField_Greybox.tscn" id="12_2tpxt"]
 [ext_resource type="Script" uid="uid://csxv3ieslc044" path="res://scripts/managers/MapManager.gd" id="12_p5fgu"]
 [ext_resource type="PackedScene" uid="uid://diuay65tqcn3n" path="res://scenes/ui/MapMenu.tscn" id="13_jsdfw"]
@@ -43,6 +44,7 @@ script = ExtResource("7_ostsq")
 [node name="MapManager" type="Node" parent="." unique_id=778466562]
 script = ExtResource("12_p5fgu")
 farm_scene = ExtResource("8_ko0rf")
+house_scene = ExtResource("11_tck0d")
 nearby_field_scene = ExtResource("12_2tpxt")
 map_container_path = NodePath("../MapContainer")
 player_path = NodePath("../Player")

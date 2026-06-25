@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://qoyigg8l6l66"]
 
 [ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="1_tq17q"]
+[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_av8mm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5t2dp"]
 size = Vector2(2040, 40)
@@ -15,7 +16,7 @@ size = Vector2(40, 1440)
 size = Vector2(40, 1440)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yt4j7"]
-size = Vector2(110, 80)
+size = Vector2(180, 120)
 
 [node name="FarmMap_Greybox" type="Node2D" unique_id=1399892865]
 
@@ -33,7 +34,7 @@ offset_right = 120.0
 offset_bottom = 80.0
 color = Color(0.58026826, 0.47122657, 0.26007298, 1)
 
-[node name="CropPlotArea" type="ColorRect" parent="." unique_id=609044918]
+[node name="FarmPlotArea" type="ColorRect" parent="." unique_id=609044918]
 offset_left = -350.0
 offset_top = 150.0
 offset_right = -50.0
@@ -107,34 +108,39 @@ color = Color(0.46536672, 0.36069107, 0.1124085, 1)
 [node name="NightReturnSpawn" type="Marker2D" parent="SpawnPoints" unique_id=1279802351]
 position = Vector2(0, 80)
 
-[node name="MapTable" type="Area2D" parent="." unique_id=526044011]
+[node name="HouseEntrance" type="Area2D" parent="." unique_id=1629726719]
+position = Vector2(0, -180)
 collision_layer = 32768
-collision_mask = 3
 script = ExtResource("1_tq17q")
-interaction_name = "Farm Map Table"
+interaction_name = "House"
+interaction_type = "travel"
+target_location_id = "house"
 
-[node name="HighlightVisual" type="ColorRect" parent="MapTable" unique_id=1435766972]
+[node name="HighlightVisual" type="ColorRect" parent="HouseEntrance" unique_id=1796383235]
 visible = false
+offset_left = -90.0
+offset_top = -60.0
+offset_right = 90.0
+offset_bottom = 60.0
+color = Color(0.9529412, 1, 0.4509804, 1)
+
+[node name="Visual" type="ColorRect" parent="HouseEntrance" unique_id=1269601673]
+offset_left = -80.0
+offset_top = -50.0
+offset_right = 80.0
+offset_bottom = 50.0
+color = Color(1, 0.32941177, 0.32941177, 1)
+
+[node name="PromptLabel" type="Label" parent="HouseEntrance" unique_id=2033924969]
 offset_left = -50.0
-offset_top = -35.0
-offset_right = 50.0
-offset_bottom = 35.0
-color = Color(0.9843137, 1, 0.6509804, 1)
+offset_top = -100.0
+offset_right = -10.0
+offset_bottom = -77.0
+text = "Door"
 
-[node name="Visual" type="ColorRect" parent="MapTable" unique_id=491994713]
-offset_left = -40.0
-offset_top = -25.0
-offset_right = 40.0
-offset_bottom = 25.0
-color = Color(0.39607844, 0.5764706, 0.6784314, 1)
-
-[node name="PromptLabel" type="Label" parent="MapTable" unique_id=774752335]
-offset_left = -50.0
-offset_top = -75.0
-offset_right = 91.0
-offset_bottom = -26.0
-text = "Map
-Press E to Interact"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="MapTable" unique_id=2063716876]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseEntrance" unique_id=254235694]
 shape = SubResource("RectangleShape2D_yt4j7")
+
+[node name="TruckProp" type="Sprite2D" parent="." unique_id=1507909805]
+position = Vector2(240, -160)
+texture = ExtResource("2_av8mm")

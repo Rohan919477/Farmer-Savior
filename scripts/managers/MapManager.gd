@@ -1,6 +1,7 @@
 extends Node
 
 @export var farm_scene: PackedScene
+@export var house_scene: PackedScene
 @export var nearby_field_scene: PackedScene
 
 @export var map_container_path: NodePath
@@ -12,6 +13,7 @@ var current_map: Node = null
 
 var unlocked_locations := {
 	"farm": true,
+	"house": true,
 	"nearby_field": true,
 	"military_base": false,
 	"city": false,
@@ -45,6 +47,8 @@ func travel_to_location(location_id: String) -> void:
 	load_location(location_id, "DefaultSpawn")
 
 func force_return_to_farm() -> void:
+	close_map_menu()
+
 	if current_location_id != "farm":
 		print("Nightfall: forcing return to farm.")
 		load_location("farm", "NightReturnSpawn")
@@ -52,6 +56,7 @@ func force_return_to_farm() -> void:
 		print("Nightfall: player already at farm.")
 
 func load_location(location_id: String, spawn_id: String = "DefaultSpawn") -> void:
+	close_map_menu()
 	clear_current_map()
 
 	var scene_to_load: PackedScene = get_scene_for_location(location_id)
@@ -72,6 +77,8 @@ func get_scene_for_location(location_id: String) -> PackedScene:
 	match location_id:
 		"farm":
 			return farm_scene
+		"house":
+			return house_scene
 		"nearby_field":
 			return nearby_field_scene
 		_:
@@ -80,6 +87,13 @@ func get_scene_for_location(location_id: String) -> PackedScene:
 func clear_current_map() -> void:
 	for child in map_container.get_children():
 		child.queue_free()
+
+func close_map_menu() -> void:
+	if map_menu != null and map_menu.has_method("close_menu"):
+		map_menu.close_menu()
+
+func is_current_location(location_id: String) -> bool:
+	return current_location_id == location_id
 
 func position_player_at_spawn(spawn_id: String) -> void:
 	if current_map == null:
