@@ -4,101 +4,82 @@
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_av8mm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5t2dp"]
-size = Vector2(2040, 40)
+size = Vector2(1280, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tq17q"]
-size = Vector2(2040, 40)
+size = Vector2(1280, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_av8mm"]
-size = Vector2(40, 1440)
+size = Vector2(64, 896)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_v0suf"]
-size = Vector2(40, 1440)
+size = Vector2(64, 896)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yt4j7"]
-size = Vector2(180, 120)
+size = Vector2(256, 192)
 
 [node name="FarmMap_Greybox" type="Node2D" unique_id=1399892865]
 
 [node name="Ground" type="ColorRect" parent="." unique_id=293795789]
-offset_left = -1000.0
-offset_top = -700.0
-offset_right = 1000.0
-offset_bottom = 700.0
+offset_left = -640.0
+offset_top = -448.0
+offset_right = 640.0
+offset_bottom = 448.0
 color = Color(0.17621657, 0.81200707, 3.85046e-06, 1)
 
-[node name="HomeArea" type="ColorRect" parent="." unique_id=1180427135]
-offset_left = -120.0
-offset_top = -80.0
-offset_right = 120.0
-offset_bottom = 80.0
-color = Color(0.58026826, 0.47122657, 0.26007298, 1)
-
 [node name="FarmPlotArea" type="ColorRect" parent="." unique_id=609044918]
-offset_left = -350.0
-offset_top = 150.0
-offset_right = -50.0
-offset_bottom = 330.0
-color = Color(0.38660517, 0.30851582, 0.016421538, 1)
-
-[node name="FarmDefenseArea" type="ColorRect" parent="." unique_id=401926881]
-offset_left = -500.0
-offset_top = -350.0
-offset_right = 500.0
-offset_bottom = 350.0
-color = Color(0.7469902, 0.73676497, 0, 1)
-
-[node name="OutsideFieldArea" type="ColorRect" parent="." unique_id=1884629732]
-offset_left = 650.0
-offset_top = -250.0
-offset_right = 950.0
-offset_bottom = 250.0
-color = Color(0.26957887, 0.39740217, 8.663535e-07, 1)
+offset_left = -192.0
+offset_top = 128.0
+offset_right = 192.0
+offset_bottom = 320.0
+color = Color(0.41960785, 0.25882354, 0.015686275, 1)
 
 [node name="CollisionWalls" type="StaticBody2D" parent="." unique_id=1710727142]
+collision_layer = 4
+collision_mask = 0
 
 [node name="TopWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=1548678866]
-position = Vector2(0, -720)
+position = Vector2(0, -416)
 shape = SubResource("RectangleShape2D_5t2dp")
 
 [node name="BottomWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=1178652531]
-position = Vector2(0, 720)
+position = Vector2(0, 416)
 shape = SubResource("RectangleShape2D_tq17q")
 
 [node name="LeftWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=270575979]
-position = Vector2(-1020, 0)
+position = Vector2(-608, 0)
 shape = SubResource("RectangleShape2D_av8mm")
 
 [node name="RightWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=674476729]
-position = Vector2(1020, 0)
+position = Vector2(608, 0)
 shape = SubResource("RectangleShape2D_v0suf")
 
 [node name="FenceTop" type="ColorRect" parent="." unique_id=1376736959]
-offset_left = -1000.0
-offset_top = -700.0
-offset_right = 1000.0
-offset_bottom = -680.0
+offset_left = -640.0
+offset_top = -448.0
+offset_right = 640.0
+offset_bottom = -384.0
 color = Color(0.4486491, 0.33152026, 0.08561262, 1)
 
 [node name="FenceBottom" type="ColorRect" parent="." unique_id=689712069]
-offset_left = -1000.0
-offset_top = 680.0
-offset_right = 1000.0
-offset_bottom = 700.0
+offset_left = -640.0
+offset_top = 384.0
+offset_right = 640.0
+offset_bottom = 448.0
 color = Color(0.4401454, 0.36336198, 0.12435486, 1)
 
 [node name="FenceLeft" type="ColorRect" parent="." unique_id=530661163]
-offset_left = -1000.0
-offset_top = -700.0
-offset_right = -980.0
-offset_bottom = 700.0
+offset_left = -640.0
+offset_top = -448.0
+offset_right = -576.0
+offset_bottom = 448.0
 color = Color(0.43266204, 0.35406277, 0.09322903, 1)
 
 [node name="FenceRight" type="ColorRect" parent="." unique_id=813301637]
-offset_left = 980.0
-offset_top = -700.0
-offset_right = 1000.0
-offset_bottom = 700.0
+offset_left = 576.0
+offset_top = -448.0
+offset_right = 640.0
+offset_bottom = 448.0
 color = Color(0.46536672, 0.36069107, 0.1124085, 1)
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=1156497663]
@@ -109,7 +90,7 @@ color = Color(0.46536672, 0.36069107, 0.1124085, 1)
 position = Vector2(0, 80)
 
 [node name="HouseEntrance" type="Area2D" parent="." unique_id=1629726719]
-position = Vector2(0, -180)
+position = Vector2(-384, -224)
 collision_layer = 32768
 script = ExtResource("1_tq17q")
 interaction_name = "House"
@@ -125,10 +106,10 @@ offset_bottom = 60.0
 color = Color(0.9529412, 1, 0.4509804, 1)
 
 [node name="Visual" type="ColorRect" parent="HouseEntrance" unique_id=1269601673]
-offset_left = -80.0
-offset_top = -50.0
-offset_right = 80.0
-offset_bottom = 50.0
+offset_left = -128.0
+offset_top = -96.0
+offset_right = 128.0
+offset_bottom = 96.0
 color = Color(1, 0.32941177, 0.32941177, 1)
 
 [node name="PromptLabel" type="Label" parent="HouseEntrance" unique_id=2033924969]
@@ -142,7 +123,8 @@ text = "Door"
 shape = SubResource("RectangleShape2D_yt4j7")
 
 [node name="TruckProp" type="Sprite2D" parent="." unique_id=1507909805]
-position = Vector2(240, -160)
+position = Vector2(352, -256)
 texture = ExtResource("2_av8mm")
 
-[node name="TurretPlacementRoot" type="Node" parent="." unique_id=45468210]
+[node name="TurretPlacementRoot" type="Node2D" parent="." unique_id=34337927]
+z_index = 15

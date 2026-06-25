@@ -14,7 +14,7 @@ radius = 28.0
 [node name="CropMite" type="CharacterBody2D" unique_id=1629791216]
 scale = Vector2(0.7, 0.7)
 collision_layer = 2
-collision_mask = 0
+collision_mask = 4
 script = ExtResource("1_g0pbl")
 seed_drop_scene = ExtResource("2_jhbwk")
 scrap_drop_scene = ExtResource("3_3wn2q")
@@ -30,7 +30,7 @@ texture = ExtResource("2_6oap1")
 shape = SubResource("RectangleShape2D_e1v0j")
 
 [node name="DamageArea" type="Area2D" parent="." unique_id=846397005]
-collision_layer = 2
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
 shape = SubResource("CircleShape2D_dtevv")

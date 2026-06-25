@@ -11,7 +11,7 @@ radius = 28.0
 
 [node name="TempEnemy" type="CharacterBody2D" unique_id=162856162]
 collision_layer = 2
-collision_mask = 0
+collision_mask = 4
 script = ExtResource("2_e1v0j")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
@@ -23,7 +23,7 @@ texture = ExtResource("1_2kfsl")
 shape = SubResource("RectangleShape2D_e1v0j")
 
 [node name="DamageArea" type="Area2D" parent="." unique_id=846397005]
-collision_layer = 2
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
 shape = SubResource("CircleShape2D_dtevv")

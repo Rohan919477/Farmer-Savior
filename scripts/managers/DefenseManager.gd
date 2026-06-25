@@ -12,8 +12,8 @@ signal turret_removed(grid_cell: Vector2i)
 @export var grid_rows: int = 14
 
 # Adjust these later only if turret placements do not align with the farm map.
-@export var farm_grid_origin: Vector2 = Vector2(-980.0, -680.0)
-@export var farm_grid_cell_size: Vector2 = Vector2(98.0, 97.0)
+@export var farm_grid_origin: Vector2 = Vector2(-640.0, -448.0)
+@export var farm_grid_cell_size: Vector2 = Vector2(64.0, 64.0)
 
 @export var max_pesticide_turrets: int = 2
 

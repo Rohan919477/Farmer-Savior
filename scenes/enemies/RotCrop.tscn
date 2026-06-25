@@ -13,7 +13,7 @@ radius = 28.0
 
 [node name="RotCrop" type="CharacterBody2D" unique_id=583873538]
 collision_layer = 2
-collision_mask = 0
+collision_mask = 4
 script = ExtResource("1_hc4vu")
 seed_drop_scene = ExtResource("2_cad0o")
 scrap_drop_scene = ExtResource("3_huxck")
@@ -29,7 +29,7 @@ texture = ExtResource("2_cki3d")
 shape = SubResource("RectangleShape2D_e1v0j")
 
 [node name="DamageArea" type="Area2D" parent="." unique_id=846397005]
-collision_layer = 2
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
 shape = SubResource("CircleShape2D_dtevv")
