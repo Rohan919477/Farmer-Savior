@@ -1,5 +1,7 @@
 extends Node
 
+signal location_loaded(location_id: String, loaded_map: Node)
+
 @export var farm_scene: PackedScene
 @export var house_scene: PackedScene
 @export var nearby_field_scene: PackedScene
@@ -72,6 +74,8 @@ func load_location(location_id: String, spawn_id: String = "DefaultSpawn") -> vo
 	position_player_at_spawn(spawn_id)
 
 	print("Loaded location: ", location_id)
+	
+	location_loaded.emit(current_location_id, current_map)
 
 func get_scene_for_location(location_id: String) -> PackedScene:
 	match location_id:

@@ -144,3 +144,5 @@ shape = SubResource("RectangleShape2D_yt4j7")
 [node name="TruckProp" type="Sprite2D" parent="." unique_id=1507909805]
 position = Vector2(240, -160)
 texture = ExtResource("2_av8mm")
+
+[node name="TurretPlacementRoot" type="Node" parent="." unique_id=45468210]

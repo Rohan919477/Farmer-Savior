@@ -15,6 +15,9 @@
 [ext_resource type="Script" uid="uid://csxv3ieslc044" path="res://scripts/managers/MapManager.gd" id="12_p5fgu"]
 [ext_resource type="PackedScene" uid="uid://diuay65tqcn3n" path="res://scenes/ui/MapMenu.tscn" id="13_jsdfw"]
 [ext_resource type="PackedScene" uid="uid://7wa80ghpbegr" path="res://scenes/ui/HUD.tscn" id="13_tck0d"]
+[ext_resource type="Script" uid="uid://ci3g6spfw4qu7" path="res://scripts/managers/DefenseManager.gd" id="16_hjnkw"]
+[ext_resource type="PackedScene" uid="uid://b0cqov81uwfb1" path="res://scenes/farm/PesticideTurret.tscn" id="17_rikml"]
+[ext_resource type="PackedScene" uid="uid://d372r5psuyviy" path="res://scenes/ui/DefensePlacementUI.tscn" id="18_rikml"]
 
 [node name="Main" type="Node2D" unique_id=1618782487]
 script = ExtResource("1_3km4f")
@@ -24,7 +27,6 @@ script = ExtResource("1_u1xfj")
 
 [node name="TimeManager" type="Node" parent="." unique_id=428679080]
 script = ExtResource("2_nha0i")
-minutes_per_real_second = 60.0
 
 [node name="SaveManager" type="Node" parent="." unique_id=1792121914]
 script = ExtResource("3_q24mn")
@@ -50,6 +52,10 @@ map_container_path = NodePath("../MapContainer")
 player_path = NodePath("../Player")
 map_menu_path = NodePath("../MapMenu")
 
+[node name="DefenseManager" type="Node" parent="." unique_id=2040749341]
+script = ExtResource("16_hjnkw")
+pesticide_turret_scene = ExtResource("17_rikml")
+
 [node name="MapContainer" type="Node2D" parent="." unique_id=2100871122]
 
 [node name="Player" parent="." unique_id=1647505724 instance=ExtResource("9_ostsq")]
@@ -58,3 +64,5 @@ z_index = 10
 [node name="HUD" parent="." unique_id=1958078306 instance=ExtResource("13_tck0d")]
 
 [node name="MapMenu" parent="." unique_id=1345799289 instance=ExtResource("13_jsdfw")]
+
+[node name="DefensePlacementUI" parent="." unique_id=1217122726 instance=ExtResource("18_rikml")]

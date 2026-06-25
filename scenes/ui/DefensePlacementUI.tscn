@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://d372r5psuyviy"]
+
+[ext_resource type="Script" uid="uid://dwt72x5xckxa5" path="res://scripts/ui/DefenseGridBoard.gd" id="1_b6mrq"]
+[ext_resource type="Script" uid="uid://eqa6c6yw6m3v" path="res://scripts/ui/DefensePlacementUI.gd" id="1_lvgt1"]
+
+[node name="DefensePlacementUi" type="CanvasLayer" unique_id=1217122726]
+visible = false
+script = ExtResource("1_lvgt1")
+
+[node name="RootControl" type="Control" parent="." unique_id=1903831435]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Overlay" type="ColorRect" parent="RootControl" unique_id=1866445776]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.07058824, 0.07058824, 0.07058824, 0.83137256)
+
+[node name="MainPanel" type="Panel" parent="RootControl" unique_id=1995237368]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 35.0
+offset_right = 1105.0
+offset_bottom = 610.0
+
+[node name="TitleLabel" type="Label" parent="RootControl/MainPanel" unique_id=825675898]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 20.0
+offset_right = 65.0
+offset_bottom = 43.0
+
+[node name="GridBoard" type="Control" parent="RootControl/MainPanel" unique_id=1780931868]
+anchors_preset = 0
+offset_left = 25.0
+offset_top = 70.0
+offset_right = 725.0
+offset_bottom = 545.0
+script = ExtResource("1_b6mrq")
+
+[node name="Sidebar" type="Panel" parent="RootControl/MainPanel" unique_id=131034292]
+layout_mode = 0
+offset_left = 750.0
+offset_top = 70.0
+offset_right = 1030.0
+offset_bottom = 545.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootControl/MainPanel/Sidebar" unique_id=615979567]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 98.0
+
+[node name="InventoryLabel" type="Label" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=1786919502]
+layout_mode = 2
+text = "DEFENSE INVENTORY"
+
+[node name="PesticideTurretButton" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=1843712352]
+layout_mode = 2
+text = "PESTICIDE  TURRET x2"
+
+[node name="RemoveTurretButton" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=177232047]
+layout_mode = 2
+text = "REMOVE TURRET"
+
+[node name="LockedTool1Button" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=691902822]
+layout_mode = 2
+disabled = true
+text = "LOCKED"
+
+[node name="LockedTool2Button" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=1183805318]
+layout_mode = 2
+disabled = true
+text = "LOCKED"
+
+[node name="StatusLabel" type="Label" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=1016844089]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=678281739]
+layout_mode = 2
+text = "CLOSE"
