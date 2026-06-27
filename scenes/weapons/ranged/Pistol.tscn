@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://cp0c14boaelvi"]
+
+[ext_resource type="Script" uid="uid://clxcxkuv23uts" path="res://scripts/weapons/ranged/Pistol.gd" id="1_pk367"]
+[ext_resource type="PackedScene" uid="uid://bk6qkc20lp0qv" path="res://scenes/weapons/ranged/PistolBullet.tscn" id="2_8oncx"]
+
+[node name="Pistol" type="Node2D" unique_id=1920361992]
+script = ExtResource("1_pk367")
+bullet_scene = ExtResource("2_8oncx")
+
+[node name="MuzzlePoint" type="Marker2D" parent="." unique_id=1863359444]
+position = Vector2(32, 0)

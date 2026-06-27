@@ -2,8 +2,8 @@
 
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="1_8afob"]
 [ext_resource type="Script" uid="uid://cyxd8puynxcko" path="res://scripts/player/Player.gd" id="1_dovo2"]
-[ext_resource type="PackedScene" uid="uid://bk6qkc20lp0qv" path="res://scenes/projectiles/SeedProjectile.tscn" id="2_gmlin"]
-[ext_resource type="Script" uid="uid://pni2fpx1fdu4" path="res://scripts/weapons/HoeHitBox.gd" id="4_lvxji"]
+[ext_resource type="Script" uid="uid://pni2fpx1fdu4" path="res://scripts/weapons/melee/HoeHitBox.gd" id="4_lvxji"]
+[ext_resource type="PackedScene" uid="uid://cp0c14boaelvi" path="res://scenes/weapons/ranged/Pistol.tscn" id="5_p47bc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dovo2"]
 size = Vector2(32, 32)
@@ -14,7 +14,6 @@ size = Vector2(48, 36)
 [node name="Player" type="CharacterBody2D" unique_id=1647505724 groups=["player"]]
 collision_mask = 4
 script = ExtResource("1_dovo2")
-seed_projectile_scene = ExtResource("2_gmlin")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=493241805]
 scale = Vector2(0.2, 0.2)
@@ -41,3 +40,5 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 60.0
 offset_bottom = 43.0
+
+[node name="Pistol" parent="." unique_id=1920361992 instance=ExtResource("5_p47bc")]
