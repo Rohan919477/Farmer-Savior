@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://w1ao620jew7c"]
+
+[ext_resource type="Script" uid="uid://dvq4kllvwt5vr" path="res://scripts/ui/GameOverUI.gd" id="1_m61qa"]
+
+[node name="GameOverUi" type="CanvasLayer" unique_id=1082685328]
+layer = 220
+script = ExtResource("1_m61qa")
+
+[node name="RootControl" type="Control" parent="." unique_id=604826820]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Backdrop" type="ColorRect" parent="RootControl" unique_id=1365228147]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CenterPanel" type="Panel" parent="RootControl" unique_id=1076996582]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="TitleLabel" type="Label" parent="RootControl/CenterPanel" unique_id=795994626]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="ReasonLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1914301371]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="ReturnToTitleButton" type="Button" parent="RootControl/CenterPanel" unique_id=72754192]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0

@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://bx86l1xfgt3wk" path="res://scripts/managers/TelemetryManager.gd" id="7_ostsq"]
 [ext_resource type="PackedScene" uid="uid://qoyigg8l6l66" path="res://scenes/maps/FarmMap_greybox.tscn" id="8_ko0rf"]
 [ext_resource type="PackedScene" uid="uid://dsdv5gtes83ea" path="res://scenes/enemies/RotCrop.tscn" id="8_roob6"]
+[ext_resource type="PackedScene" uid="uid://cui2n8gm2quba" path="res://scenes/enemies/TutorialBoss.tscn" id="9_m1khv"]
 [ext_resource type="PackedScene" uid="uid://cjbffm7mgxfw" path="res://scenes/player/player.tscn" id="9_ostsq"]
 [ext_resource type="PackedScene" uid="uid://c063t17x2gye3" path="res://scenes/maps/HouseInterior_Greybox.tscn" id="11_tck0d"]
 [ext_resource type="PackedScene" uid="uid://c08ccyc3an8ho" path="res://scenes/maps/NearbyField_Greybox.tscn" id="12_2tpxt"]
@@ -22,6 +23,18 @@
 [ext_resource type="PackedScene" uid="uid://b0cqov81uwfb1" path="res://scenes/farm/PesticideTurret.tscn" id="17_rikml"]
 [ext_resource type="Script" uid="uid://b3ji3er4c3v0y" path="res://scripts/managers/WorldLightingManager.gd" id="18_d8523"]
 [ext_resource type="PackedScene" uid="uid://d372r5psuyviy" path="res://scenes/ui/DefensePlacementUI.tscn" id="18_rikml"]
+[ext_resource type="PackedScene" uid="uid://bu1digdsg017o" path="res://scenes/farm/FenceSegment.tscn" id="18_roob6"]
+[ext_resource type="Script" uid="uid://fl0c4oklkgx8" path="res://scripts/managers/InventoryManager.gd" id="21_0cxqb"]
+[ext_resource type="Script" uid="uid://baafybc56dwl2" path="res://scripts/managers/TutorialManager.gd" id="22_ew7m7"]
+[ext_resource type="Script" uid="uid://cvufsvcho4xu1" path="res://scripts/farm/CropManager.gd" id="24_j0f7u"]
+[ext_resource type="PackedScene" uid="uid://denxdwl4ttgpf" path="res://scenes/farm/CropPlotSlot.tscn" id="25_n12rl"]
+[ext_resource type="PackedScene" uid="uid://dwlxjb3bwrasj" path="res://scenes/ui/CropPlantingUI.tscn" id="26_n12rl"]
+[ext_resource type="PackedScene" uid="uid://8keld1ucb18n" path="res://scenes/ui/PlayerInventoryUI.tscn" id="28_ilqpp"]
+[ext_resource type="PackedScene" uid="uid://da3t8j2nebpas" path="res://scenes/ui/WorkshopUI.tscn" id="30_04n4k"]
+[ext_resource type="PackedScene" uid="uid://crc4ni75doew0" path="res://scenes/ui/InventorySlotUI.tscn" id="30_ftc2p"]
+[ext_resource type="PackedScene" uid="uid://b3nvl7g5yluyy" path="res://scenes/ui/TitleScreenUI.tscn" id="32_fg4ko"]
+[ext_resource type="PackedScene" uid="uid://haqrwqkp5xn5" path="res://scenes/ui/TutorialPopupUI.tscn" id="33_m1khv"]
+[ext_resource type="PackedScene" uid="uid://w1ao620jew7c" path="res://scenes/ui/GameOverUI.tscn" id="34_vs4dm"]
 
 [node name="Main" type="Node2D" unique_id=1618782487]
 script = ExtResource("1_3km4f")
@@ -29,8 +42,9 @@ script = ExtResource("1_3km4f")
 [node name="GameManager" type="Node" parent="." unique_id=1702856493]
 script = ExtResource("1_u1xfj")
 
-[node name="TimeManager" type="Node" parent="." unique_id=428679080]
+[node name="TimeManager" type="Node" parent="." unique_id=428679080 groups=["time_manager"]]
 script = ExtResource("2_nha0i")
+minutes_per_real_second = 20.0
 
 [node name="SaveManager" type="Node" parent="." unique_id=1792121914]
 script = ExtResource("3_q24mn")
@@ -40,6 +54,7 @@ script = ExtResource("4_gyg6b")
 crop_mite_scene = ExtResource("6_yub1f")
 blight_pig_scene = ExtResource("7_d8523")
 rot_crop_scene = ExtResource("8_roob6")
+tutorial_boss_scene = ExtResource("9_m1khv")
 
 [node name="ResourceManager" type="Node" parent="." unique_id=1072858265]
 script = ExtResource("5_sjxhf")
@@ -62,6 +77,19 @@ map_menu_path = NodePath("../MapMenu")
 [node name="DefenseManager" type="Node" parent="." unique_id=2040749341]
 script = ExtResource("16_hjnkw")
 pesticide_turret_scene = ExtResource("17_rikml")
+fence_segment_scene = ExtResource("18_roob6")
+minimum_broken_segments_for_passable_gap = 2
+
+[node name="CropManager" type="Node" parent="." unique_id=61324828]
+script = ExtResource("24_j0f7u")
+crop_plot_slot_scene = ExtResource("25_n12rl")
+
+[node name="InventoryManager" type="Node" parent="." unique_id=914208468]
+script = ExtResource("21_0cxqb")
+
+[node name="TutorialManager" type="Node" parent="." unique_id=1824480578]
+script = ExtResource("22_ew7m7")
+metadata/_custom_type_script = "uid://baafybc56dwl2"
 
 [node name="MapContainer" type="Node2D" parent="." unique_id=2100871122]
 
@@ -80,3 +108,16 @@ z_index = 10
 [node name="MapMenu" parent="." unique_id=1345799289 instance=ExtResource("13_jsdfw")]
 
 [node name="DefensePlacementUI" parent="." unique_id=1217122726 instance=ExtResource("18_rikml")]
+
+[node name="CropPlantingUI" parent="." unique_id=320576508 instance=ExtResource("26_n12rl")]
+
+[node name="PlayerInventoryUI" parent="." unique_id=298674892 instance=ExtResource("28_ilqpp")]
+inventory_slot_scene = ExtResource("30_ftc2p")
+
+[node name="WorkshopUI" parent="." unique_id=1765629333 instance=ExtResource("30_04n4k")]
+
+[node name="TitleScreenUI" parent="." unique_id=2101743907 instance=ExtResource("32_fg4ko")]
+
+[node name="TutorialPopupUI" parent="." unique_id=1003355418 instance=ExtResource("33_m1khv")]
+
+[node name="GameOverUI" parent="." unique_id=1082685328 instance=ExtResource("34_vs4dm")]

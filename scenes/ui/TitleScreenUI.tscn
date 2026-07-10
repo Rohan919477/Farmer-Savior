@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://b3nvl7g5yluyy"]
+
+[ext_resource type="Script" uid="uid://d35jo6x72cxmr" path="res://scripts/ui/TitleScreenUI.gd" id="1_nnurv"]
+
+[node name="TitleScreenUI" type="CanvasLayer" unique_id=2101743907]
+layer = 200
+script = ExtResource("1_nnurv")
+
+[node name="RootControl" type="Control" parent="." unique_id=565136911]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Backdrop" type="ColorRect" parent="RootControl" unique_id=61906293]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CenterPanel" type="Panel" parent="RootControl" unique_id=71890434]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="TitleLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1037425502]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="SubtitleLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1691617920]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="PlayButton" type="Button" parent="RootControl/CenterPanel" unique_id=701020116]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="SettingsButton" type="Button" parent="RootControl/CenterPanel" unique_id=1580591568]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="GlossaryButton" type="Button" parent="RootControl/CenterPanel" unique_id=1762711071]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="CreditsButton" type="Button" parent="RootControl/CenterPanel" unique_id=681703525]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="PlaceholderLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1333253392]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0

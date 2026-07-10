@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cui2n8gm2quba"]
+
+[ext_resource type="Script" uid="uid://bxh50g2hbhns2" path="res://scripts/enemies/TutorialBoss.gd" id="1_e5uue"]
+[ext_resource type="PackedScene" uid="uid://d4hnqicq4jwab" path="res://scenes/items/SeedDrop.tscn" id="2_j1e2c"]
+[ext_resource type="PackedScene" uid="uid://6vktlkqluj5r" path="res://scenes/items/ScrapDrop.tscn" id="3_j2tnu"]
+[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="4_2el5p"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e1v0j"]
+size = Vector2(32, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dtevv"]
+radius = 28.0
+
+[node name="TutorialBoss" type="CharacterBody2D" unique_id=1231377827]
+collision_layer = 2
+collision_mask = 4
+script = ExtResource("1_e5uue")
+seed_drop_scene = ExtResource("2_j1e2c")
+scrap_drop_scene = ExtResource("3_j2tnu")
+seed_drop_chance = 1.0
+scrap_drop_chance = 1.0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
+modulate = Color(0.81, 0.3645, 0.32399997, 1)
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("4_2el5p")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1537155070]
+shape = SubResource("RectangleShape2D_e1v0j")
+
+[node name="DamageArea" type="Area2D" parent="." unique_id=846397005]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
+shape = SubResource("CircleShape2D_dtevv")

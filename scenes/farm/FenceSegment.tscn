@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://bu1digdsg017o"]
+
+[ext_resource type="Script" uid="uid://boe5kaicsvmlt" path="res://scripts/farm/FenceSegment.gd" id="1_xvk7r"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xvk7r"]
+
+[node name="FenceSegment" type="Node2D" unique_id=368735819]
+script = ExtResource("1_xvk7r")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1684025640]
+z_index = 20
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1387464279]
+
+[node name="RepairArea" type="Area2D" parent="." unique_id=1246703563]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RepairArea" unique_id=1255135722]
+shape = SubResource("CircleShape2D_xvk7r")
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1318437292]
+
+[node name="Background" type="Polygon2D" parent="HealthBar" unique_id=1436262823]
+
+[node name="Fill" type="Polygon2D" parent="HealthBar" unique_id=1180466867]
+
+[node name="RepairPrompt" type="Label" parent="." unique_id=1742586462]
+visible = false
+z_index = 30
+offset_right = 110.0
+offset_bottom = 36.0
+text = "Fix (Hold F)"
+horizontal_alignment = 1
+vertical_alignment = 1

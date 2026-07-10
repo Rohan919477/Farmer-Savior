@@ -1,0 +1,129 @@
+[gd_scene format=3 uid="uid://dwlxjb3bwrasj"]
+
+[ext_resource type="Script" uid="uid://bljm6s43a5ubm" path="res://scripts/ui/CropPlantingUI.gd" id="1_bjr8u"]
+
+[node name="CropPlantingUI" type="CanvasLayer" unique_id=320576508]
+layer = 20
+script = ExtResource("1_bjr8u")
+
+[node name="RootControl" type="Control" parent="." unique_id=1834435346]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SeedPanel" type="Panel" parent="RootControl" unique_id=1321861681]
+layout_mode = 0
+offset_left = 396.0
+offset_top = 194.0
+offset_right = 756.0
+offset_bottom = 454.0
+
+[node name="TitleLabel" type="Label" parent="RootControl/SeedPanel" unique_id=902132421]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 340.0
+offset_bottom = 50.0
+text = "Plant Seed"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="RootControl/SeedPanel" unique_id=434139463]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 60.0
+offset_right = 336.0
+offset_bottom = 115.0
+text = "Choose a seed to plant in this crop plot."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="SeedCountLabel" type="Label" parent="RootControl/SeedPanel" unique_id=997589448]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 118.0
+offset_right = 336.0
+offset_bottom = 142.0
+horizontal_alignment = 1
+
+[node name="BasicCropButton" type="Button" parent="RootControl/SeedPanel" unique_id=1706155501]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 150.0
+offset_right = 315.0
+offset_bottom = 186.0
+text = "BASIC CROP - 1 Seed
+"
+
+[node name="MutantCropButton" type="Button" parent="RootControl/SeedPanel" unique_id=2010544367]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+focus_mode = 0
+text = "MUTANT CROP"
+
+[node name="StatusLabel" type="Label" parent="RootControl/SeedPanel" unique_id=112586384]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 192.0
+offset_right = 336.0
+offset_bottom = 222.0
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CancelButton" type="Button" parent="RootControl/SeedPanel" unique_id=2140144316]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 224.0
+offset_right = 255.0
+offset_bottom = 255.0
+text = "Cancel"
+
+[node name="CropInfoPanel" type="Panel" parent="RootControl" unique_id=1499930140]
+visible = false
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CropInfoLabel" type="Label" parent="RootControl/CropInfoPanel" unique_id=2108069014]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+autowrap_mode = 3
+
+[node name="RemoveCropButton" type="Button" parent="RootControl/CropInfoPanel" unique_id=1761786239]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+focus_mode = 0
+text = "REMOVE CROP"
+
+[node name="CloseInfoButton" type="Button" parent="RootControl/CropInfoPanel" unique_id=712898731]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+focus_mode = 0
+text = "CLOSE"
+
+[node name="SeedTooltipPanel" type="Panel" parent="RootControl" unique_id=1742467217]
+visible = false
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="TooltipTitleLabel" type="Label" parent="RootControl/SeedTooltipPanel" unique_id=114484218]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="TooltipTypeLabel" type="Label" parent="RootControl/SeedTooltipPanel" unique_id=1925260302]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="TooltipDescriptionLabel" type="Label" parent="RootControl/SeedTooltipPanel" unique_id=15069347]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+autowrap_mode = 3

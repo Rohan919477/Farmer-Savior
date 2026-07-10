@@ -5,7 +5,12 @@ func _ready() -> void:
 	max_health = 25
 	move_speed = 130.0
 	contact_damage = 6
-	seed_drop_chance = 0.7
-	scrap_drop_chance = 0.1
+
+	required_fence_gap_segments = 1
+	body_radius = 8.0
+	visual_scale_multiplier = 0.65
+
+	seed_drop_chance = 1.0
+	scrap_drop_chance = 1.0
 
 	super._ready()

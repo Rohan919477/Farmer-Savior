@@ -12,7 +12,7 @@ size = Vector2(32, 32)
 size = Vector2(48, 36)
 
 [node name="Player" type="CharacterBody2D" unique_id=1647505724 groups=["player"]]
-collision_mask = 4
+collision_mask = 12
 script = ExtResource("1_dovo2")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=493241805]

@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://crc4ni75doew0"]
+
+[ext_resource type="Script" uid="uid://cpn6oti452pue" path="res://scripts/ui/InventorySlotUI.gd" id="1_86g6e"]
+
+[node name="InventorySlotUI" type="Button" unique_id=1664126252]
+custom_minimum_size = Vector2(112, 62)
+focus_mode = 0
+script = ExtResource("1_86g6e")
+
+[node name="ItemLabel" type="Label" parent="." unique_id=743154172]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 4.0
+offset_right = 107.0
+offset_bottom = 42.0
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="AmountLabel" type="Label" parent="." unique_id=1184313419]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 41.0
+offset_right = 102.0
+offset_bottom = 64.0
+horizontal_alignment = 2
+vertical_alignment = 1

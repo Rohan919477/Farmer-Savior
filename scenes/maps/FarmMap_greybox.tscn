@@ -4,21 +4,33 @@
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_av8mm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5t2dp"]
-size = Vector2(1280, 64)
+size = Vector2(2304, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tq17q"]
-size = Vector2(1280, 64)
+size = Vector2(2304, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_av8mm"]
-size = Vector2(64, 896)
+size = Vector2(32, 1920)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_v0suf"]
-size = Vector2(64, 896)
+size = Vector2(32, 1920)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yt4j7"]
 size = Vector2(256, 192)
 
-[node name="FarmMap_Greybox" type="Node2D" unique_id=1399892865]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tuk2o"]
+size = Vector2(1792, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_77nn7"]
+size = Vector2(1792, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_x6y1u"]
+size = Vector2(32, 1408)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lwr4n"]
+size = Vector2(32, 1408)
+
+[node name="FarmMap_Greybox" type="Node2D" unique_id=1399892865 groups=["farm_map"]]
 
 [node name="EnemyContainer" type="Node2D" parent="." unique_id=2130364705]
 z_index = 10
@@ -28,6 +40,7 @@ offset_left = -640.0
 offset_top = -448.0
 offset_right = 640.0
 offset_bottom = 448.0
+mouse_filter = 2
 color = Color(0.17621657, 0.81200707, 3.85046e-06, 1)
 
 [node name="FarmPlotArea" type="ColorRect" parent="." unique_id=609044918]
@@ -35,6 +48,7 @@ offset_left = -192.0
 offset_top = 128.0
 offset_right = 192.0
 offset_bottom = 320.0
+mouse_filter = 2
 color = Color(0.41960785, 0.25882354, 0.015686275, 1)
 
 [node name="CollisionWalls" type="StaticBody2D" parent="." unique_id=1710727142]
@@ -42,47 +56,55 @@ collision_layer = 4
 collision_mask = 0
 
 [node name="TopWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=1548678866]
-position = Vector2(0, -416)
+position = Vector2(0, -944)
 shape = SubResource("RectangleShape2D_5t2dp")
 
 [node name="BottomWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=1178652531]
-position = Vector2(0, 416)
+position = Vector2(0, 944)
 shape = SubResource("RectangleShape2D_tq17q")
 
 [node name="LeftWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=270575979]
-position = Vector2(-608, 0)
+position = Vector2(-1136, 0)
 shape = SubResource("RectangleShape2D_av8mm")
 
 [node name="RightWall" type="CollisionShape2D" parent="CollisionWalls" unique_id=674476729]
-position = Vector2(608, 0)
+position = Vector2(1136, 0)
 shape = SubResource("RectangleShape2D_v0suf")
 
 [node name="FenceTop" type="ColorRect" parent="." unique_id=1376736959]
+visible = false
 offset_left = -640.0
 offset_top = -448.0
 offset_right = 640.0
 offset_bottom = -384.0
+mouse_filter = 2
 color = Color(0.4486491, 0.33152026, 0.08561262, 1)
 
 [node name="FenceBottom" type="ColorRect" parent="." unique_id=689712069]
+visible = false
 offset_left = -640.0
 offset_top = 384.0
 offset_right = 640.0
 offset_bottom = 448.0
+mouse_filter = 2
 color = Color(0.4401454, 0.36336198, 0.12435486, 1)
 
 [node name="FenceLeft" type="ColorRect" parent="." unique_id=530661163]
+visible = false
 offset_left = -640.0
 offset_top = -448.0
 offset_right = -576.0
 offset_bottom = 448.0
+mouse_filter = 2
 color = Color(0.43266204, 0.35406277, 0.09322903, 1)
 
 [node name="FenceRight" type="ColorRect" parent="." unique_id=813301637]
+visible = false
 offset_left = 576.0
 offset_top = -448.0
 offset_right = 640.0
 offset_bottom = 448.0
+mouse_filter = 2
 color = Color(0.46536672, 0.36069107, 0.1124085, 1)
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=1156497663]
@@ -113,6 +135,7 @@ offset_left = -128.0
 offset_top = -96.0
 offset_right = 128.0
 offset_bottom = 96.0
+mouse_filter = 2
 color = Color(1, 0.32941177, 0.32941177, 1)
 
 [node name="PromptLabel" type="Label" parent="HouseEntrance" unique_id=2033924969]
@@ -131,3 +154,47 @@ texture = ExtResource("2_av8mm")
 
 [node name="TurretPlacementRoot" type="Node2D" parent="." unique_id=34337927]
 z_index = 15
+
+[node name="FencePlacementRoot" type="Node2D" parent="." unique_id=383879832]
+z_index = 12
+
+[node name="CropPlacementRoot" type="Node2D" parent="." unique_id=1020658081]
+z_index = 6
+
+[node name="ExteriorGround" type="ColorRect" parent="." unique_id=1453172101]
+z_index = -10
+offset_left = -896.0
+offset_top = -704.0
+offset_right = 896.0
+offset_bottom = 704.0
+mouse_filter = 2
+color = Color(0.07450981, 0.6901961, 0.08627451, 1)
+
+[node name="PlayerBoundaryWalls" type="StaticBody2D" parent="." unique_id=1864476500]
+collision_layer = 8
+collision_mask = 0
+
+[node name="TopWall" type="CollisionShape2D" parent="PlayerBoundaryWalls" unique_id=2120971154]
+position = Vector2(0, -688)
+shape = SubResource("RectangleShape2D_tuk2o")
+
+[node name="BottomWall" type="CollisionShape2D" parent="PlayerBoundaryWalls" unique_id=1994285182]
+position = Vector2(0, 688)
+shape = SubResource("RectangleShape2D_77nn7")
+
+[node name="LeftWall" type="CollisionShape2D" parent="PlayerBoundaryWalls" unique_id=712181092]
+position = Vector2(-880, 0)
+shape = SubResource("RectangleShape2D_x6y1u")
+
+[node name="RightWall" type="CollisionShape2D" parent="PlayerBoundaryWalls" unique_id=1913631359]
+position = Vector2(880, 0)
+shape = SubResource("RectangleShape2D_lwr4n")
+
+[node name="EnemySpawnGround" type="ColorRect" parent="." unique_id=1271991582]
+z_index = -11
+offset_left = -1152.0
+offset_top = -960.0
+offset_right = 1152.0
+offset_bottom = 960.0
+mouse_filter = 2
+color = Color(0.105882354, 0.4392157, 0.050980393, 1)

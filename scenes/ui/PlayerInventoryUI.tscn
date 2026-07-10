@@ -1,0 +1,152 @@
+[gd_scene format=3 uid="uid://8keld1ucb18n"]
+
+[ext_resource type="Script" uid="uid://cxt15hqj141jp" path="res://scripts/ui/PlayerInventoryUI.gd" id="1_7ov7q"]
+
+[node name="PlayerInventoryUI" type="CanvasLayer" unique_id=298674892]
+layer = 30
+script = ExtResource("1_7ov7q")
+
+[node name="RootControl" type="Control" parent="." unique_id=1639621189]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="OpenInventoryButton" type="Button" parent="RootControl" unique_id=289057318]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = -74.0
+offset_right = 112.0
+offset_bottom = -24.0
+tooltip_text = "Inventory (I)"
+text = "BAG"
+
+[node name="Overlay" type="ColorRect" parent="RootControl" unique_id=1381828998]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.59607846)
+
+[node name="InventoryPanel" type="Panel" parent="RootControl" unique_id=799384286]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -450.0
+offset_top = -255.0
+offset_right = 450.0
+offset_bottom = 255.0
+
+[node name="TitleLabel" type="Label" parent="RootControl/InventoryPanel" unique_id=1266731128]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 15.0
+offset_right = 782.0
+offset_bottom = 45.0
+text = "PLAYER INVENTORY"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="RootControl/InventoryPanel" unique_id=1779819042]
+layout_mode = 0
+offset_left = 835.0
+offset_top = 15.0
+offset_right = 880.0
+offset_bottom = 45.0
+text = "X"
+
+[node name="PlayerInfoPanel" type="Panel" parent="RootControl/InventoryPanel" unique_id=330157905]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 58.0
+offset_right = 245.0
+offset_bottom = 483.0
+
+[node name="PlayerInfoLabel" type="Label" parent="RootControl/InventoryPanel/PlayerInfoPanel" unique_id=1875274614]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = 211.0
+offset_bottom = 279.0
+autowrap_mode = 3
+
+[node name="SelectedItemLabel" type="Label" parent="RootControl/InventoryPanel/PlayerInfoPanel" unique_id=830418682]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 295.0
+offset_right = 211.0
+offset_bottom = 400.0
+autowrap_mode = 3
+
+[node name="InventoryContentPanel" type="Panel" parent="RootControl/InventoryPanel" unique_id=1278531750]
+layout_mode = 0
+offset_left = 265.0
+offset_top = 58.0
+offset_right = 880.0
+offset_bottom = 483.0
+
+[node name="PreviousPageButton" type="Button" parent="RootControl/InventoryPanel/InventoryContentPanel" unique_id=486619721]
+layout_mode = 0
+offset_left = 35.0
+offset_top = 25.0
+offset_right = 145.0
+offset_bottom = 56.0
+text = "<"
+
+[node name="PageLabel" type="Label" parent="RootControl/InventoryPanel/InventoryContentPanel" unique_id=630205572]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 25.0
+offset_right = 445.0
+offset_bottom = 53.0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NextPageButton" type="Button" parent="RootControl/InventoryPanel/InventoryContentPanel" unique_id=490978520]
+layout_mode = 0
+offset_left = 470.0
+offset_top = 25.0
+offset_right = 580.0
+offset_bottom = 53.0
+text = ">"
+
+[node name="SlotGrid" type="GridContainer" parent="RootControl/InventoryPanel/InventoryContentPanel" unique_id=190936933]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 70.0
+offset_right = 112.0
+offset_bottom = 110.0
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
+
+[node name="StatusLabel" type="Label" parent="RootControl/InventoryPanel/InventoryContentPanel" unique_id=525518480]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 345.0
+offset_right = 575.0
+offset_bottom = 373.0
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="InstructionLabel" type="Label" parent="RootControl/InventoryPanel/InventoryContentPanel" unique_id=39383670]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 382.0
+offset_right = 585.0
+offset_bottom = 406.0
+text = "Click an item, then click another slot to move, merge, or swap it."
+horizontal_alignment = 1

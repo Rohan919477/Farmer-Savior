@@ -66,7 +66,10 @@ func perform_interaction() -> void:
 				print("War Table interaction placeholder.")
 
 		"workshop":
-			print("Interacted with workshop.")
+			if main.has_method("open_workshop"):
+				main.open_workshop()
+			else:
+				print("Workshop interaction placeholder.")
 
 		_:
 			print("Unknown interaction type: ", interaction_type)

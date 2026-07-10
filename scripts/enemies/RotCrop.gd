@@ -4,36 +4,42 @@ extends BaseEnemy
 @export var pulse_interval: float = 1.5
 @export var pulse_range: float = 120.0
 
-var can_pulse: bool = true
-
 func _ready() -> void:
 	enemy_name = "Rot Crop"
 	max_health = 90
 	move_speed = 45.0
-	contact_damage = 8
-	seed_drop_chance = 0.4
-	scrap_drop_chance = 0.4
+
+	contact_damage = pulse_damage
+	damage_cooldown = pulse_interval
+	attack_range = pulse_range
+	damage_type = "Rot"
+
+	required_fence_gap_segments = 1
+	body_radius = 11.0
+	visual_scale_multiplier = 1.05
+
+	seed_drop_chance = 1.0
+	scrap_drop_chance = 1.0
 
 	super._ready()
 
-func update_enemy_behavior() -> void:
-	chase_player()
+func get_attack_range() -> float:
+	return pulse_range
 
-	if can_pulse:
-		rot_pulse()
+func attacks_through_fences() -> bool:
+	return true
 
-func rot_pulse() -> void:
-	if player == null:
+func perform_attack_on_target(target: Node2D) -> void:
+	if not target.has_method("take_damage"):
 		return
 
-	can_pulse = false
+	target.call("take_damage", pulse_damage)
 
-	var distance_to_player := global_position.distance_to(player.global_position)
+	print(
+		"Rot Crop pulse dealt ",
+		pulse_damage,
+		" Rot damage to ",
+		target.name
+	)
 
-	if distance_to_player <= pulse_range:
-		if player.has_method("take_damage"):
-			print("Rot Crop pulse damaged player.")
-			player.take_damage(pulse_damage)
-
-	await get_tree().create_timer(pulse_interval).timeout
-	can_pulse = true
+	start_attack_cooldown()

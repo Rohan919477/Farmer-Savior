@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://haqrwqkp5xn5"]
+
+[ext_resource type="Script" uid="uid://buvkpyhnwqcl2" path="res://scripts/ui/TutorialPopupUI.gd" id="1_e7ll2"]
+
+[node name="TutorialPopupUI" type="CanvasLayer" unique_id=1003355418]
+layer = 150
+script = ExtResource("1_e7ll2")
+
+[node name="RootControl" type="Control" parent="." unique_id=303122869]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="DimOverlay" type="ColorRect" parent="RootControl" unique_id=65490804]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="BubbleTail" type="Polygon2D" parent="RootControl" unique_id=886683998]
+
+[node name="BubblePanel" type="Panel" parent="RootControl" unique_id=1065764105]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ExplanationLabel" type="Label" parent="RootControl/BubblePanel" unique_id=734156461]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="UnderstoodButton" type="Button" parent="RootControl" unique_id=1024871359]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0

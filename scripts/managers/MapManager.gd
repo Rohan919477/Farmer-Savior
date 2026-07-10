@@ -27,6 +27,8 @@ var unlocked_locations := {
 @onready var map_menu: Control = get_node(map_menu_path)
 
 func _ready() -> void:
+	add_to_group("map_manager")
+	
 	map_menu.travel_requested.connect(travel_to_location)
 	load_location("farm", "DefaultSpawn")
 
