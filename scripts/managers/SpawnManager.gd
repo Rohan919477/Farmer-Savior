@@ -1,6 +1,19 @@
 extends Node
 
 signal night_cleanup_cleared
+signal night_enemy_count_changed(enemies_left: int)
+signal normal_night_finished
+
+@export var base_normal_night_enemy_quota: int = 12
+@export var extra_normal_night_enemies_per_day: int = 3
+@export var max_alive_normal_night_enemies: int = 8
+@export var normal_night_spawn_interval: float = 1.7
+
+var normal_night_active: bool = false
+var normal_night_spawns_remaining: int = 0
+var normal_night_spawn_timer: float = 0.0
+var normal_night_finished_emitted: bool = false
+var last_reported_normal_night_enemies_left: int = -1
 
 @export var crop_mite_scene: PackedScene
 @export var blight_pig_scene: PackedScene
@@ -42,6 +55,10 @@ func _ready() -> void:
 		time_manager.midnight_reached.connect(_on_midnight_reached)
 
 func _process(delta: float) -> void:
+	if normal_night_active:
+		_process_normal_night(delta)
+		return
+			
 	if _is_tutorial_world_soft_paused():
 		return
 
@@ -65,6 +82,9 @@ func _process(delta: float) -> void:
 	spawn_cooldown = spawn_interval
 
 func can_spawn_night_enemies() -> bool:
+	if _is_week10_normal_night_control_active():
+		return false
+	
 	if active_farm_map == null:
 		return false
 
@@ -104,20 +124,24 @@ func get_max_active_enemies() -> int:
 
 	return base_max_active_enemies + (day_number - 1)
 
-func spawn_enemy() -> void:
+func spawn_enemy() -> Node2D:
 	var spawn_position: Vector2 = get_valid_spawn_position()
 
 	if spawn_position == Vector2.INF:
 		print("No valid exterior spawn position was found.")
-		return
+		return null
 
 	var enemy_scene: PackedScene = choose_enemy_scene()
 
 	if enemy_scene == null:
 		print("Enemy scene is not assigned.")
-		return
+		return null
 
-	spawn_specific_enemy_scene(enemy_scene, spawn_position, true)
+	return spawn_specific_enemy_scene(
+		enemy_scene,
+		spawn_position,
+		true
+	)
 	
 func spawn_specific_enemy_scene(
 	enemy_scene: PackedScene,
@@ -401,3 +425,120 @@ func _is_tutorial_world_soft_paused() -> bool:
 		return bool(tutorial_manager.call("is_world_soft_paused"))
 
 	return false
+	
+func begin_normal_night_combat(day_number: int) -> void:
+	normal_night_active = true
+	normal_night_finished_emitted = false
+	normal_night_spawn_timer = 0.0
+	last_reported_normal_night_enemies_left = -1
+	spawn_cooldown = 0.0
+	cleanup_cleared_emitted = false
+
+	var day_offset: int = maxi(0, day_number - 1)
+
+	normal_night_spawns_remaining = (
+		base_normal_night_enemy_quota
+		+ day_offset * extra_normal_night_enemies_per_day
+	)
+
+	print(
+		"[Night] Normal night combat started. Enemies queued: ",
+		normal_night_spawns_remaining
+	)
+
+	_emit_normal_night_enemy_count()
+
+func stop_normal_night_combat() -> void:
+	normal_night_active = false
+	normal_night_spawns_remaining = 0
+	normal_night_spawn_timer = 0.0
+	normal_night_finished_emitted = false
+	last_reported_normal_night_enemies_left = -1
+
+	_emit_normal_night_enemy_count()
+
+func get_normal_night_enemies_left() -> int:
+	return (
+		get_active_enemy_count()
+		+ normal_night_spawns_remaining
+	)
+
+func is_normal_night_finished() -> bool:
+	return (
+		normal_night_active
+		and normal_night_spawns_remaining <= 0
+		and get_active_enemy_count() <= 0
+	)
+
+func _process_normal_night(delta: float) -> void:
+	if not normal_night_active:
+		return
+
+	normal_night_spawn_timer -= delta
+
+	var active_enemy_count: int = get_active_enemy_count()
+
+	if (
+		normal_night_spawns_remaining > 0
+		and active_enemy_count < max_alive_normal_night_enemies
+		and normal_night_spawn_timer <= 0.0
+	):
+		var spawned_enemy: Node2D = spawn_enemy()
+
+		if spawned_enemy != null:
+			normal_night_spawns_remaining -= 1
+			normal_night_spawn_timer = normal_night_spawn_interval
+			_emit_normal_night_enemy_count()
+		else:
+			normal_night_spawn_timer = 0.5
+
+	else:
+		_emit_normal_night_enemy_count_if_changed()
+
+	if is_normal_night_finished():
+		if not normal_night_finished_emitted:
+			normal_night_finished_emitted = true
+			normal_night_active = false
+
+			print("[Night] Normal night cleared.")
+			_emit_normal_night_enemy_count()
+			normal_night_finished.emit()
+
+func _emit_normal_night_enemy_count() -> void:
+	var active_count: int = get_active_enemy_count()
+	var enemies_left: int = (
+		active_count
+		+ normal_night_spawns_remaining
+	)
+
+	last_reported_normal_night_enemies_left = enemies_left
+
+	print(
+		"[Night Count] Active: ",
+		active_count,
+		" | Queued: ",
+		normal_night_spawns_remaining,
+		" | Left: ",
+		enemies_left
+	)
+
+	night_enemy_count_changed.emit(enemies_left)
+
+func _emit_normal_night_enemy_count_if_changed() -> void:
+	var enemies_left: int = get_normal_night_enemies_left()
+
+	if enemies_left == last_reported_normal_night_enemies_left:
+		return
+
+	_emit_normal_night_enemy_count()
+	
+func _is_week10_normal_night_control_active() -> bool:
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if main_node == null:
+		return false
+
+	if not main_node.has_method("is_using_week10_normal_night_loop"):
+		return false
+
+	return bool(main_node.call("is_using_week10_normal_night_loop"))

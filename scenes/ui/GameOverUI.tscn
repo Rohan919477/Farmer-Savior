@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://dvq4kllvwt5vr" path="res://scripts/ui/GameOverUI.gd" id="1_m61qa"]
 
-[node name="GameOverUi" type="CanvasLayer" unique_id=1082685328]
-layer = 220
+[node name="GameOverUI" type="CanvasLayer" unique_id=1082685328]
+layer = 240
 script = ExtResource("1_m61qa")
 
 [node name="RootControl" type="Control" parent="." unique_id=604826820]

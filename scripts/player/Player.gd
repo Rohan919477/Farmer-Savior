@@ -10,6 +10,10 @@ var facing_direction: Vector2 = Vector2.RIGHT
 var can_melee_attack: bool = true
 var is_dead: bool = false
 
+var base_move_speed: float = 220.0
+var base_max_health: int = 100
+var base_damage_taken_multiplier: float = 1.0
+
 @onready var hoe_hitbox: Area2D = $HoeHitbox
 @onready var hoe_collision: CollisionShape2D = $HoeHitbox/CollisionShape2D
 @onready var health_label: Label = $PlayerDebugUI/HealthLabel
@@ -17,11 +21,15 @@ var is_dead: bool = false
 
 func _ready() -> void:
 	add_to_group("player")
-	
+
+	base_move_speed = move_speed
+	base_max_health = max_health
+	base_damage_taken_multiplier = damage_taken_multiplier
+
 	current_health = max_health
 	hoe_collision.disabled = true
 	update_debug_ui()
-	
+
 func apply_max_health_upgrade(health_bonus: int) -> void:
 	if health_bonus <= 0:
 		return
@@ -79,7 +87,7 @@ func is_gameplay_input_blocked() -> bool:
 		return bool(main_node.call("is_gameplay_input_blocked"))
 
 	return false
-	
+
 func is_crop_planting_menu_open() -> bool:
 	var crop_manager: Node = get_tree().get_first_node_in_group(
 		"crop_manager"
@@ -104,11 +112,16 @@ func handle_mouse_aim() -> void:
 		return
 
 	facing_direction = aim_vector.normalized()
-	
+
 	if pistol != null:
 		pistol.rotation = facing_direction.angle()
 
 func _physics_process(_delta: float) -> void:
+	if is_dead:
+		velocity = Vector2.ZERO
+		hoe_collision.disabled = true
+		return
+
 	if is_gameplay_input_blocked() or is_crop_planting_menu_open():
 		velocity = Vector2.ZERO
 		hoe_collision.disabled = true
@@ -128,7 +141,7 @@ func handle_movement() -> void:
 
 	velocity = input_direction * move_speed
 	move_and_slide()
-	
+
 func is_crop_click_being_captured() -> bool:
 	var crop_manager: Node = get_tree().get_first_node_in_group(
 		"crop_manager"
@@ -145,7 +158,7 @@ func is_crop_click_being_captured() -> bool:
 func handle_combat_input() -> void:
 	if is_crop_click_being_captured():
 		return
-	
+
 	if Input.is_action_just_pressed("shoot"):
 		fire_pistol()
 
@@ -347,3 +360,82 @@ func die() -> void:
 
 	print("[Death Debug] Calling Main.handle_player_death().")
 	main_node.call("handle_player_death")
+
+func get_save_data() -> Dictionary:
+	return {
+		"position_x": global_position.x,
+		"position_y": global_position.y,
+		"current_health": current_health,
+		"max_health": max_health,
+		"move_speed": move_speed,
+		"damage_taken_multiplier": damage_taken_multiplier,
+		"facing_direction_x": facing_direction.x,
+		"facing_direction_y": facing_direction.y,
+		"is_dead": is_dead
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	max_health = int(data.get("max_health", base_max_health))
+	move_speed = float(data.get("move_speed", base_move_speed))
+	damage_taken_multiplier = float(
+		data.get(
+			"damage_taken_multiplier",
+			base_damage_taken_multiplier
+		)
+	)
+
+	current_health = int(
+		data.get("current_health", max_health)
+	)
+
+	current_health = clampi(
+		current_health,
+		0,
+		max_health
+	)
+
+	global_position = Vector2(
+		float(data.get("position_x", global_position.x)),
+		float(data.get("position_y", global_position.y))
+	)
+
+	facing_direction = Vector2(
+		float(data.get("facing_direction_x", 1.0)),
+		float(data.get("facing_direction_y", 0.0))
+	)
+
+	if facing_direction.length() <= 0.01:
+		facing_direction = Vector2.RIGHT
+	else:
+		facing_direction = facing_direction.normalized()
+
+	is_dead = false
+	can_melee_attack = true
+	velocity = Vector2.ZERO
+
+	if hoe_collision != null:
+		hoe_collision.disabled = true
+
+	if pistol != null:
+		pistol.rotation = facing_direction.angle()
+
+	update_debug_ui()
+
+func reset_for_new_game() -> void:
+	max_health = base_max_health
+	move_speed = base_move_speed
+	damage_taken_multiplier = base_damage_taken_multiplier
+
+	current_health = max_health
+	facing_direction = Vector2.RIGHT
+	can_melee_attack = true
+	is_dead = false
+	velocity = Vector2.ZERO
+
+	if hoe_collision != null:
+		hoe_collision.disabled = true
+
+	if pistol != null:
+		pistol.rotation = facing_direction.angle()
+
+	update_debug_ui()

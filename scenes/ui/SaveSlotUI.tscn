@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://12f2j84j5vhb"]
+
+[ext_resource type="Script" uid="uid://eqbthrhco7tg" path="res://scripts/ui/SaveSlotUI.gd" id="1_2nbfk"]
+
+[node name="SaveSlotUI" type="CanvasLayer" unique_id=1102910586]
+layer = 230
+script = ExtResource("1_2nbfk")

@@ -4,6 +4,10 @@ extends CanvasLayer
 @onready var night_warning_label: Label = $NightWarningLabel
 @onready var fade_overlay: ColorRect = $FadeOverlay
 
+@onready var enemy_count_label: Label = (
+	get_node_or_null("EnemyCountLabel") as Label
+)
+
 @onready var tutorial_objective_label: Label = (
 	get_node_or_null("TutorialObjectiveLabel") as Label
 )
@@ -15,6 +19,18 @@ var tutorial_feedback_tween: Tween
 func _ready() -> void:
 	fade_overlay.visible = false
 	fade_overlay.modulate = Color(1, 1, 1, 0)
+
+	if enemy_count_label != null:
+		enemy_count_label.visible = false
+		enemy_count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		enemy_count_label.add_theme_font_size_override(
+			"font_size",
+			19
+		)
+		enemy_count_label.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.82, 0.45, 1.0)
+		)
 
 	if tutorial_objective_label != null:
 		tutorial_objective_label.visible = false
@@ -33,11 +49,26 @@ func _ready() -> void:
 
 func _on_viewport_size_changed() -> void:
 	_resize_fade_overlay()
+	_layout_enemy_count()
 	_layout_tutorial_objective()
 
 func _resize_fade_overlay() -> void:
 	fade_overlay.position = Vector2.ZERO
 	fade_overlay.size = get_viewport().get_visible_rect().size
+
+func _layout_enemy_count() -> void:
+	if enemy_count_label == null:
+		return
+
+	var viewport_size: Vector2 = (
+		get_viewport().get_visible_rect().size
+	)
+
+	enemy_count_label.position = Vector2(18.0, 14.0)
+	enemy_count_label.size = Vector2(
+		viewport_size.x - 36.0,
+		34.0
+	)
 
 func _layout_tutorial_objective() -> void:
 	if tutorial_objective_label == null:
@@ -63,6 +94,7 @@ func show_tutorial_objective(objective_text: String) -> void:
 	tutorial_objective_label.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	tutorial_objective_label.text = "Objective: " + objective_text
 	tutorial_objective_label.visible = true
+
 	_layout_tutorial_objective()
 
 func hide_tutorial_objective() -> void:
@@ -70,7 +102,7 @@ func hide_tutorial_objective() -> void:
 		return
 
 	tutorial_objective_label.visible = false
-	
+
 func show_tutorial_completion_message(
 	message: String,
 	duration: float = 4.0
@@ -169,7 +201,12 @@ func fade_to_black(duration: float = 0.35) -> void:
 	fade_overlay.modulate = Color(1, 1, 1, 0)
 
 	fade_tween = create_tween()
-	fade_tween.tween_property(fade_overlay, "modulate:a", 1.0, duration)
+	fade_tween.tween_property(
+		fade_overlay,
+		"modulate:a",
+		1.0,
+		duration
+	)
 
 	await fade_tween.finished
 
@@ -181,8 +218,62 @@ func fade_from_black(duration: float = 0.35) -> void:
 	fade_overlay.modulate = Color(1, 1, 1, 1)
 
 	fade_tween = create_tween()
-	fade_tween.tween_property(fade_overlay, "modulate:a", 0.0, duration)
+	fade_tween.tween_property(
+		fade_overlay,
+		"modulate:a",
+		0.0,
+		duration
+	)
 
 	await fade_tween.finished
 
 	fade_overlay.visible = false
+
+func show_time_display() -> void:
+	if time_label != null:
+		time_label.visible = true
+
+	if enemy_count_label != null:
+		enemy_count_label.visible = false
+
+func show_night_enemy_count(enemies_left: int) -> void:
+
+	if time_label != null:
+		time_label.visible = false
+
+	if enemy_count_label == null:
+		print("[HUD] EnemyCountLabel is missing.")
+		return
+
+	enemy_count_label.visible = true
+	enemy_count_label.text = "Enemies Left: " + str(enemies_left)
+
+	_layout_enemy_count()
+
+func show_night_cleared() -> void:
+	if time_label != null:
+		time_label.visible = false
+
+	if enemy_count_label == null:
+		return
+
+	enemy_count_label.visible = true
+	enemy_count_label.text = "Night Cleared. Return to bed."
+
+	_layout_enemy_count()
+
+func show_house_evacuation_warning(seconds_left: int) -> void:
+	if time_label != null:
+		time_label.visible = false
+
+	if enemy_count_label == null:
+		return
+
+	enemy_count_label.visible = true
+	enemy_count_label.text = (
+		"Leave the house: "
+		+ str(seconds_left)
+		+ "s"
+	)
+
+	_layout_enemy_count()

@@ -572,3 +572,6 @@ func _disable_workshop_tutorial_focus() -> void:
 
 	if workshop_ui.has_method("set_tutorial_player_upgrade_focus"):
 		workshop_ui.call("set_tutorial_player_upgrade_focus", false)
+
+func is_tutorial_running() -> bool:
+	return tutorial_active and not tutorial_completed

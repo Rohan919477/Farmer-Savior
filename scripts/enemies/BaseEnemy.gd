@@ -1256,7 +1256,12 @@ func spawn_drop(
 	if drop == null:
 		return
 
-	get_tree().current_scene.add_child(drop)
+	var drop_parent: Node = get_parent()
+
+	if drop_parent == null:
+		drop_parent = get_tree().current_scene
+
+	drop_parent.add_child(drop)
 	drop.global_position = global_position + position_offset
 
 func _get_fence_name(fence: Node2D) -> String:

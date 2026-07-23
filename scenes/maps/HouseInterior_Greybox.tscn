@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c063t17x2gye3"]
 
 [ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="1_uveoq"]
+[ext_resource type="PackedScene" uid="uid://c1qf835q7437v" path="res://scenes/interactables/Bed.tscn" id="2_20cke"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uveoq"]
 size = Vector2(120, 90)
@@ -172,3 +173,6 @@ text = "Exit
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HouseExit" unique_id=844992408]
 shape = SubResource("RectangleShape2D_w62e5")
+
+[node name="Bed" parent="." unique_id=1640131424 instance=ExtResource("2_20cke")]
+position = Vector2(-300, 140)

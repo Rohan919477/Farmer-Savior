@@ -32,7 +32,6 @@ const MUTANT_CROP_ID: String = "mutant_crop"
 
 @export var crop_plot_slot_scene: PackedScene
 
-# Temporary Week 8 values. These become Workshop/data-driven later.
 @export var basic_crop_seed_cost: int = 1
 @export var basic_crop_growth_days: int = 1
 @export var basic_crop_harvest_amount: int = 2
@@ -53,7 +52,6 @@ var mutant_growth_reward_unlocked: bool = false
 var pending_plant_grid_cell: Vector2i = Vector2i(-1, -1)
 var planting_menu_open: bool = false
 
-# Prevents the original world click from firing a pistol shot.
 var capture_crop_click_until_release: bool = false
 
 func _ready() -> void:
@@ -199,7 +197,7 @@ func get_crop_hover_text(grid_cell: Vector2i) -> String:
 		crop_name,
 		days_left
 	]
-	
+
 func get_crop_display_name(grid_cell: Vector2i) -> String:
 	var crop_data: Dictionary = get_crop_data(grid_cell)
 
@@ -256,6 +254,14 @@ func remove_crop_without_harvest(grid_cell: Vector2i) -> bool:
 
 	crop_data_changed.emit()
 	crop_removed.emit(crop_id, grid_cell)
+
+	_log_telemetry("crop_removed", {
+		"crop_id": crop_id,
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"reason": "removed_without_harvest"
+	})
+
 	planting_result.emit(true, "Crop removed.")
 	planting_menu_closed.emit()
 
@@ -422,11 +428,12 @@ func plant_mutant_crop(grid_cell: Vector2i) -> bool:
 		return false
 
 	var crop_key: String = get_crop_key(grid_cell)
+	var planted_day: int = get_current_day_number()
 
 	planted_crops[crop_key] = {
 		"crop_id": MUTANT_CROP_ID,
 		"display_name": "Mutant Crop",
-		"planted_day": get_current_day_number(),
+		"planted_day": planted_day,
 		"growth_days": mutant_crop_growth_days,
 		"harvest_amount": mutant_crop_harvest_amount,
 		"harvest_resource_type": "seeds"
@@ -440,6 +447,19 @@ func plant_mutant_crop(grid_cell: Vector2i) -> bool:
 
 	crop_data_changed.emit()
 	crop_planted.emit(MUTANT_CROP_ID, grid_cell)
+
+	_log_telemetry("crop_planted", {
+		"crop_id": MUTANT_CROP_ID,
+		"display_name": "Mutant Crop",
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"planted_day": planted_day,
+		"growth_days": mutant_crop_growth_days,
+		"seed_cost_type": "mutant_seeds",
+		"seed_cost_amount": mutant_crop_mutant_seed_cost,
+		"harvest_resource_type": "seeds",
+		"harvest_amount": mutant_crop_harvest_amount
+	})
 
 	return true
 
@@ -458,6 +478,11 @@ func _unlock_mutant_crop_reward() -> void:
 
 	mutant_crop_reward_unlocked.emit("Mutant Compost")
 	crop_data_changed.emit()
+
+	_log_telemetry("mutant_reward_unlocked", {
+		"reward_name": "Mutant Compost",
+		"basic_crop_bonus_seeds": mutant_growth_basic_crop_bonus
+	})
 
 func cancel_planting_menu() -> void:
 	if not planting_menu_open:
@@ -479,11 +504,12 @@ func plant_basic_crop(grid_cell: Vector2i) -> bool:
 		return false
 
 	var crop_key: String = get_crop_key(grid_cell)
+	var planted_day: int = get_current_day_number()
 
 	planted_crops[crop_key] = {
 		"crop_id": BASIC_CROP_ID,
 		"display_name": "Basic Crop",
-		"planted_day": get_current_day_number(),
+		"planted_day": planted_day,
 		"growth_days": basic_crop_growth_days,
 		"harvest_amount": basic_crop_harvest_amount,
 		"harvest_resource_type": "seeds"
@@ -499,6 +525,19 @@ func plant_basic_crop(grid_cell: Vector2i) -> bool:
 
 	crop_data_changed.emit()
 	crop_planted.emit(BASIC_CROP_ID, grid_cell)
+
+	_log_telemetry("crop_planted", {
+		"crop_id": BASIC_CROP_ID,
+		"display_name": "Basic Crop",
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"planted_day": planted_day,
+		"growth_days": basic_crop_growth_days,
+		"seed_cost_type": "seeds",
+		"seed_cost_amount": basic_crop_seed_cost,
+		"harvest_resource_type": "seeds",
+		"harvest_amount": basic_crop_harvest_amount
+	})
 
 	return true
 
@@ -547,6 +586,15 @@ func harvest_ready_crop(grid_cell: Vector2i) -> void:
 		resource_type,
 		harvest_amount
 	)
+
+	_log_telemetry("crop_harvested", {
+		"crop_id": crop_id,
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"resource_type": resource_type,
+		"amount": harvest_amount,
+		"mutant_reward_active": mutant_growth_reward_unlocked
+	})
 
 func harvest_crop(grid_cell: Vector2i) -> Dictionary:
 	if get_crop_state(grid_cell) != CROP_STATE_READY:
@@ -646,3 +694,164 @@ func rebuild_crop_slots() -> void:
 
 		if crop_slot.has_method("configure_slot"):
 			crop_slot.call("configure_slot", self, grid_cell)
+
+func get_save_data() -> Dictionary:
+	var saved_crops: Array[Dictionary] = []
+
+	for crop_key_variant in planted_crops.keys():
+		var crop_key: String = str(crop_key_variant)
+		var crop_data: Dictionary = planted_crops[crop_key]
+
+		var grid_cell: Vector2i = _grid_cell_from_crop_key(crop_key)
+
+		saved_crops.append({
+			"grid_x": grid_cell.x,
+			"grid_y": grid_cell.y,
+			"crop_id": str(
+				crop_data.get("crop_id", BASIC_CROP_ID)
+			),
+			"display_name": str(
+				crop_data.get("display_name", "Crop")
+			),
+			"planted_day": int(
+				crop_data.get("planted_day", 1)
+			),
+			"growth_days": int(
+				crop_data.get("growth_days", 1)
+			),
+			"harvest_amount": int(
+				crop_data.get("harvest_amount", 0)
+			),
+			"harvest_resource_type": str(
+				crop_data.get("harvest_resource_type", "seeds")
+			)
+		})
+
+	return {
+		"planted_crops": saved_crops,
+		"mutant_growth_reward_unlocked": mutant_growth_reward_unlocked,
+		"pending_plant_grid_x": pending_plant_grid_cell.x,
+		"pending_plant_grid_y": pending_plant_grid_cell.y,
+		"planting_menu_open": false
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	planted_crops.clear()
+
+	mutant_growth_reward_unlocked = bool(
+		data.get("mutant_growth_reward_unlocked", false)
+	)
+
+	planting_menu_open = false
+	pending_plant_grid_cell = Vector2i(-1, -1)
+	capture_crop_click_until_release = false
+
+	var saved_crops: Array = data.get("planted_crops", [])
+
+	for crop_variant in saved_crops:
+		if typeof(crop_variant) != TYPE_DICTIONARY:
+			continue
+
+		var saved_crop: Dictionary = crop_variant
+
+		var grid_cell := Vector2i(
+			int(saved_crop.get("grid_x", 0)),
+			int(saved_crop.get("grid_y", 0))
+		)
+
+		if not is_crop_plot_cell(grid_cell):
+			continue
+
+		var crop_id: String = str(
+			saved_crop.get("crop_id", BASIC_CROP_ID)
+		)
+
+		if crop_id != BASIC_CROP_ID and crop_id != MUTANT_CROP_ID:
+			crop_id = BASIC_CROP_ID
+
+		var default_display_name: String = _get_default_crop_display_name(
+			crop_id
+		)
+
+		var crop_key: String = get_crop_key(grid_cell)
+
+		planted_crops[crop_key] = {
+			"crop_id": crop_id,
+			"display_name": str(
+				saved_crop.get("display_name", default_display_name)
+			),
+			"planted_day": int(
+				saved_crop.get("planted_day", get_current_day_number())
+			),
+			"growth_days": int(
+				saved_crop.get("growth_days", 1)
+			),
+			"harvest_amount": int(
+				saved_crop.get("harvest_amount", 0)
+			),
+			"harvest_resource_type": str(
+				saved_crop.get("harvest_resource_type", "seeds")
+			)
+		}
+
+	crop_data_changed.emit()
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_crop_slots()
+
+	print(
+		"[Crop] Loaded save data. Crops: ",
+		planted_crops.size(),
+		" | Mutant reward: ",
+		mutant_growth_reward_unlocked
+	)
+
+func reset_for_new_game() -> void:
+	planted_crops.clear()
+	mutant_growth_reward_unlocked = false
+
+	pending_plant_grid_cell = Vector2i(-1, -1)
+	planting_menu_open = false
+	capture_crop_click_until_release = false
+
+	crop_data_changed.emit()
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_crop_slots()
+
+	print("[Crop] Reset for new game.")
+
+func _grid_cell_from_crop_key(crop_key: String) -> Vector2i:
+	var parts: PackedStringArray = crop_key.split(":")
+
+	if parts.size() < 2:
+		return Vector2i.ZERO
+
+	return Vector2i(
+		int(parts[0]),
+		int(parts[1])
+	)
+
+func _get_default_crop_display_name(crop_id: String) -> String:
+	match crop_id:
+		BASIC_CROP_ID:
+			return "Basic Crop"
+
+		MUTANT_CROP_ID:
+			return "Mutant Crop"
+
+	return "Crop"
+
+func _log_telemetry(
+	event_name: String,
+	event_data: Dictionary = {}
+) -> void:
+	var telemetry_manager: Node = get_tree().get_first_node_in_group(
+		"telemetry_manager"
+	)
+
+	if telemetry_manager == null:
+		return
+
+	if telemetry_manager.has_method("log_event"):
+		telemetry_manager.call("log_event", event_name, event_data)

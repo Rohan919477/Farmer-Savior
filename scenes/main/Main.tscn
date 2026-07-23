@@ -9,13 +9,13 @@
 [ext_resource type="Script" uid="uid://clkpj7munxg5m" path="res://scripts/managers/UpgradeManager.gd" id="6_ko0rf"]
 [ext_resource type="PackedScene" uid="uid://cd8rxxv1hpv4s" path="res://scenes/enemies/CropMite.tscn" id="6_yub1f"]
 [ext_resource type="PackedScene" uid="uid://7sbw0d00k026" path="res://scenes/enemies/BlightPig.tscn" id="7_d8523"]
-[ext_resource type="Script" uid="uid://bx86l1xfgt3wk" path="res://scripts/managers/TelemetryManager.gd" id="7_ostsq"]
 [ext_resource type="PackedScene" uid="uid://qoyigg8l6l66" path="res://scenes/maps/FarmMap_greybox.tscn" id="8_ko0rf"]
 [ext_resource type="PackedScene" uid="uid://dsdv5gtes83ea" path="res://scenes/enemies/RotCrop.tscn" id="8_roob6"]
 [ext_resource type="PackedScene" uid="uid://cui2n8gm2quba" path="res://scenes/enemies/TutorialBoss.tscn" id="9_m1khv"]
 [ext_resource type="PackedScene" uid="uid://cjbffm7mgxfw" path="res://scenes/player/player.tscn" id="9_ostsq"]
 [ext_resource type="PackedScene" uid="uid://c063t17x2gye3" path="res://scenes/maps/HouseInterior_Greybox.tscn" id="11_tck0d"]
 [ext_resource type="PackedScene" uid="uid://c08ccyc3an8ho" path="res://scenes/maps/NearbyField_Greybox.tscn" id="12_2tpxt"]
+[ext_resource type="Script" uid="uid://cra8q1k5xy7ur" path="res://scripts/system/TelemetryManager.gd" id="12_gwlw1"]
 [ext_resource type="Script" uid="uid://csxv3ieslc044" path="res://scripts/managers/MapManager.gd" id="12_p5fgu"]
 [ext_resource type="PackedScene" uid="uid://diuay65tqcn3n" path="res://scenes/ui/MapMenu.tscn" id="13_jsdfw"]
 [ext_resource type="PackedScene" uid="uid://7wa80ghpbegr" path="res://scenes/ui/HUD.tscn" id="13_tck0d"]
@@ -35,6 +35,8 @@
 [ext_resource type="PackedScene" uid="uid://b3nvl7g5yluyy" path="res://scenes/ui/TitleScreenUI.tscn" id="32_fg4ko"]
 [ext_resource type="PackedScene" uid="uid://haqrwqkp5xn5" path="res://scenes/ui/TutorialPopupUI.tscn" id="33_m1khv"]
 [ext_resource type="PackedScene" uid="uid://w1ao620jew7c" path="res://scenes/ui/GameOverUI.tscn" id="34_vs4dm"]
+[ext_resource type="PackedScene" uid="uid://12f2j84j5vhb" path="res://scenes/ui/SaveSlotUI.tscn" id="36_vs4dm"]
+[ext_resource type="PackedScene" uid="uid://dwvv5hc1itgad" path="res://scenes/ui/PauseMenu.tscn" id="37_gwlw1"]
 
 [node name="Main" type="Node2D" unique_id=1618782487]
 script = ExtResource("1_3km4f")
@@ -44,7 +46,7 @@ script = ExtResource("1_u1xfj")
 
 [node name="TimeManager" type="Node" parent="." unique_id=428679080 groups=["time_manager"]]
 script = ExtResource("2_nha0i")
-minutes_per_real_second = 20.0
+minutes_per_real_second = 60.0
 
 [node name="SaveManager" type="Node" parent="." unique_id=1792121914]
 script = ExtResource("3_q24mn")
@@ -63,7 +65,7 @@ script = ExtResource("5_sjxhf")
 script = ExtResource("6_ko0rf")
 
 [node name="TelemetryManager" type="Node" parent="." unique_id=35984836]
-script = ExtResource("7_ostsq")
+script = ExtResource("12_gwlw1")
 
 [node name="MapManager" type="Node" parent="." unique_id=778466562]
 script = ExtResource("12_p5fgu")
@@ -78,7 +80,24 @@ map_menu_path = NodePath("../MapMenu")
 script = ExtResource("16_hjnkw")
 pesticide_turret_scene = ExtResource("17_rikml")
 fence_segment_scene = ExtResource("18_roob6")
+grid_columns = null
+grid_rows = null
+farm_grid_origin = null
+farm_grid_cell_size = null
+max_pesticide_turrets = null
+pesticide_turret_max_integrity = null
+pesticide_turret_max_durability = null
+starting_fences = null
+fence_max_health = null
+create_starting_perimeter_fence = null
+damaged_fence_repair_cost_scrap = null
+fence_repair_rate_per_second = null
+fence_damage_multiplier = null
+fence_craft_scrap_cost = null
+fence_craft_seed_cost = null
+broken_fence_repair_scrap_cost = null
 minimum_broken_segments_for_passable_gap = 2
+debug_fence_logging = null
 
 [node name="CropManager" type="Node" parent="." unique_id=61324828]
 script = ExtResource("24_j0f7u")
@@ -121,3 +140,8 @@ inventory_slot_scene = ExtResource("30_ftc2p")
 [node name="TutorialPopupUI" parent="." unique_id=1003355418 instance=ExtResource("33_m1khv")]
 
 [node name="GameOverUI" parent="." unique_id=1082685328 instance=ExtResource("34_vs4dm")]
+
+[node name="SaveSlotUI" parent="." unique_id=1102910586 instance=ExtResource("36_vs4dm")]
+
+[node name="PauseMenu" parent="." unique_id=2061990389 instance=ExtResource("37_gwlw1")]
+layer = 215

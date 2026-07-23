@@ -70,6 +70,12 @@ func perform_interaction() -> void:
 				main.open_workshop()
 			else:
 				print("Workshop interaction placeholder.")
+		
+		"bed":
+			if main.has_method("sleep_at_bed"):
+				main.sleep_at_bed()
+			else:
+				print("Bed interaction missing Main.sleep_at_bed().")
 
 		_:
 			print("Unknown interaction type: ", interaction_type)

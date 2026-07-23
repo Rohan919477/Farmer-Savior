@@ -27,7 +27,7 @@ func ensure_slot_count(target_slot_count: int) -> void:
 		slots.append(_create_empty_slot())
 
 	inventory_changed.emit()
-	
+
 func add_inventory_slots(additional_slots: int) -> void:
 	if additional_slots <= 0:
 		return
@@ -78,7 +78,6 @@ func add_item(item_id: String, amount: int) -> int:
 	var remaining_amount: int = amount
 	var stack_limit: int = get_item_stack_limit(item_id)
 
-	# Fill existing stacks first.
 	for slot_index in range(slots.size()):
 		var slot_data: Dictionary = slots[slot_index]
 
@@ -106,7 +105,6 @@ func add_item(item_id: String, amount: int) -> int:
 			inventory_changed.emit()
 			return 0
 
-	# Then use empty slots.
 	for slot_index in range(slots.size()):
 		if not is_slot_empty(slot_index):
 			continue
@@ -197,7 +195,6 @@ func move_or_merge_slot(
 	var source_slot: Dictionary = slots[source_slot_index]
 	var target_slot: Dictionary = slots[target_slot_index]
 
-	# Move into an empty slot.
 	if str(target_slot.get("item_id", "")).is_empty():
 		slots[target_slot_index] = source_slot
 		slots[source_slot_index] = _create_empty_slot()
@@ -211,7 +208,6 @@ func move_or_merge_slot(
 	var source_item_id: String = str(source_slot.get("item_id", ""))
 	var target_item_id: String = str(target_slot.get("item_id", ""))
 
-	# Merge matching item stacks.
 	if source_item_id == target_item_id:
 		var stack_limit: int = get_item_stack_limit(source_item_id)
 
@@ -245,7 +241,6 @@ func move_or_merge_slot(
 
 		return true
 
-	# Swap different item types.
 	slots[source_slot_index] = target_slot
 	slots[target_slot_index] = source_slot
 
@@ -280,3 +275,68 @@ func get_page_slots(
 		page_slots.append(get_slot(slot_index))
 
 	return page_slots
+
+func get_save_data() -> Dictionary:
+	var saved_slots: Array[Dictionary] = []
+
+	for slot_index in range(slots.size()):
+		var slot_data: Dictionary = slots[slot_index]
+
+		saved_slots.append({
+			"item_id": str(slot_data.get("item_id", "")),
+			"amount": int(slot_data.get("amount", 0))
+		})
+
+	return {
+		"slot_count": slots.size(),
+		"slots": saved_slots,
+		"resources": {
+			"seeds": get_item_amount("seeds"),
+			"scrap": get_item_amount("scrap"),
+			"mutant_seeds": get_item_amount("mutant_seeds")
+		}
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	var saved_slot_count: int = int(
+		data.get("slot_count", starting_slot_count)
+	)
+
+	var saved_slots: Array = data.get("slots", [])
+
+	slots.clear()
+
+	var final_slot_count: int = maxi(
+		maxi(saved_slot_count, starting_slot_count),
+		saved_slots.size()
+	)
+
+	for slot_index in range(final_slot_count):
+		if slot_index < saved_slots.size():
+			var raw_slot: Dictionary = saved_slots[slot_index]
+
+			var item_id: String = str(raw_slot.get("item_id", ""))
+			var amount: int = int(raw_slot.get("amount", 0))
+
+			if item_id.is_empty() or amount <= 0:
+				slots.append(_create_empty_slot())
+			else:
+				slots.append({
+					"item_id": item_id,
+					"amount": amount
+				})
+		else:
+			slots.append(_create_empty_slot())
+
+	_emit_full_inventory_refresh()
+
+func clear_inventory() -> void:
+	slots.clear()
+	ensure_slot_count(starting_slot_count)
+	_emit_full_inventory_refresh()
+
+func _emit_full_inventory_refresh() -> void:
+	inventory_changed.emit()
+
+	for slot_index in range(slots.size()):
+		slot_changed.emit(slot_index)

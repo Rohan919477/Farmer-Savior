@@ -92,9 +92,21 @@ var placed_fences: Dictionary = {}
 var broken_fences_in_repair_queue: int = 0
 var active_farm_map: Node = null
 
+var base_max_pesticide_turrets: int = 2
+var base_starting_fences: int = 12
+var base_fence_max_health: float = 100.0
+var base_fence_repair_rate_per_second: float = 25.0
+var base_fence_damage_multiplier: float = 1.0
+
 func _ready() -> void:
 	add_to_group("defense_manager")
-	
+
+	base_max_pesticide_turrets = max_pesticide_turrets
+	base_starting_fences = starting_fences
+	base_fence_max_health = fence_max_health
+	base_fence_repair_rate_per_second = fence_repair_rate_per_second
+	base_fence_damage_multiplier = fence_damage_multiplier
+
 	pesticide_turrets_available = max_pesticide_turrets
 	fences_available = starting_fences
 
@@ -345,6 +357,12 @@ func place_pesticide_turret(grid_cell: Vector2i) -> bool:
 	inventory_changed.emit(pesticide_turrets_available)
 	turret_placed.emit(grid_cell)
 
+	_log_telemetry("turret_placed", {
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"turrets_available": pesticide_turrets_available
+	})
+
 	if active_farm_map != null and is_instance_valid(active_farm_map):
 		rebuild_farm_turrets()
 
@@ -404,6 +422,16 @@ func remove_pesticide_turret(grid_cell: Vector2i) -> bool:
 		)
 
 	turret_removed.emit(grid_cell)
+
+	_log_telemetry("turret_removed", {
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"turret_state": turret_state,
+		"turrets_available": pesticide_turrets_available,
+		"broken_turrets_in_repair_queue": (
+			broken_pesticide_turrets_in_repair_queue
+		)
+	})
 
 	if active_farm_map != null and is_instance_valid(active_farm_map):
 		rebuild_farm_turrets()
@@ -487,6 +515,14 @@ func repair_broken_pesticide_turrets_in_workshop(amount: int) -> int:
 	)
 
 	inventory_changed.emit(pesticide_turrets_available)
+
+	_log_telemetry("turret_repair_queue_used", {
+		"repaired_count": repaired_count,
+		"broken_turrets_in_repair_queue": (
+			broken_pesticide_turrets_in_repair_queue
+		),
+		"turrets_available": pesticide_turrets_available
+	})
 
 	return repaired_count
 
@@ -746,6 +782,15 @@ func place_fence(
 
 	fence_inventory_changed.emit(fences_available)
 	fence_placed.emit(fence_key)
+	fence_navigation_changed.emit()
+
+	_log_telemetry("fence_placed", {
+		"fence_key": fence_key,
+		"orientation": orientation,
+		"grid_x": grid_edge.x,
+		"grid_y": grid_edge.y,
+		"fences_available": fences_available
+	})
 
 	if active_farm_map != null and is_instance_valid(active_farm_map):
 		rebuild_farm_fences()
@@ -1003,14 +1048,24 @@ func craft_fence_in_workshop() -> bool:
 
 	if not failure_reason.is_empty():
 		fence_workshop_action_failed.emit(failure_reason)
+
+		_log_telemetry("fence_craft_failed", {
+			"reason": failure_reason
+		})
+
 		return false
 
 	var player_node: Node = _get_player_resource_node()
 
 	if player_node == null:
-		fence_workshop_action_failed.emit(
-			"Player inventory is unavailable."
-		)
+		var missing_inventory_reason: String = "Player inventory is unavailable."
+
+		fence_workshop_action_failed.emit(missing_inventory_reason)
+
+		_log_telemetry("fence_craft_failed", {
+			"reason": missing_inventory_reason
+		})
+
 		return false
 
 	var scrap_cost: int = get_fence_craft_scrap_cost()
@@ -1021,7 +1076,16 @@ func craft_fence_in_workshop() -> bool:
 	)
 
 	if not spent_scrap:
-		fence_workshop_action_failed.emit("Not enough Scrap.")
+		var scrap_failure_reason: String = "Not enough Scrap."
+
+		fence_workshop_action_failed.emit(scrap_failure_reason)
+
+		_log_telemetry("fence_craft_failed", {
+			"reason": scrap_failure_reason,
+			"scrap_cost": scrap_cost,
+			"seed_cost": seed_cost
+		})
+
 		return false
 
 	var spent_seeds: bool = bool(
@@ -1031,15 +1095,28 @@ func craft_fence_in_workshop() -> bool:
 	if not spent_seeds:
 		player_node.call("add_resource", "scrap", scrap_cost)
 
-		fence_workshop_action_failed.emit(
-			"Not enough Seeds."
-		)
+		var seed_failure_reason: String = "Not enough Seeds."
+
+		fence_workshop_action_failed.emit(seed_failure_reason)
+
+		_log_telemetry("fence_craft_failed", {
+			"reason": seed_failure_reason,
+			"scrap_cost": scrap_cost,
+			"seed_cost": seed_cost
+		})
+
 		return false
 
 	fences_available += 1
 
 	fence_inventory_changed.emit(fences_available)
 	fence_crafted.emit(fences_available)
+
+	_log_telemetry("fence_crafted", {
+		"fences_available": fences_available,
+		"scrap_cost": scrap_cost,
+		"seed_cost": seed_cost
+	})
 
 	print(
 		"[Workshop] Crafted 1 Fence. "
@@ -1060,6 +1137,12 @@ func repair_broken_fences_with_materials(
 
 	if not failure_reason.is_empty():
 		fence_workshop_action_failed.emit(failure_reason)
+
+		_log_telemetry("fence_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"reason": failure_reason
+		})
+
 		return 0
 
 	var repair_count: int = get_repairable_broken_fence_count(
@@ -1073,9 +1156,15 @@ func repair_broken_fences_with_materials(
 	var player_node: Node = _get_player_resource_node()
 
 	if player_node == null:
-		fence_workshop_action_failed.emit(
-			"Player inventory is unavailable."
-		)
+		var missing_inventory_reason: String = "Player inventory is unavailable."
+
+		fence_workshop_action_failed.emit(missing_inventory_reason)
+
+		_log_telemetry("fence_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"reason": missing_inventory_reason
+		})
+
 		return 0
 
 	var spent_scrap: bool = bool(
@@ -1087,9 +1176,19 @@ func repair_broken_fences_with_materials(
 	)
 
 	if not spent_scrap:
+		var scrap_failure_reason: String = "Not enough Scrap."
+
 		fence_workshop_action_failed.emit(
-			"Not enough Scrap."
+			scrap_failure_reason
 		)
+
+		_log_telemetry("fence_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"repair_count": repair_count,
+			"total_scrap_cost": total_scrap_cost,
+			"reason": scrap_failure_reason
+		})
+
 		return 0
 
 	var repaired_count: int = repair_broken_fences_in_workshop(
@@ -1103,11 +1202,30 @@ func repair_broken_fences_with_materials(
 			total_scrap_cost
 		)
 
-		fence_workshop_action_failed.emit(
+		var completion_failure_reason: String = (
 			"Fence repair could not be completed."
 		)
 
+		fence_workshop_action_failed.emit(
+			completion_failure_reason
+		)
+
+		_log_telemetry("fence_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"repair_count": repair_count,
+			"total_scrap_cost": total_scrap_cost,
+			"reason": completion_failure_reason
+		})
+
 		return 0
+
+	_log_telemetry("fence_repair_queue_used", {
+		"requested_amount": requested_amount,
+		"repaired_count": repaired_count,
+		"total_scrap_cost": total_scrap_cost,
+		"broken_fences_in_repair_queue": broken_fences_in_repair_queue,
+		"fences_available": fences_available
+	})
 
 	print(
 		"[Workshop] Repaired ",
@@ -1384,12 +1502,35 @@ func damage_fence(
 	if not has_fence(fence_key):
 		return
 
+	var old_state: String = get_fence_state(fence_key)
 	var current_health: float = get_fence_current_health(fence_key)
 
 	set_fence_current_health(
 		fence_key,
 		current_health - damage_amount
 	)
+
+	var new_state: String = get_fence_state(fence_key)
+
+	if (
+		old_state != FENCE_STATE_BROKEN
+		and new_state == FENCE_STATE_BROKEN
+	):
+		var fence_data: Dictionary = get_fence_data(fence_key)
+
+		var grid_edge: Vector2i = fence_data.get(
+			"grid_edge",
+			Vector2i.ZERO
+		)
+
+		_log_telemetry("fence_broken", {
+			"fence_key": fence_key,
+			"orientation": str(fence_data.get("orientation", "")),
+			"grid_x": grid_edge.x,
+			"grid_y": grid_edge.y,
+			"damage_amount": damage_amount,
+			"fence_max_health": fence_max_health
+		})
 
 func repair_fence(
 	fence_key: String,
@@ -1401,12 +1542,27 @@ func repair_fence(
 	if get_fence_state(fence_key) == FENCE_STATE_BROKEN:
 		return
 
+	var old_state: String = get_fence_state(fence_key)
 	var current_health: float = get_fence_current_health(fence_key)
 
 	set_fence_current_health(
 		fence_key,
 		current_health + repair_amount
 	)
+
+	var new_state: String = get_fence_state(fence_key)
+
+	if (
+		old_state == FENCE_STATE_DAMAGED
+		and new_state == FENCE_STATE_PERFECT
+	):
+		_log_telemetry("fence_repaired", {
+			"fence_key": fence_key,
+			"repair_type": "field_repair",
+			"repair_amount": repair_amount,
+			"current_health": get_fence_current_health(fence_key),
+			"fence_max_health": fence_max_health
+		})
 
 func can_remove_fence(fence_key: String) -> bool:
 	var fence_state: String = get_fence_state(fence_key)
@@ -1429,6 +1585,17 @@ func remove_fence(fence_key: String) -> bool:
 		)
 		return false
 
+	var fence_data: Dictionary = get_fence_data(fence_key)
+
+	var orientation: String = str(
+		fence_data.get("orientation", "")
+	)
+
+	var grid_edge: Vector2i = fence_data.get(
+		"grid_edge",
+		Vector2i.ZERO
+	)
+
 	placed_fences.erase(fence_key)
 
 	if fence_state == FENCE_STATE_PERFECT:
@@ -1443,6 +1610,17 @@ func remove_fence(fence_key: String) -> bool:
 		)
 
 	fence_removed.emit(fence_key)
+	fence_navigation_changed.emit()
+
+	_log_telemetry("fence_removed", {
+		"fence_key": fence_key,
+		"orientation": orientation,
+		"grid_x": grid_edge.x,
+		"grid_y": grid_edge.y,
+		"fence_state": fence_state,
+		"fences_available": fences_available,
+		"broken_fences_in_repair_queue": broken_fences_in_repair_queue
+	})
 
 	if active_farm_map != null and is_instance_valid(active_farm_map):
 		rebuild_farm_fences()
@@ -1618,3 +1796,253 @@ func rebuild_farm_fences() -> void:
 				self,
 				fence_key
 			)
+			
+func get_save_data() -> Dictionary:
+	var saved_turrets: Array[Dictionary] = []
+
+	for turret_key_variant in placed_turrets.keys():
+		var turret_key: String = str(turret_key_variant)
+		var turret_data: Dictionary = get_turret_data(turret_key)
+
+		var grid_cell: Vector2i = turret_data.get(
+			"grid_cell",
+			Vector2i.ZERO
+		)
+
+		saved_turrets.append({
+			"turret_key": turret_key,
+			"grid_x": grid_cell.x,
+			"grid_y": grid_cell.y,
+			"current_integrity": float(
+				turret_data.get("current_integrity", 0.0)
+			),
+			"current_durability": float(
+				turret_data.get("current_durability", 0.0)
+			)
+		})
+
+	var saved_fences: Array[Dictionary] = []
+
+	for fence_key_variant in placed_fences.keys():
+		var fence_key: String = str(fence_key_variant)
+		var fence_data: Dictionary = get_fence_data(fence_key)
+
+		var grid_edge: Vector2i = fence_data.get(
+			"grid_edge",
+			Vector2i.ZERO
+		)
+
+		saved_fences.append({
+			"fence_key": fence_key,
+			"orientation": str(
+				fence_data.get("orientation", "")
+			),
+			"grid_x": grid_edge.x,
+			"grid_y": grid_edge.y,
+			"current_health": float(
+				fence_data.get("current_health", fence_max_health)
+			),
+			"repair_cost_paid": bool(
+				fence_data.get("repair_cost_paid", false)
+			),
+			"is_perimeter_fence": bool(
+				fence_data.get("is_perimeter_fence", false)
+			)
+		})
+
+	return {
+		"pesticide_turrets_available": pesticide_turrets_available,
+		"broken_pesticide_turrets_in_repair_queue": (
+			broken_pesticide_turrets_in_repair_queue
+		),
+		"placed_turrets": saved_turrets,
+
+		"fences_available": fences_available,
+		"broken_fences_in_repair_queue": broken_fences_in_repair_queue,
+		"placed_fences": saved_fences,
+
+		"fence_max_health": fence_max_health,
+		"fence_repair_rate_per_second": fence_repair_rate_per_second,
+		"fence_damage_multiplier": fence_damage_multiplier
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	pesticide_turrets_available = int(
+		data.get(
+			"pesticide_turrets_available",
+			max_pesticide_turrets
+		)
+	)
+
+	broken_pesticide_turrets_in_repair_queue = int(
+		data.get(
+			"broken_pesticide_turrets_in_repair_queue",
+			0
+		)
+	)
+
+	fences_available = int(
+		data.get("fences_available", starting_fences)
+	)
+
+	broken_fences_in_repair_queue = int(
+		data.get("broken_fences_in_repair_queue", 0)
+	)
+
+	fence_max_health = float(
+		data.get("fence_max_health", fence_max_health)
+	)
+
+	fence_repair_rate_per_second = float(
+		data.get(
+			"fence_repair_rate_per_second",
+			fence_repair_rate_per_second
+		)
+	)
+
+	fence_damage_multiplier = float(
+		data.get("fence_damage_multiplier", fence_damage_multiplier)
+	)
+
+	placed_turrets.clear()
+
+	var saved_turrets: Array = data.get("placed_turrets", [])
+
+	for turret_variant in saved_turrets:
+		var turret_data: Dictionary = turret_variant
+
+		var grid_cell := Vector2i(
+			int(turret_data.get("grid_x", 0)),
+			int(turret_data.get("grid_y", 0))
+		)
+
+		var turret_key: String = get_turret_key(grid_cell)
+
+		placed_turrets[turret_key] = {
+			"grid_cell": grid_cell,
+			"current_integrity": float(
+				turret_data.get(
+					"current_integrity",
+					pesticide_turret_max_integrity
+				)
+			),
+			"current_durability": float(
+				turret_data.get(
+					"current_durability",
+					pesticide_turret_max_durability
+				)
+			)
+		}
+
+	placed_fences.clear()
+
+	var saved_fences: Array = data.get("placed_fences", [])
+
+	for fence_variant in saved_fences:
+		var fence_data: Dictionary = fence_variant
+
+		var orientation: String = str(
+			fence_data.get("orientation", "")
+		)
+
+		var grid_edge := Vector2i(
+			int(fence_data.get("grid_x", 0)),
+			int(fence_data.get("grid_y", 0))
+		)
+
+		if not is_valid_fence_orientation(orientation):
+			continue
+
+		if not is_valid_fence_edge(orientation, grid_edge):
+			continue
+
+		var fence_key: String = get_fence_key(
+			orientation,
+			grid_edge
+		)
+
+		placed_fences[fence_key] = {
+			"orientation": orientation,
+			"grid_edge": grid_edge,
+			"current_health": float(
+				fence_data.get("current_health", fence_max_health)
+			),
+			"repair_cost_paid": bool(
+				fence_data.get("repair_cost_paid", false)
+			),
+			"is_perimeter_fence": bool(
+				fence_data.get("is_perimeter_fence", false)
+			)
+		}
+
+	inventory_changed.emit(pesticide_turrets_available)
+
+	turret_repair_queue_changed.emit(
+		broken_pesticide_turrets_in_repair_queue
+	)
+
+	fence_inventory_changed.emit(fences_available)
+
+	fence_repair_queue_changed.emit(
+		broken_fences_in_repair_queue
+	)
+
+	fence_stats_changed.emit()
+	fence_navigation_changed.emit()
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_turrets()
+		rebuild_farm_fences()
+
+	print(
+		"[Defense] Loaded save data. Turrets: ",
+		placed_turrets.size(),
+		" | Fences: ",
+		placed_fences.size()
+	)
+
+func reset_for_new_game() -> void:
+	pesticide_turrets_available = base_max_pesticide_turrets
+	broken_pesticide_turrets_in_repair_queue = 0
+	placed_turrets.clear()
+
+	fences_available = base_starting_fences
+	broken_fences_in_repair_queue = 0
+	placed_fences.clear()
+
+	fence_max_health = base_fence_max_health
+	fence_repair_rate_per_second = base_fence_repair_rate_per_second
+	fence_damage_multiplier = base_fence_damage_multiplier
+
+	_create_starting_perimeter_fences()
+
+	inventory_changed.emit(pesticide_turrets_available)
+	turret_repair_queue_changed.emit(
+		broken_pesticide_turrets_in_repair_queue
+	)
+
+	fence_inventory_changed.emit(fences_available)
+	fence_repair_queue_changed.emit(broken_fences_in_repair_queue)
+
+	fence_stats_changed.emit()
+	fence_navigation_changed.emit()
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_turrets()
+		rebuild_farm_fences()
+
+	print("[Defense] Reset for new game.")
+	
+func _log_telemetry(
+	event_name: String,
+	event_data: Dictionary = {}
+) -> void:
+	var telemetry_manager: Node = get_tree().get_first_node_in_group(
+		"telemetry_manager"
+	)
+
+	if telemetry_manager == null:
+		return
+
+	if telemetry_manager.has_method("log_event"):
+		telemetry_manager.call("log_event", event_name, event_data)

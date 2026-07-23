@@ -202,10 +202,19 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 	var status: String = get_upgrade_status(upgrade_id)
 
 	if status != STATUS_AVAILABLE:
+		var failure_reason: String = get_upgrade_status_message(upgrade_id)
+
 		upgrade_purchase_failed.emit(
 			upgrade_id,
-			get_upgrade_status_message(upgrade_id)
+			failure_reason
 		)
+
+		_log_telemetry("upgrade_purchase_failed", {
+			"upgrade_id": upgrade_id,
+			"status": status,
+			"reason": failure_reason
+		})
+
 		return false
 
 	var definition: Dictionary = get_upgrade_definition(upgrade_id)
@@ -214,10 +223,19 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 	var player_node: Node = get_tree().get_first_node_in_group("player")
 
 	if player_node == null or not player_node.has_method("spend_resource"):
+		var failure_reason: String = "Player resource data is unavailable."
+
 		upgrade_purchase_failed.emit(
 			upgrade_id,
-			"Player resource data is unavailable."
+			failure_reason
 		)
+
+		_log_telemetry("upgrade_purchase_failed", {
+			"upgrade_id": upgrade_id,
+			"status": "player_resource_unavailable",
+			"reason": failure_reason
+		})
+
 		return false
 
 	var spent_successfully: bool = bool(
@@ -225,23 +243,50 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 	)
 
 	if not spent_successfully:
+		var failure_reason: String = "Not enough Scrap."
+
 		upgrade_purchase_failed.emit(
 			upgrade_id,
-			"Not enough Scrap."
+			failure_reason
 		)
+
+		_log_telemetry("upgrade_purchase_failed", {
+			"upgrade_id": upgrade_id,
+			"status": "resource_spend_failed",
+			"reason": failure_reason,
+			"cost_scrap": scrap_cost
+		})
+
 		return false
 
 	if not _apply_upgrade_effect(upgrade_id):
 		if player_node.has_method("add_resource"):
 			player_node.call("add_resource", "scrap", scrap_cost)
 
+		var failure_reason: String = "Upgrade effect could not be applied."
+
 		upgrade_purchase_failed.emit(
 			upgrade_id,
-			"Upgrade effect could not be applied."
+			failure_reason
 		)
+
+		_log_telemetry("upgrade_purchase_failed", {
+			"upgrade_id": upgrade_id,
+			"status": "effect_failed",
+			"reason": failure_reason,
+			"cost_scrap": scrap_cost
+		})
+
 		return false
 
 	purchased_upgrades[upgrade_id] = true
+
+	_log_telemetry("upgrade_purchased", {
+		"upgrade_id": upgrade_id,
+		"title": str(definition.get("title", upgrade_id)),
+		"tree": str(definition.get("tree", "")),
+		"cost_scrap": scrap_cost
+	})
 
 	print(
 		"[Upgrade] Purchased ",
@@ -373,3 +418,105 @@ func _is_known_main_tab(main_tab: String) -> bool:
 		TAB_BACKPACK,
 		TAB_GADGETS
 	]
+
+func get_save_data() -> Dictionary:
+	var purchased_upgrade_ids: Array[String] = []
+
+	for upgrade_id_variant in purchased_upgrades.keys():
+		var upgrade_id: String = str(upgrade_id_variant)
+
+		if bool(purchased_upgrades.get(upgrade_id, false)):
+			purchased_upgrade_ids.append(upgrade_id)
+
+	return {
+		"purchased_upgrade_ids": purchased_upgrade_ids,
+		"workshop_opened_once": workshop_opened_once,
+		"last_workshop_tab": last_workshop_tab,
+		"last_subtab_by_main_tab": last_subtab_by_main_tab.duplicate(true)
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	purchased_upgrades.clear()
+
+	var purchased_upgrade_ids: Array = data.get(
+		"purchased_upgrade_ids",
+		[]
+	)
+
+	for upgrade_id_variant in purchased_upgrade_ids:
+		var upgrade_id: String = str(upgrade_id_variant)
+
+		if not UPGRADE_DEFINITIONS.has(upgrade_id):
+			continue
+
+		purchased_upgrades[upgrade_id] = true
+
+	workshop_opened_once = bool(
+		data.get("workshop_opened_once", false)
+	)
+
+	last_workshop_tab = str(
+		data.get("last_workshop_tab", TAB_PLAYER)
+	)
+
+	if not _is_known_main_tab(last_workshop_tab):
+		last_workshop_tab = TAB_PLAYER
+
+	var saved_subtabs: Dictionary = data.get(
+		"last_subtab_by_main_tab",
+		{}
+	)
+
+	last_subtab_by_main_tab = {
+		TAB_TURRETS: "pesticide_turret",
+		TAB_WEAPONS: "pistol"
+	}
+
+	for main_tab_variant in saved_subtabs.keys():
+		var main_tab: String = str(main_tab_variant)
+
+		if not _is_known_main_tab(main_tab):
+			continue
+
+		last_subtab_by_main_tab[main_tab] = str(
+			saved_subtabs.get(main_tab, "")
+		)
+
+	upgrade_state_changed.emit()
+
+	print(
+		"[Upgrade] Loaded ",
+		purchased_upgrades.size(),
+		" purchased upgrade(s)."
+	)
+
+func reset_for_new_game() -> void:
+	workshop_opened_once = false
+	last_workshop_tab = TAB_PLAYER
+
+	last_subtab_by_main_tab = {
+		TAB_TURRETS: "pesticide_turret",
+		TAB_WEAPONS: "pistol"
+	}
+
+	purchased_upgrades.clear()
+
+	upgrade_state_changed.emit()
+
+	print("[Upgrade] Reset for new game.")
+	
+func _log_telemetry(
+	event_name: String,
+	event_data: Dictionary = {}
+) -> void:
+	var telemetry_manager: Node = get_tree().get_first_node_in_group(
+		"telemetry_manager"
+	)
+
+	if telemetry_manager == null:
+		return
+
+	if telemetry_manager.has_method("log_event"):
+		telemetry_manager.call("log_event", event_name, event_data)
+		
+	

@@ -1,6 +1,13 @@
 extends CanvasLayer
 class_name TitleScreenUI
 
+signal new_game_pressed
+signal load_save_pressed
+signal settings_pressed
+signal glossary_pressed
+signal credits_pressed
+
+# Kept so older Main.gd references do not instantly break.
 signal play_pressed
 
 @onready var root_control: Control = $RootControl
@@ -11,6 +18,7 @@ signal play_pressed
 @onready var subtitle_label: Label = $RootControl/CenterPanel/SubtitleLabel
 
 @onready var play_button: Button = $RootControl/CenterPanel/PlayButton
+@onready var load_save_button: Button = $RootControl/CenterPanel/LoadSaveButton
 @onready var settings_button: Button = $RootControl/CenterPanel/SettingsButton
 @onready var glossary_button: Button = $RootControl/CenterPanel/GlossaryButton
 @onready var credits_button: Button = $RootControl/CenterPanel/CreditsButton
@@ -23,7 +31,7 @@ func _ready() -> void:
 	if root_control == null:
 		print(name, " is missing RootControl. Check the scene tree.")
 		return
-		
+
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	root_control.set_anchors_and_offsets_preset(
@@ -39,8 +47,7 @@ func _ready() -> void:
 	_apply_panel_style()
 	_setup_text()
 	_setup_buttons()
-
-	play_button.pressed.connect(_on_play_button_pressed)
+	_connect_buttons()
 
 	get_viewport().size_changed.connect(_layout_ui)
 
@@ -59,9 +66,7 @@ func is_title_screen_open() -> bool:
 
 func _setup_text() -> void:
 	title_label.text = "FARMER SAVIOR"
-	subtitle_label.text = (
-		"A farm-defence survival prototype"
-	)
+	subtitle_label.text = "A farm-defence survival prototype"
 
 	placeholder_label.text = (
 		"Settings, Glossary, and Credits are planned "
@@ -70,24 +75,28 @@ func _setup_text() -> void:
 
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	placeholder_label.horizontal_alignment = (
-		HORIZONTAL_ALIGNMENT_CENTER
-	)
+	placeholder_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	title_label.add_theme_font_size_override("font_size", 34)
 	subtitle_label.add_theme_font_size_override("font_size", 16)
 	placeholder_label.add_theme_font_size_override("font_size", 13)
 
 func _setup_buttons() -> void:
-	play_button.text = "PLAY"
+	play_button.text = "NEW GAME"
+	load_save_button.text = "LOAD SAVE"
 	settings_button.text = "SETTINGS"
 	glossary_button.text = "GLOSSARY"
 	credits_button.text = "CREDITS"
 
 	play_button.focus_mode = Control.FOCUS_NONE
+	load_save_button.focus_mode = Control.FOCUS_NONE
 	settings_button.focus_mode = Control.FOCUS_NONE
 	glossary_button.focus_mode = Control.FOCUS_NONE
 	credits_button.focus_mode = Control.FOCUS_NONE
+
+	load_save_button.tooltip_text = (
+		"Load a saved game from Autosave or a manual slot."
+	)
 
 	settings_button.tooltip_text = (
 		"Placeholder — planned for a later iteration."
@@ -101,6 +110,13 @@ func _setup_buttons() -> void:
 		"Placeholder — planned for a later iteration."
 	)
 
+func _connect_buttons() -> void:
+	play_button.pressed.connect(_on_new_game_button_pressed)
+	load_save_button.pressed.connect(_on_load_save_button_pressed)
+	settings_button.pressed.connect(_on_settings_button_pressed)
+	glossary_button.pressed.connect(_on_glossary_button_pressed)
+	credits_button.pressed.connect(_on_credits_button_pressed)
+
 func _apply_panel_style() -> void:
 	var panel_style := StyleBoxFlat.new()
 
@@ -110,25 +126,17 @@ func _apply_panel_style() -> void:
 	panel_style.set_border_width_all(3)
 	panel_style.set_corner_radius_all(18)
 
-	center_panel.add_theme_stylebox_override(
-		"panel",
-		panel_style
-	)
+	center_panel.add_theme_stylebox_override("panel", panel_style)
 
 func _layout_ui() -> void:
-	var viewport_size: Vector2 = (
-		get_viewport().get_visible_rect().size
-	)
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 
 	backdrop.position = Vector2.ZERO
 	backdrop.size = viewport_size
 
-	var panel_size := Vector2(440.0, 430.0)
+	var panel_size := Vector2(440.0, 500.0)
 
-	center_panel.position = (
-		viewport_size - panel_size
-	) * 0.5
-
+	center_panel.position = (viewport_size - panel_size) * 0.5
 	center_panel.size = panel_size
 
 	title_label.position = Vector2(20.0, 34.0)
@@ -141,23 +149,41 @@ func _layout_ui() -> void:
 	var button_width: float = 300.0
 	var button_height: float = 42.0
 
-	play_button.position = Vector2(button_x, 146.0)
+	play_button.position = Vector2(button_x, 140.0)
 	play_button.size = Vector2(button_width, button_height)
 
-	settings_button.position = Vector2(button_x, 200.0)
+	load_save_button.position = Vector2(button_x, 194.0)
+	load_save_button.size = Vector2(button_width, button_height)
+
+	settings_button.position = Vector2(button_x, 248.0)
 	settings_button.size = Vector2(button_width, button_height)
 
-	glossary_button.position = Vector2(button_x, 254.0)
+	glossary_button.position = Vector2(button_x, 302.0)
 	glossary_button.size = Vector2(button_width, button_height)
 
-	credits_button.position = Vector2(button_x, 308.0)
+	credits_button.position = Vector2(button_x, 356.0)
 	credits_button.size = Vector2(button_width, button_height)
 
-	placeholder_label.position = Vector2(32.0, 366.0)
-	placeholder_label.size = Vector2(376.0, 42.0)
+	placeholder_label.position = Vector2(32.0, 416.0)
+	placeholder_label.size = Vector2(376.0, 52.0)
 
-func _on_play_button_pressed() -> void:
-	hide_title_screen()
+func _on_new_game_button_pressed() -> void:
+	new_game_pressed.emit()
 
-	get_tree().paused = false
-	play_pressed.emit()
+func _on_load_save_button_pressed() -> void:
+	load_save_pressed.emit()
+
+func _on_settings_button_pressed() -> void:
+	settings_pressed.emit()
+	_show_placeholder_message("Settings are planned for a later iteration.")
+
+func _on_glossary_button_pressed() -> void:
+	glossary_pressed.emit()
+	_show_placeholder_message("Glossary is planned for a later iteration.")
+
+func _on_credits_button_pressed() -> void:
+	credits_pressed.emit()
+	_show_placeholder_message("Credits are planned for a later iteration.")
+
+func _show_placeholder_message(message: String) -> void:
+	placeholder_label.text = message

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://7wa80ghpbegr"]
 
 [ext_resource type="Script" uid="uid://bto30scxia3iv" path="res://scripts/ui/HUD.gd" id="1_kw0id"]
-[ext_resource type="Script" uid="uid://bgsb7djgx6qww" path="res://scripts/ui/EnemyCountLabel.gd" id="2_atyv1"]
 
 [sub_resource type="FontVariation" id="FontVariation_kw0id"]
 
@@ -46,7 +45,6 @@ offset_right = -24.0
 offset_bottom = 48.0
 text = "Enemies Left: 0"
 horizontal_alignment = 2
-script = ExtResource("2_atyv1")
 
 [node name="TutorialObjectiveLabel" type="Label" parent="." unique_id=1294497051]
 visible = false

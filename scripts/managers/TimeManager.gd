@@ -13,12 +13,15 @@ var day_number: int = 1
 var current_minutes: float = 0.0
 var phase: String = "day"
 var night_started_today: bool = false
+var normal_night_time_locked: bool = false
 
 func _ready() -> void:
 	add_to_group("time_manager")
 
 	current_minutes = float(start_hour * 60)
 	phase = "day"
+	night_started_today = false
+	normal_night_time_locked = false
 
 	emit_time_changed()
 
@@ -53,6 +56,9 @@ func start_night() -> void:
 	emit_time_changed()
 
 func start_night_cleanup() -> void:
+	if phase == "night_cleanup":
+		return
+
 	phase = "night_cleanup"
 
 	print("Midnight reached. Clear remaining enemies.")
@@ -60,13 +66,14 @@ func start_night_cleanup() -> void:
 	emit_time_changed()
 
 func complete_night_and_start_new_day() -> void:
-	if phase != "night_cleanup":
+	if phase != "night" and phase != "night_cleanup":
 		return
 
 	day_number += 1
 	current_minutes = float(start_hour * 60)
 	phase = "day"
 	night_started_today = false
+	normal_night_time_locked = false
 
 	print("Day ", day_number, " started at 06:00.")
 	day_started.emit(day_number)
@@ -85,6 +92,9 @@ func is_night_cleanup() -> bool:
 	return phase == "night_cleanup"
 
 func get_day_number() -> int:
+	return day_number
+
+func get_current_day_number() -> int:
 	return day_number
 
 func get_current_minutes() -> float:
@@ -141,3 +151,69 @@ func _is_tutorial_world_soft_paused() -> bool:
 		return bool(tutorial_manager.call("is_world_soft_paused"))
 
 	return false
+
+func set_normal_night_time_locked(locked: bool) -> void:
+	normal_night_time_locked = locked
+
+func get_save_data() -> Dictionary:
+	return {
+		"day_number": day_number,
+		"current_minutes": current_minutes,
+		"hour": get_hour(),
+		"minute": get_minute(),
+		"phase": phase,
+		"night_started_today": night_started_today,
+		"normal_night_time_locked": normal_night_time_locked
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	day_number = int(data.get("day_number", 1))
+
+	current_minutes = float(
+		data.get(
+			"current_minutes",
+			float(start_hour * 60)
+		)
+	)
+
+	current_minutes = clampf(
+		current_minutes,
+		0.0,
+		24.0 * 60.0
+	)
+
+	phase = str(data.get("phase", "day"))
+
+	if phase != "day" and phase != "night" and phase != "night_cleanup":
+		phase = "day"
+
+	night_started_today = bool(
+		data.get(
+			"night_started_today",
+			phase != "day"
+		)
+	)
+
+	normal_night_time_locked = false
+
+	emit_time_changed()
+
+	print(
+		"[Time] Loaded Day ",
+		day_number,
+		" ",
+		get_time_text(),
+		" | Phase: ",
+		phase
+	)
+
+func reset_for_new_game() -> void:
+	day_number = 1
+	current_minutes = float(start_hour * 60)
+	phase = "day"
+	night_started_today = false
+	normal_night_time_locked = false
+
+	emit_time_changed()
+
+	print("[Time] Reset for new game.")

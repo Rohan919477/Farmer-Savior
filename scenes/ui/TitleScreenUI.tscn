@@ -37,6 +37,11 @@ layout_mode = 0
 offset_right = 8.0
 offset_bottom = 8.0
 
+[node name="LoadSaveButton" type="Button" parent="RootControl/CenterPanel" unique_id=1692685919]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+
 [node name="SettingsButton" type="Button" parent="RootControl/CenterPanel" unique_id=1580591568]
 layout_mode = 0
 offset_right = 8.0
