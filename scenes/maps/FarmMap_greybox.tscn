@@ -192,9 +192,9 @@ shape = SubResource("RectangleShape2D_lwr4n")
 
 [node name="EnemySpawnGround" type="ColorRect" parent="." unique_id=1271991582]
 z_index = -11
-offset_left = -1152.0
-offset_top = -960.0
-offset_right = 1152.0
-offset_bottom = 960.0
+offset_left = -1137.0
+offset_top = -962.0
+offset_right = 1167.0
+offset_bottom = 958.0
 mouse_filter = 2
 color = Color(0.105882354, 0.4392157, 0.050980393, 1)

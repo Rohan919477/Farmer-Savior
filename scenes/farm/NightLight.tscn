@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://by1ncmshnmqmr"]
+
+[ext_resource type="Script" uid="uid://dlq16v3d2nlkr" path="res://scripts/farm/NightLight.gd" id="1_dnvqq"]
+
+[node name="NightLight" type="Node2D" unique_id=764537436]
+script = ExtResource("1_dnvqq")

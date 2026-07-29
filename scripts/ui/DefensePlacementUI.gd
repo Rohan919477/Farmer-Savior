@@ -1,6 +1,10 @@
 extends CanvasLayer
 class_name DefensePlacementUI
 
+const ITEM_PESTICIDE_TURRET: String = "pesticide_turret"
+const ITEM_FENCE: String = "fence"
+const ITEM_NIGHTLIGHT: String = "nightlight"
+
 @onready var grid_board: DefenseGridBoard = (
 	$RootControl/MainPanel/GridBoard
 )
@@ -13,8 +17,8 @@ class_name DefensePlacementUI
 	$RootControl/MainPanel/Sidebar/VBoxContainer/FenceButton
 )
 
-@onready var locked_tool_1_button: Button = (
-	$RootControl/MainPanel/Sidebar/VBoxContainer/LockedTool1Button
+@onready var nightlight_button: Button = (
+	$RootControl/MainPanel/Sidebar/VBoxContainer/NightLightButton
 )
 
 @onready var locked_tool_2_button: Button = (
@@ -47,6 +51,7 @@ func _ready() -> void:
 	)
 
 	fence_button.pressed.connect(_on_fence_button_pressed)
+	nightlight_button.pressed.connect(_on_nightlight_button_pressed)
 	close_button.pressed.connect(close_ui)
 
 	grid_board.grid_cell_clicked.connect(
@@ -85,6 +90,14 @@ func open_ui(new_defense_manager: DefenseManager) -> void:
 				_on_fence_inventory_changed
 			)
 
+		if defense_manager.has_signal("nightlight_inventory_changed"):
+			if not defense_manager.nightlight_inventory_changed.is_connected(
+				_on_nightlight_inventory_changed
+			):
+				defense_manager.nightlight_inventory_changed.connect(
+					_on_nightlight_inventory_changed
+				)
+
 		if not defense_manager.placement_failed.is_connected(
 			_on_placement_failed
 		):
@@ -109,6 +122,7 @@ func show_controls_hint() -> void:
 
 	instruction_label.text = (
 		"Left-click an item to select it. "
+		+ "Turrets and NightLights use grid cells. "
 		+ "For fences, click close to a grid line. "
 		+ "Right-click a placed item to remove it."
 	)
@@ -139,7 +153,7 @@ func _on_pesticide_turret_button_pressed() -> void:
 		status_label.text = "No Pesticide Turrets remain."
 		return
 
-	selected_item_id = "pesticide_turret"
+	selected_item_id = ITEM_PESTICIDE_TURRET
 	status_label.text = "Select a valid farm grid cell."
 
 	update_ui()
@@ -152,11 +166,28 @@ func _on_fence_button_pressed() -> void:
 		status_label.text = "No fences remain in storage."
 		return
 
-	selected_item_id = "fence"
+	selected_item_id = ITEM_FENCE
 
 	status_label.text = (
 		"Click close to a grid line to place a fence."
 	)
+
+	update_ui()
+
+func _on_nightlight_button_pressed() -> void:
+	if defense_manager == null:
+		return
+
+	if not defense_manager.has_method("get_nightlights_available"):
+		status_label.text = "NightLights are unavailable."
+		return
+
+	if int(defense_manager.call("get_nightlights_available")) <= 0:
+		status_label.text = "No NightLights remain."
+		return
+
+	selected_item_id = ITEM_NIGHTLIGHT
+	status_label.text = "Select a valid farm grid cell for the NightLight."
 
 	update_ui()
 
@@ -166,10 +197,18 @@ func _on_grid_cell_left_clicked(
 	if defense_manager == null:
 		return
 
-	if selected_item_id != "pesticide_turret":
-		status_label.text = "Select a defence item first."
+	if selected_item_id == ITEM_PESTICIDE_TURRET:
+		_place_pesticide_turret(grid_cell)
 		return
 
+	if selected_item_id == ITEM_NIGHTLIGHT:
+		_place_nightlight(grid_cell)
+		return
+
+	status_label.text = "Select a defence item first."
+	update_ui()
+
+func _place_pesticide_turret(grid_cell: Vector2i) -> void:
 	var placed_successfully: bool = (
 		defense_manager.place_pesticide_turret(grid_cell)
 	)
@@ -182,6 +221,24 @@ func _on_grid_cell_left_clicked(
 
 	update_ui()
 
+func _place_nightlight(grid_cell: Vector2i) -> void:
+	if not defense_manager.has_method("place_nightlight"):
+		status_label.text = "NightLight placement is unavailable."
+		update_ui()
+		return
+
+	var placed_successfully: bool = bool(
+		defense_manager.call("place_nightlight", grid_cell)
+	)
+
+	if placed_successfully:
+		status_label.text = "NightLight placed."
+
+		if int(defense_manager.call("get_nightlights_available")) <= 0:
+			selected_item_id = ""
+
+	update_ui()
+
 func _on_fence_edge_left_clicked(
 	orientation: String,
 	grid_edge: Vector2i
@@ -189,7 +246,7 @@ func _on_fence_edge_left_clicked(
 	if defense_manager == null:
 		return
 
-	if selected_item_id != "fence":
+	if selected_item_id != ITEM_FENCE:
 		status_label.text = "Select Fence from the inventory first."
 		return
 
@@ -212,9 +269,65 @@ func _on_grid_cell_right_clicked(
 	if defense_manager == null:
 		return
 
-	if not defense_manager.is_cell_occupied(grid_cell):
-		status_label.text = "No placed item exists on this grid cell."
+	if _try_remove_nightlight(grid_cell):
+		update_ui()
 		return
+
+	if _try_remove_pesticide_turret(grid_cell):
+		update_ui()
+		return
+
+	status_label.text = "No placed item exists on this grid cell."
+	update_ui()
+
+func _try_remove_nightlight(grid_cell: Vector2i) -> bool:
+	if not defense_manager.has_method("has_nightlight"):
+		return false
+
+	if not bool(defense_manager.call("has_nightlight", grid_cell)):
+		return false
+
+	if not defense_manager.has_method("remove_nightlight"):
+		status_label.text = "NightLight removal is unavailable."
+		return true
+
+	var nightlight_state_before_removal: String = "perfect"
+
+	if defense_manager.has_method("get_nightlight_key"):
+		var nightlight_key: String = str(
+			defense_manager.call("get_nightlight_key", grid_cell)
+		)
+
+		if defense_manager.has_method("get_nightlight_state"):
+			nightlight_state_before_removal = str(
+				defense_manager.call(
+					"get_nightlight_state",
+					nightlight_key
+				)
+			)
+
+	var removed_successfully: bool = bool(
+		defense_manager.call("remove_nightlight", grid_cell)
+	)
+
+	if removed_successfully:
+		if nightlight_state_before_removal == (
+			DefenseManager.PLACEABLE_STATE_BROKEN
+		):
+			status_label.text = (
+				"Broken NightLight moved to Workshop repair queue."
+			)
+		else:
+			status_label.text = "NightLight returned to inventory."
+
+	return true
+
+func _try_remove_pesticide_turret(grid_cell: Vector2i) -> bool:
+	if not defense_manager.has_method("has_turret"):
+		return false
+
+	if not defense_manager.has_turret(grid_cell):
+		return false
 
 	var turret_key: String = defense_manager.get_turret_key(grid_cell)
 
@@ -236,7 +349,7 @@ func _on_grid_cell_right_clicked(
 				"Pesticide Turret returned to inventory."
 			)
 
-	update_ui()
+	return true
 
 func _on_fence_edge_right_clicked(
 	orientation: String,
@@ -278,6 +391,11 @@ func _on_fence_inventory_changed(
 ) -> void:
 	update_ui()
 
+func _on_nightlight_inventory_changed(
+	_remaining_nightlights: int
+) -> void:
+	update_ui()
+
 func _on_placement_failed(reason: String) -> void:
 	status_label.text = reason
 	update_ui()
@@ -294,44 +412,69 @@ func update_ui() -> void:
 		defense_manager.get_fences_available()
 	)
 
+	var available_nightlights: int = 0
+
+	if defense_manager.has_method("get_nightlights_available"):
+		available_nightlights = int(
+			defense_manager.call("get_nightlights_available")
+		)
+
 	pesticide_turret_button.text = (
 		"PESTICIDE TURRET x%d" % available_turrets
 	)
 
 	fence_button.text = "FENCE x%d" % available_fences
+	nightlight_button.text = "NIGHTLIGHT x%d" % available_nightlights
+	locked_tool_2_button.text = "LOCKED"
 
 	pesticide_turret_button.disabled = available_turrets <= 0
 	fence_button.disabled = available_fences <= 0
+	nightlight_button.disabled = available_nightlights <= 0
+	locked_tool_2_button.disabled = true
 
-	if selected_item_id == "pesticide_turret":
-		pesticide_turret_button.self_modulate = (
-			Color(0.18, 0.35, 0.75)
-		)
-	else:
-		pesticide_turret_button.self_modulate = (
-			Color(0.48, 0.60, 0.72)
-		)
+	_update_item_button_visual(
+		pesticide_turret_button,
+		selected_item_id == ITEM_PESTICIDE_TURRET,
+		available_turrets > 0
+	)
 
-	if selected_item_id == "fence":
-		fence_button.self_modulate = (
-			Color(0.18, 0.35, 0.75)
-		)
-	else:
-		fence_button.self_modulate = (
-			Color(0.48, 0.60, 0.72)
-		)
+	_update_item_button_visual(
+		fence_button,
+		selected_item_id == ITEM_FENCE,
+		available_fences > 0
+	)
 
-	locked_tool_1_button.self_modulate = Color(0.45, 0.52, 0.60)
+	_update_item_button_visual(
+		nightlight_button,
+		selected_item_id == ITEM_NIGHTLIGHT,
+		available_nightlights > 0
+	)
+
 	locked_tool_2_button.self_modulate = Color(0.45, 0.52, 0.60)
 
 	update_details_panel()
 	grid_board.configure(defense_manager, selected_item_id)
 
+func _update_item_button_visual(
+	button: Button,
+	is_selected: bool,
+	is_available: bool
+) -> void:
+	if is_selected:
+		button.self_modulate = Color(0.18, 0.35, 0.75)
+		return
+
+	if is_available:
+		button.self_modulate = Color(0.48, 0.60, 0.72)
+		return
+
+	button.self_modulate = Color(0.34, 0.38, 0.42)
+
 func update_details_panel() -> void:
 	if defense_manager == null:
 		return
 
-	if selected_item_id == "pesticide_turret":
+	if selected_item_id == ITEM_PESTICIDE_TURRET:
 		details_label.text = (
 			"PESTICIDE TURRET\n\n"
 			+ "Damage: 8\n"
@@ -344,17 +487,40 @@ func update_details_panel() -> void:
 		)
 		return
 
-	if selected_item_id == "fence":
+	if selected_item_id == ITEM_FENCE:
 		details_label.text = (
 			"FENCE\n\n"
-			+ "Max HP: %d\n"
-			% int(defense_manager.fence_max_health)
+			+ ("Max HP: %d\n" % int(defense_manager.fence_max_health))
 			+ "Blocks: Player and enemies\n"
 			+ "Does not block: Projectiles and AoE\n\n"
 			+ "Perfect fences can be removed.\n"
 			+ "Damaged fences must be fixed in the field.\n"
 			+ "Broken fences go to the Workshop repair queue.\n\n"
 			+ "Click near a grid line to place."
+		)
+		return
+
+	if selected_item_id == ITEM_NIGHTLIGHT:
+		var max_integrity: int = 100
+		var wear_rate: float = 0.0
+
+		if "nightlight_max_integrity" in defense_manager:
+			max_integrity = int(defense_manager.get("nightlight_max_integrity"))
+
+		if "nightlight_wear_per_second" in defense_manager:
+			wear_rate = float(defense_manager.get("nightlight_wear_per_second"))
+
+		details_label.text = (
+			"NIGHTLIGHT\n\n"
+			+ ("Integrity: %d\n" % max_integrity)
+			+ ("Night Wear: %.2f/sec\n" % wear_rate)
+			+ "Purpose: Visibility\n"
+			+ "Light Type: Warm local glow\n"
+			+ "Best Use: Farm paths, breach points, and defence zones\n\n"
+			+ "NightLights do not damage enemies.\n"
+			+ "They slowly wear down while active at night.\n"
+			+ "Broken NightLights go to the Workshop repair queue.\n\n"
+			+ "Select a valid grid cell to place."
 		)
 		return
 

@@ -14,6 +14,10 @@ signal fence_edge_right_clicked(
 	grid_edge: Vector2i
 )
 
+const ITEM_PESTICIDE_TURRET: String = "pesticide_turret"
+const ITEM_FENCE: String = "fence"
+const ITEM_NIGHTLIGHT: String = "nightlight"
+
 @export var columns: int = 40
 @export var rows: int = 28
 
@@ -65,14 +69,10 @@ func _draw() -> void:
 			var fill_color: Color = get_cell_color(cell_type)
 
 			if grid_cell == hover_cell:
-				if selected_item_id == "pesticide_turret":
-					if can_place_turret(grid_cell):
-						fill_color = Color(0.20, 0.45, 0.90, 0.85)
-					else:
-						fill_color = Color(0.80, 0.15, 0.15, 0.85)
-
-				elif is_turret_occupied(grid_cell):
-					fill_color = Color(0.90, 0.42, 0.12, 0.90)
+				fill_color = _get_hover_cell_color(
+					grid_cell,
+					fill_color
+				)
 
 			draw_rect(cell_rect, fill_color)
 
@@ -84,14 +84,72 @@ func _draw() -> void:
 			)
 
 			if is_turret_occupied(grid_cell):
-				draw_circle(
-					cell_rect.get_center(),
-					min(cell_rect.size.x, cell_rect.size.y) * 0.24,
-					Color(0.25, 0.95, 0.40)
-				)
+				_draw_turret_marker(cell_rect)
+
+			if is_nightlight_occupied(grid_cell):
+				_draw_nightlight_marker(cell_rect)
 
 	_draw_placed_fences()
 	_draw_fence_hover_preview()
+
+func _get_hover_cell_color(
+	grid_cell: Vector2i,
+	default_color: Color
+) -> Color:
+	if selected_item_id == ITEM_PESTICIDE_TURRET:
+		if can_place_turret(grid_cell):
+			return Color(0.20, 0.45, 0.90, 0.85)
+
+		return Color(0.80, 0.15, 0.15, 0.85)
+
+	if selected_item_id == ITEM_NIGHTLIGHT:
+		if can_place_nightlight(grid_cell):
+			return Color(0.95, 0.72, 0.22, 0.88)
+
+		return Color(0.80, 0.15, 0.15, 0.85)
+
+	if is_turret_occupied(grid_cell) or is_nightlight_occupied(grid_cell):
+		return Color(0.90, 0.42, 0.12, 0.90)
+
+	return default_color
+
+func _draw_turret_marker(cell_rect: Rect2) -> void:
+	var center: Vector2 = cell_rect.get_center()
+	var radius: float = min(cell_rect.size.x, cell_rect.size.y) * 0.24
+
+	draw_circle(
+		center,
+		radius,
+		Color(0.25, 0.95, 0.40)
+	)
+
+	draw_circle(
+		center,
+		radius * 0.45,
+		Color(0.08, 0.30, 0.12)
+	)
+
+func _draw_nightlight_marker(cell_rect: Rect2) -> void:
+	var center: Vector2 = cell_rect.get_center()
+	var radius: float = min(cell_rect.size.x, cell_rect.size.y) * 0.25
+
+	draw_circle(
+		center,
+		radius * 1.35,
+		Color(1.0, 0.72, 0.24, 0.24)
+	)
+
+	draw_circle(
+		center,
+		radius,
+		Color(0.95, 0.58, 0.18)
+	)
+
+	draw_circle(
+		center,
+		radius * 0.42,
+		Color(0.18, 0.10, 0.04)
+	)
 
 func _draw_placed_fences() -> void:
 	if defense_manager == null:
@@ -137,7 +195,7 @@ func _draw_placed_fences() -> void:
 		)
 
 func _draw_fence_hover_preview() -> void:
-	if selected_item_id != "fence":
+	if selected_item_id != ITEM_FENCE:
 		return
 
 	if not is_hovering_grid():
@@ -298,9 +356,6 @@ func get_cell_from_position(
 func get_nearest_fence_edge(
 	local_position: Vector2
 ) -> Dictionary:
-	var cell_width: float = size.x / float(columns)
-	var cell_height: float = size.y / float(rows)
-
 	var grid_cell: Vector2i = get_cell_from_position(
 		local_position
 	)
@@ -400,6 +455,19 @@ func can_place_turret(grid_cell: Vector2i) -> bool:
 
 	return false
 
+func can_place_nightlight(grid_cell: Vector2i) -> bool:
+	if defense_manager != null and defense_manager.has_method(
+		"can_place_nightlight"
+	):
+		return bool(
+			defense_manager.call(
+				"can_place_nightlight",
+				grid_cell
+			)
+		)
+
+	return false
+
 func can_place_fence(
 	orientation: String,
 	grid_edge: Vector2i
@@ -419,11 +487,24 @@ func can_place_fence(
 
 func is_turret_occupied(grid_cell: Vector2i) -> bool:
 	if defense_manager != null and defense_manager.has_method(
-		"is_cell_occupied"
+		"has_turret"
 	):
 		return bool(
 			defense_manager.call(
-				"is_cell_occupied",
+				"has_turret",
+				grid_cell
+			)
+		)
+
+	return false
+
+func is_nightlight_occupied(grid_cell: Vector2i) -> bool:
+	if defense_manager != null and defense_manager.has_method(
+		"has_nightlight"
+	):
+		return bool(
+			defense_manager.call(
+				"has_nightlight",
 				grid_cell
 			)
 		)
@@ -485,7 +566,7 @@ func _gui_input(event: InputEvent) -> void:
 	)
 
 	if mouse_event.button_index == MOUSE_BUTTON_LEFT:
-		if selected_item_id == "fence":
+		if selected_item_id == ITEM_FENCE:
 			fence_edge_clicked.emit(orientation, grid_edge)
 		else:
 			grid_cell_clicked.emit(clicked_cell)

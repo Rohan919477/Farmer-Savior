@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://eeoq8rjeogc" path="res://scripts/farm/PesticideTurret.gd" id="1_nvrrb"]
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_77ox7"]
+[ext_resource type="Script" uid="uid://bsud0qhpjun5o" path="res://scripts/visuals/SimpleDropShadow.gd" id="3_77ox7"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nvrrb"]
 radius = 180.0
@@ -21,3 +22,10 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RangeArea" unique_id=1152726921]
 shape = SubResource("CircleShape2D_nvrrb")
+
+[node name="DropShadow" type="Node2D" parent="." unique_id=1325220615]
+script = ExtResource("3_77ox7")
+shadow_offset = Vector2(0, 10)
+base_width = 24.0
+base_height = 8.0
+base_alpha = 0.28

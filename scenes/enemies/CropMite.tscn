@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_6oap1"]
 [ext_resource type="PackedScene" uid="uid://d4hnqicq4jwab" path="res://scenes/items/SeedDrop.tscn" id="2_jhbwk"]
 [ext_resource type="PackedScene" uid="uid://6vktlkqluj5r" path="res://scenes/items/ScrapDrop.tscn" id="3_3wn2q"]
+[ext_resource type="Script" uid="uid://bsud0qhpjun5o" path="res://scripts/visuals/SimpleDropShadow.gd" id="5_jhbwk"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_e1v0j"]
 size = Vector2(32, 32)
@@ -34,3 +35,9 @@ collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=892838114]
 shape = SubResource("CircleShape2D_dtevv")
+
+[node name="DropShadow" type="Node2D" parent="." unique_id=1789042424]
+script = ExtResource("5_jhbwk")
+shadow_offset = Vector2(0, 12)
+base_width = 38.0
+base_height = 13.0

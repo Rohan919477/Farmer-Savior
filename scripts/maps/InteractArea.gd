@@ -5,9 +5,15 @@ extends Area2D
 @export var target_location_id: String = ""
 
 var player_nearby: bool = false
+var nearby_player: Node = null
 
-@onready var prompt_label: Label = get_node_or_null("PromptLabel")
-@onready var highlight_visual: CanvasItem = get_node_or_null("HighlightVisual")
+@onready var prompt_label: Label = get_node_or_null(
+	"PromptLabel"
+)
+@onready var highlight_visual: CanvasItem = get_node_or_null(
+	"HighlightVisual"
+)
+
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -20,16 +26,22 @@ func _ready() -> void:
 	if highlight_visual != null:
 		highlight_visual.visible = false
 
+
 func is_gameplay_input_blocked() -> bool:
-	var main_node: Node = get_tree().get_first_node_in_group("main")
+	var main_node: Node = get_tree().get_first_node_in_group(
+		"main"
+	)
 
 	if main_node == null:
 		return false
 
 	if main_node.has_method("is_gameplay_input_blocked"):
-		return bool(main_node.call("is_gameplay_input_blocked"))
+		return bool(
+			main_node.call("is_gameplay_input_blocked")
+		)
 
 	return false
+
 
 func _process(_delta: float) -> void:
 	if not player_nearby:
@@ -41,55 +53,98 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("interact"):
 		perform_interaction()
 
+
+func play_player_interaction_pose() -> void:
+	if nearby_player == null:
+		return
+
+	if nearby_player.has_method("play_interaction_pose"):
+		nearby_player.call("play_interaction_pose")
+
+
 func perform_interaction() -> void:
-	var main = get_tree().get_first_node_in_group("main")
+	var main: Node = get_tree().get_first_node_in_group(
+		"main"
+	)
 
 	if main == null:
 		print("Could not find Main.")
 		return
 
-	print("Interacted with: ", interaction_name)
-
 	match interaction_type:
 		"map_menu":
 			if main.has_method("open_map_menu"):
+				play_player_interaction_pose()
+				print("Interacted with: ", interaction_name)
 				main.open_map_menu()
+			else:
+				print("Main.open_map_menu() is missing.")
 
 		"travel":
 			if main.has_method("travel_to_location"):
+				play_player_interaction_pose()
+				print("Interacted with: ", interaction_name)
 				main.travel_to_location(target_location_id)
+			else:
+				print("Main.travel_to_location() is missing.")
 
 		"war_table":
 			if main.has_method("open_defense_placement"):
+				play_player_interaction_pose()
+				print("Interacted with: ", interaction_name)
 				main.open_defense_placement()
 			else:
-				print("War Table interaction placeholder.")
+				print("War Table interaction is missing.")
 
 		"workshop":
 			if main.has_method("open_workshop"):
+				play_player_interaction_pose()
+				print("Interacted with: ", interaction_name)
 				main.open_workshop()
 			else:
-				print("Workshop interaction placeholder.")
-		
+				print("Workshop interaction is missing.")
+
 		"bed":
 			if main.has_method("sleep_at_bed"):
+				play_player_interaction_pose()
+				print("Interacted with: ", interaction_name)
 				main.sleep_at_bed()
 			else:
-				print("Bed interaction missing Main.sleep_at_bed().")
+				print("Bed interaction is missing.")
 
 		_:
-			print("Unknown interaction type: ", interaction_type)
+			print(
+				"Unknown interaction type: ",
+				interaction_type
+			)
+
 
 func _on_body_entered(body: Node) -> void:
-	if body.is_in_group("player"):
-		player_nearby = true
-		show_interaction_feedback()
-		print("Press E to interact with ", interaction_name)
+	if not body.is_in_group("player"):
+		return
+
+	player_nearby = true
+	nearby_player = body
+
+	show_interaction_feedback()
+
+	print(
+		"Press E to interact with ",
+		interaction_name
+	)
+
 
 func _on_body_exited(body: Node) -> void:
-	if body.is_in_group("player"):
-		player_nearby = false
-		hide_interaction_feedback()
+	if not body.is_in_group("player"):
+		return
+
+	player_nearby = false
+
+	if nearby_player == body:
+		nearby_player = null
+
+	hide_interaction_feedback()
+
 
 func show_interaction_feedback() -> void:
 	if prompt_label != null:
@@ -97,6 +152,7 @@ func show_interaction_feedback() -> void:
 
 	if highlight_visual != null:
 		highlight_visual.visible = true
+
 
 func hide_interaction_feedback() -> void:
 	if prompt_label != null:

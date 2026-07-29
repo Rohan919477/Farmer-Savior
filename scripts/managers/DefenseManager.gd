@@ -18,6 +18,12 @@ signal fence_workshop_action_failed(reason: String)
 signal fence_navigation_changed
 signal fence_stats_changed
 
+signal nightlight_inventory_changed(nightlights_available: int)
+signal nightlight_placed(grid_cell: Vector2i)
+signal nightlight_removed(grid_cell: Vector2i)
+signal nightlight_condition_changed(nightlight_key: String, nightlight_state: String)
+signal nightlight_repair_queue_changed(broken_nightlights_in_queue: int)
+
 const FENCE_ORIENTATION_HORIZONTAL: String = "horizontal"
 const FENCE_ORIENTATION_VERTICAL: String = "vertical"
 
@@ -31,6 +37,7 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 
 @export var pesticide_turret_scene: PackedScene
 @export var fence_segment_scene: PackedScene
+@export var nightlight_scene: PackedScene
 
 # The farm remains 1280 × 896 world units.
 # 40 × 28 cells at 32 × 32 preserves that map size.
@@ -46,6 +53,11 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 
 # War Table starting inventory.
 @export var starting_fences: int = 12
+@export var starting_nightlights: int = 2
+@export var nightlight_max_integrity: float = 100.0
+@export var nightlight_wear_per_second: float = 0.20
+@export var damaged_nightlight_repair_cost_scrap: int = 1
+@export var nightlight_repair_rate_per_second: float = 20.0
 @export var fence_max_health: float = 100.0
 @export var create_starting_perimeter_fence: bool = true
 
@@ -58,12 +70,14 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 @export var fence_craft_scrap_cost: int = 3
 @export var fence_craft_seed_cost: int = 2
 @export var broken_fence_repair_scrap_cost: int = 3
+@export var broken_nightlight_repair_scrap_cost: int = 2
 
 @export var minimum_broken_segments_for_passable_gap: int = 3
 @export var debug_fence_logging: bool = true
 
 var pesticide_turrets_available: int = 2
 var fences_available: int = 12
+var nightlights_available: int = 2
 
 # Example:
 # {
@@ -75,7 +89,17 @@ var fences_available: int = 12
 # }
 var placed_turrets: Dictionary = {}
 
+# Example:
+# {
+#     "10:5": {
+#         "grid_cell": Vector2i(10, 5),
+#         "current_integrity": 100.0
+#     }
+# }
+var placed_nightlights: Dictionary = {}
+
 var broken_pesticide_turrets_in_repair_queue: int = 0
+var broken_nightlights_in_repair_queue: int = 0
 
 # Example:
 # {
@@ -94,6 +118,12 @@ var active_farm_map: Node = null
 
 var base_max_pesticide_turrets: int = 2
 var base_starting_fences: int = 12
+var base_starting_nightlights: int = 2
+var base_nightlight_max_integrity: float = 100.0
+var base_nightlight_wear_per_second: float = 0.20
+var base_damaged_nightlight_repair_cost_scrap: int = 1
+var base_nightlight_repair_rate_per_second: float = 20.0
+var base_broken_nightlight_repair_scrap_cost: int = 2
 var base_fence_max_health: float = 100.0
 var base_fence_repair_rate_per_second: float = 25.0
 var base_fence_damage_multiplier: float = 1.0
@@ -103,12 +133,19 @@ func _ready() -> void:
 
 	base_max_pesticide_turrets = max_pesticide_turrets
 	base_starting_fences = starting_fences
+	base_starting_nightlights = starting_nightlights
+	base_nightlight_max_integrity = nightlight_max_integrity
+	base_nightlight_wear_per_second = nightlight_wear_per_second
+	base_damaged_nightlight_repair_cost_scrap = damaged_nightlight_repair_cost_scrap
+	base_nightlight_repair_rate_per_second = nightlight_repair_rate_per_second
+	base_broken_nightlight_repair_scrap_cost = broken_nightlight_repair_scrap_cost
 	base_fence_max_health = fence_max_health
 	base_fence_repair_rate_per_second = fence_repair_rate_per_second
 	base_fence_damage_multiplier = fence_damage_multiplier
 
 	pesticide_turrets_available = max_pesticide_turrets
 	fences_available = starting_fences
+	nightlights_available = starting_nightlights
 
 	_create_starting_perimeter_fences()
 
@@ -121,6 +158,9 @@ func _ready() -> void:
 		)
 
 	call_deferred("_bind_initial_farm_map")
+
+func _process(delta: float) -> void:
+	_process_nightlight_wear(delta)
 
 func _bind_initial_farm_map() -> void:
 	await get_tree().process_frame
@@ -137,6 +177,7 @@ func _bind_initial_farm_map() -> void:
 
 	rebuild_farm_turrets()
 	rebuild_farm_fences()
+	rebuild_farm_nightlights()
 
 # -------------------------------------------------------------------
 # Starting perimeter fences
@@ -264,7 +305,7 @@ func has_turret(grid_cell: Vector2i) -> bool:
 	return placed_turrets.has(get_turret_key(grid_cell))
 
 func is_cell_occupied(grid_cell: Vector2i) -> bool:
-	return has_turret(grid_cell)
+	return has_turret(grid_cell) or has_nightlight(grid_cell)
 
 func get_turret_data(turret_key: String) -> Dictionary:
 	if not placed_turrets.has(turret_key):
@@ -525,6 +566,594 @@ func repair_broken_pesticide_turrets_in_workshop(amount: int) -> int:
 	})
 
 	return repaired_count
+
+
+# -------------------------------------------------------------------
+# Nightlights
+# -------------------------------------------------------------------
+
+func get_nightlights_available() -> int:
+	return nightlights_available
+
+func get_nightlight_key(grid_cell: Vector2i) -> String:
+	return "%d:%d" % [grid_cell.x, grid_cell.y]
+
+func has_nightlight(grid_cell: Vector2i) -> bool:
+	return placed_nightlights.has(get_nightlight_key(grid_cell))
+
+func has_placed_nightlights() -> bool:
+	return not placed_nightlights.is_empty()
+
+func get_nightlight_data(nightlight_key: String) -> Dictionary:
+	if not placed_nightlights.has(nightlight_key):
+		return {}
+
+	var nightlight_data: Dictionary = placed_nightlights[nightlight_key]
+	return nightlight_data.duplicate(true)
+
+func get_nightlight_current_integrity(nightlight_key: String) -> float:
+	var nightlight_data: Dictionary = get_nightlight_data(nightlight_key)
+
+	if nightlight_data.is_empty():
+		return 0.0
+
+	return float(
+		nightlight_data.get(
+			"current_integrity",
+			nightlight_max_integrity
+		)
+	)
+
+func is_nightlight_repair_cost_paid(nightlight_key: String) -> bool:
+	var nightlight_data: Dictionary = get_nightlight_data(nightlight_key)
+
+	if nightlight_data.is_empty():
+		return false
+
+	return bool(nightlight_data.get("repair_cost_paid", false))
+
+func mark_nightlight_repair_cost_paid(nightlight_key: String) -> void:
+	if not placed_nightlights.has(nightlight_key):
+		return
+
+	var nightlight_data: Dictionary = placed_nightlights[nightlight_key]
+	nightlight_data["repair_cost_paid"] = true
+	placed_nightlights[nightlight_key] = nightlight_data
+
+func get_nightlight_state(nightlight_key: String) -> String:
+	if not placed_nightlights.has(nightlight_key):
+		return PLACEABLE_STATE_BROKEN
+
+	var current_integrity: float = get_nightlight_current_integrity(
+		nightlight_key
+	)
+
+	if current_integrity <= 0.0:
+		return PLACEABLE_STATE_BROKEN
+
+	if current_integrity < nightlight_max_integrity:
+		return PLACEABLE_STATE_DAMAGED
+
+	return PLACEABLE_STATE_PERFECT
+
+func get_broken_nightlights_in_repair_queue() -> int:
+	return broken_nightlights_in_repair_queue
+
+func get_broken_nightlight_repair_scrap_cost() -> int:
+	return maxi(0, broken_nightlight_repair_scrap_cost)
+
+func get_damaged_nightlight_repair_cost_scrap() -> int:
+	return maxi(0, damaged_nightlight_repair_cost_scrap)
+
+func get_nightlight_repair_rate_per_second() -> float:
+	return maxf(0.0, nightlight_repair_rate_per_second)
+
+
+func get_repairable_broken_nightlight_count(
+	requested_amount: int
+) -> int:
+	if requested_amount <= 0:
+		return 0
+
+	return mini(
+		requested_amount,
+		broken_nightlights_in_repair_queue
+	)
+
+func get_broken_nightlight_repair_total_cost(
+	requested_amount: int
+) -> int:
+	var repair_count: int = get_repairable_broken_nightlight_count(
+		requested_amount
+	)
+
+	return repair_count * get_broken_nightlight_repair_scrap_cost()
+
+func get_broken_nightlight_repair_failure_reason(
+	requested_amount: int
+) -> String:
+	if broken_nightlights_in_repair_queue <= 0:
+		return "No broken NightLights are waiting for repair."
+
+	var repair_count: int = get_repairable_broken_nightlight_count(
+		requested_amount
+	)
+
+	if repair_count <= 0:
+		return "No broken NightLights are waiting for repair."
+
+	var player_node: Node = _get_player_resource_node()
+
+	if player_node == null:
+		return "Player inventory is unavailable."
+
+	if not player_node.has_method("has_resource"):
+		return "Player inventory is unavailable."
+
+	var total_scrap_cost: int = (
+		get_broken_nightlight_repair_total_cost(repair_count)
+	)
+
+	if not bool(
+		player_node.call(
+			"has_resource",
+			"scrap",
+			total_scrap_cost
+		)
+	):
+		var current_scrap: int = int(
+			player_node.call("get_resource_amount", "scrap")
+		)
+
+		return "Need %d Scrap. You have %d." % [
+			total_scrap_cost,
+			current_scrap
+		]
+
+	return ""
+
+func can_place_nightlight(grid_cell: Vector2i) -> bool:
+	if nightlights_available <= 0:
+		return false
+
+	if get_cell_type(grid_cell) != "open":
+		return false
+
+	if is_cell_occupied(grid_cell):
+		return false
+
+	return true
+
+func get_nightlight_placement_failure_reason(grid_cell: Vector2i) -> String:
+	if nightlights_available <= 0:
+		return "No Nightlights are available."
+
+	var cell_type: String = get_cell_type(grid_cell)
+
+	if cell_type == "outside":
+		return "Choose a cell within the farm boundary."
+
+	if cell_type == "boundary":
+		return "Nightlights cannot be placed on the outer boundary."
+
+	if cell_type == "house":
+		return "Nightlights cannot be placed on the house."
+
+	if cell_type == "truck":
+		return "Nightlights cannot be placed on the truck."
+
+	if cell_type == "farmland":
+		return "Nightlights cannot be placed on farmland."
+
+	if is_cell_occupied(grid_cell):
+		return "Another defense item is already placed there."
+
+	return "This location cannot be used."
+
+func place_nightlight(grid_cell: Vector2i) -> bool:
+	if not can_place_nightlight(grid_cell):
+		placement_failed.emit(
+			get_nightlight_placement_failure_reason(grid_cell)
+		)
+		return false
+
+	var nightlight_key: String = get_nightlight_key(grid_cell)
+
+	placed_nightlights[nightlight_key] = {
+		"grid_cell": grid_cell,
+		"current_integrity": nightlight_max_integrity,
+		"repair_cost_paid": false
+	}
+
+	nightlights_available -= 1
+
+	nightlight_inventory_changed.emit(nightlights_available)
+	nightlight_placed.emit(grid_cell)
+	nightlight_condition_changed.emit(
+		nightlight_key,
+		get_nightlight_state(nightlight_key)
+	)
+
+	_log_telemetry("nightlight_placed", {
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"nightlights_available": nightlights_available,
+		"current_integrity": nightlight_max_integrity,
+		"max_integrity": nightlight_max_integrity
+	})
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_nightlights()
+
+	return true
+
+func can_remove_nightlight(grid_cell: Vector2i) -> bool:
+	if not has_nightlight(grid_cell):
+		return false
+
+	var nightlight_key: String = get_nightlight_key(grid_cell)
+	var nightlight_state: String = get_nightlight_state(nightlight_key)
+
+	return (
+		nightlight_state == PLACEABLE_STATE_PERFECT
+		or nightlight_state == PLACEABLE_STATE_BROKEN
+	)
+
+func remove_nightlight(grid_cell: Vector2i) -> bool:
+	if not has_nightlight(grid_cell):
+		placement_failed.emit("There is no Nightlight placed on this grid cell.")
+		return false
+
+	var nightlight_key: String = get_nightlight_key(grid_cell)
+	var nightlight_state: String = get_nightlight_state(nightlight_key)
+	var nightlight_data: Dictionary = get_nightlight_data(nightlight_key)
+
+	if nightlight_state == PLACEABLE_STATE_DAMAGED:
+		placement_failed.emit(
+			"Damaged Nightlights must be repaired before removal."
+		)
+		return false
+
+	placed_nightlights.erase(nightlight_key)
+
+	if nightlight_state == PLACEABLE_STATE_PERFECT:
+		nightlights_available += 1
+		nightlight_inventory_changed.emit(nightlights_available)
+
+	elif nightlight_state == PLACEABLE_STATE_BROKEN:
+		broken_nightlights_in_repair_queue += 1
+		nightlight_repair_queue_changed.emit(
+			broken_nightlights_in_repair_queue
+		)
+
+	nightlight_removed.emit(grid_cell)
+
+	_log_telemetry("nightlight_removed", {
+		"grid_x": grid_cell.x,
+		"grid_y": grid_cell.y,
+		"nightlight_state": nightlight_state,
+		"current_integrity": float(
+			nightlight_data.get("current_integrity", 0.0)
+		),
+		"nightlights_available": nightlights_available,
+		"broken_nightlights_in_repair_queue": (
+			broken_nightlights_in_repair_queue
+		)
+	})
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_nightlights()
+
+	return true
+
+func damage_nightlight_integrity(
+	nightlight_key: String,
+	damage_amount: float,
+	damage_source: String = "wear"
+) -> bool:
+	if damage_amount <= 0.0:
+		return false
+
+	if not placed_nightlights.has(nightlight_key):
+		return false
+
+	if get_nightlight_state(nightlight_key) == PLACEABLE_STATE_BROKEN:
+		return false
+
+	var old_state: String = get_nightlight_state(nightlight_key)
+	var nightlight_data: Dictionary = placed_nightlights[nightlight_key]
+	var old_integrity: float = float(
+		nightlight_data.get(
+			"current_integrity",
+			nightlight_max_integrity
+		)
+	)
+
+	var new_integrity: float = clampf(
+		old_integrity - damage_amount,
+		0.0,
+		nightlight_max_integrity
+	)
+
+	nightlight_data["current_integrity"] = new_integrity
+
+	if new_integrity < nightlight_max_integrity:
+		nightlight_data["repair_cost_paid"] = false
+
+	placed_nightlights[nightlight_key] = nightlight_data
+
+	var new_state: String = get_nightlight_state(nightlight_key)
+
+	if new_state != old_state:
+		nightlight_condition_changed.emit(nightlight_key, new_state)
+
+		_log_telemetry("nightlight_condition_changed", {
+			"nightlight_key": nightlight_key,
+			"old_state": old_state,
+			"new_state": new_state,
+			"damage_source": damage_source,
+			"current_integrity": new_integrity,
+			"max_integrity": nightlight_max_integrity
+		})
+
+	if new_state == PLACEABLE_STATE_BROKEN:
+		_log_telemetry("nightlight_broken", {
+			"nightlight_key": nightlight_key,
+			"damage_source": damage_source,
+			"current_integrity": new_integrity,
+			"max_integrity": nightlight_max_integrity
+		})
+
+		return true
+
+	return false
+
+func repair_nightlight(
+	nightlight_key: String,
+	repair_amount: float
+) -> void:
+	if repair_amount <= 0.0:
+		return
+
+	if not placed_nightlights.has(nightlight_key):
+		return
+
+	if get_nightlight_state(nightlight_key) == PLACEABLE_STATE_BROKEN:
+		return
+
+	var old_state: String = get_nightlight_state(nightlight_key)
+	var nightlight_data: Dictionary = placed_nightlights[nightlight_key]
+
+	var old_integrity: float = float(
+		nightlight_data.get(
+			"current_integrity",
+			nightlight_max_integrity
+		)
+	)
+
+	var new_integrity: float = clampf(
+		old_integrity + repair_amount,
+		0.0,
+		nightlight_max_integrity
+	)
+
+	nightlight_data["current_integrity"] = new_integrity
+
+	if new_integrity >= nightlight_max_integrity:
+		nightlight_data["repair_cost_paid"] = false
+
+	placed_nightlights[nightlight_key] = nightlight_data
+
+	var new_state: String = get_nightlight_state(nightlight_key)
+
+	nightlight_condition_changed.emit(nightlight_key, new_state)
+
+	if (
+		old_state == PLACEABLE_STATE_DAMAGED
+		and new_state == PLACEABLE_STATE_PERFECT
+	):
+		_log_telemetry("nightlight_field_repaired", {
+			"nightlight_key": nightlight_key,
+			"repair_type": "field_repair",
+			"repair_amount": repair_amount,
+			"current_integrity": new_integrity,
+			"max_integrity": nightlight_max_integrity
+		})
+
+
+func repair_broken_nightlights_in_workshop(amount: int) -> int:
+	if amount <= 0:
+		return 0
+
+	var repaired_count: int = mini(
+		amount,
+		broken_nightlights_in_repair_queue
+	)
+
+	if repaired_count <= 0:
+		return 0
+
+	broken_nightlights_in_repair_queue -= repaired_count
+	nightlights_available += repaired_count
+
+	nightlight_repair_queue_changed.emit(
+		broken_nightlights_in_repair_queue
+	)
+
+	nightlight_inventory_changed.emit(nightlights_available)
+
+	_log_telemetry("nightlight_repair_queue_used", {
+		"repaired_count": repaired_count,
+		"broken_nightlights_in_repair_queue": (
+			broken_nightlights_in_repair_queue
+		),
+		"nightlights_available": nightlights_available
+	})
+
+	return repaired_count
+
+func repair_broken_nightlights_with_materials(
+	requested_amount: int
+) -> int:
+	var failure_reason: String = (
+		get_broken_nightlight_repair_failure_reason(
+			requested_amount
+		)
+	)
+
+	if not failure_reason.is_empty():
+		fence_workshop_action_failed.emit(failure_reason)
+
+		_log_telemetry("nightlight_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"reason": failure_reason
+		})
+
+		return 0
+
+	var repair_count: int = get_repairable_broken_nightlight_count(
+		requested_amount
+	)
+
+	var total_scrap_cost: int = (
+		get_broken_nightlight_repair_total_cost(repair_count)
+	)
+
+	var player_node: Node = _get_player_resource_node()
+
+	if player_node == null:
+		var missing_inventory_reason: String = (
+			"Player inventory is unavailable."
+		)
+
+		fence_workshop_action_failed.emit(missing_inventory_reason)
+
+		_log_telemetry("nightlight_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"reason": missing_inventory_reason
+		})
+
+		return 0
+
+	var spent_scrap: bool = bool(
+		player_node.call(
+			"spend_resource",
+			"scrap",
+			total_scrap_cost
+		)
+	)
+
+	if not spent_scrap:
+		var scrap_failure_reason: String = "Not enough Scrap."
+
+		fence_workshop_action_failed.emit(scrap_failure_reason)
+
+		_log_telemetry("nightlight_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"repair_count": repair_count,
+			"total_scrap_cost": total_scrap_cost,
+			"reason": scrap_failure_reason
+		})
+
+		return 0
+
+	var repaired_count: int = repair_broken_nightlights_in_workshop(
+		repair_count
+	)
+
+	if repaired_count <= 0:
+		player_node.call(
+			"add_resource",
+			"scrap",
+			total_scrap_cost
+		)
+
+		var completion_failure_reason: String = (
+			"NightLight repair could not be completed."
+		)
+
+		fence_workshop_action_failed.emit(
+			completion_failure_reason
+		)
+
+		_log_telemetry("nightlight_repair_queue_failed", {
+			"requested_amount": requested_amount,
+			"repair_count": repair_count,
+			"total_scrap_cost": total_scrap_cost,
+			"reason": completion_failure_reason
+		})
+
+		return 0
+
+	_log_telemetry("nightlight_repair_queue_paid", {
+		"requested_amount": requested_amount,
+		"repaired_count": repaired_count,
+		"total_scrap_cost": total_scrap_cost,
+		"broken_nightlights_in_repair_queue": (
+			broken_nightlights_in_repair_queue
+		),
+		"nightlights_available": nightlights_available
+	})
+
+	print(
+		"[Workshop] Repaired ",
+		repaired_count,
+		" NightLight(s). Stored NightLights: ",
+		nightlights_available
+	)
+
+	return repaired_count
+
+func get_nightlight_position(grid_cell: Vector2i) -> Vector2:
+	return get_turret_position(grid_cell)
+
+func _process_nightlight_wear(delta: float) -> void:
+	if delta <= 0.0:
+		return
+
+	if placed_nightlights.is_empty():
+		return
+
+	if nightlight_wear_per_second <= 0.0:
+		return
+
+	if not _is_nighttime_for_nightlight_wear():
+		return
+
+	var wear_damage: float = nightlight_wear_per_second * delta
+	var should_rebuild_nightlights: bool = false
+
+	for nightlight_key_variant in placed_nightlights.keys():
+		var nightlight_key: String = str(nightlight_key_variant)
+
+		var broke_now: bool = damage_nightlight_integrity(
+			nightlight_key,
+			wear_damage,
+			"night_wear"
+		)
+
+		if broke_now:
+			should_rebuild_nightlights = true
+
+	if should_rebuild_nightlights:
+		if active_farm_map != null and is_instance_valid(active_farm_map):
+			rebuild_farm_nightlights()
+
+func _is_nighttime_for_nightlight_wear() -> bool:
+	var current_time_manager: Node = get_tree().get_first_node_in_group(
+		"time_manager"
+	)
+
+	if current_time_manager == null:
+		return false
+
+	if current_time_manager.has_method("is_nighttime"):
+		return bool(current_time_manager.call("is_nighttime"))
+
+	if "phase" in current_time_manager:
+		return str(current_time_manager.get("phase")) == "night"
+
+	return false
 
 # -------------------------------------------------------------------
 # Fence placement and condition
@@ -1684,6 +2313,7 @@ func _on_location_loaded(
 
 		rebuild_farm_turrets()
 		rebuild_farm_fences()
+		rebuild_farm_nightlights()
 	else:
 		active_farm_map = null
 
@@ -1733,6 +2363,79 @@ func rebuild_farm_turrets() -> void:
 				self,
 				turret_key
 			)
+
+func rebuild_farm_nightlights() -> void:
+	if active_farm_map == null:
+		return
+
+	var placement_root: Node2D = _get_or_create_nightlight_placement_root()
+
+	if placement_root == null:
+		print("Farm map is missing NightLightPlacementRoot.")
+		return
+
+	for child in placement_root.get_children():
+		child.queue_free()
+
+	if placed_nightlights.is_empty():
+		return
+
+	if nightlight_scene == null:
+		print("NightLight scene is not assigned.")
+		return
+
+	for nightlight_key_variant in placed_nightlights.keys():
+		var nightlight_key: String = str(nightlight_key_variant)
+		var nightlight_data: Dictionary = get_nightlight_data(
+			nightlight_key
+		)
+
+		var grid_cell: Vector2i = nightlight_data.get(
+			"grid_cell",
+			Vector2i.ZERO
+		)
+
+		var nightlight: Node2D = (
+			nightlight_scene.instantiate() as Node2D
+		)
+
+		if nightlight == null:
+			continue
+
+		nightlight.position = get_nightlight_position(grid_cell)
+		placement_root.add_child(nightlight)
+
+		if nightlight.has_method("configure_nightlight"):
+			nightlight.call(
+				"configure_nightlight",
+				self,
+				nightlight_key
+			)
+
+		if nightlight.has_method("set_nightlight_state"):
+			nightlight.call(
+				"set_nightlight_state",
+				get_nightlight_state(nightlight_key)
+			)
+
+func _get_or_create_nightlight_placement_root() -> Node2D:
+	if active_farm_map == null:
+		return null
+
+	var placement_root: Node2D = (
+		active_farm_map.get_node_or_null(
+			"NightLightPlacementRoot"
+		) as Node2D
+	)
+
+	if placement_root != null:
+		return placement_root
+
+	placement_root = Node2D.new()
+	placement_root.name = "NightLightPlacementRoot"
+	active_farm_map.add_child(placement_root)
+
+	return placement_root
 
 func rebuild_farm_fences() -> void:
 	if active_farm_map == null:
@@ -1821,6 +2524,34 @@ func get_save_data() -> Dictionary:
 			)
 		})
 
+	var saved_nightlights: Array[Dictionary] = []
+
+	for nightlight_key_variant in placed_nightlights.keys():
+		var nightlight_key: String = str(nightlight_key_variant)
+		var nightlight_data: Dictionary = get_nightlight_data(
+			nightlight_key
+		)
+
+		var nightlight_grid_cell: Vector2i = nightlight_data.get(
+			"grid_cell",
+			Vector2i.ZERO
+		)
+
+		saved_nightlights.append({
+			"nightlight_key": nightlight_key,
+			"grid_x": nightlight_grid_cell.x,
+			"grid_y": nightlight_grid_cell.y,
+			"current_integrity": float(
+				nightlight_data.get(
+					"current_integrity",
+					nightlight_max_integrity
+				)
+			),
+			"repair_cost_paid": bool(
+				nightlight_data.get("repair_cost_paid", false)
+			)
+		})
+
 	var saved_fences: Array[Dictionary] = []
 
 	for fence_key_variant in placed_fences.keys():
@@ -1857,6 +2588,23 @@ func get_save_data() -> Dictionary:
 		),
 		"placed_turrets": saved_turrets,
 
+		"nightlights_available": nightlights_available,
+		"broken_nightlights_in_repair_queue": (
+			broken_nightlights_in_repair_queue
+		),
+		"placed_nightlights": saved_nightlights,
+		"nightlight_max_integrity": nightlight_max_integrity,
+		"nightlight_wear_per_second": nightlight_wear_per_second,
+		"damaged_nightlight_repair_cost_scrap": (
+			damaged_nightlight_repair_cost_scrap
+		),
+		"nightlight_repair_rate_per_second": (
+			nightlight_repair_rate_per_second
+		),
+		"broken_nightlight_repair_scrap_cost": (
+			broken_nightlight_repair_scrap_cost
+		),
+
 		"fences_available": fences_available,
 		"broken_fences_in_repair_queue": broken_fences_in_repair_queue,
 		"placed_fences": saved_fences,
@@ -1878,6 +2626,43 @@ func load_save_data(data: Dictionary) -> void:
 		data.get(
 			"broken_pesticide_turrets_in_repair_queue",
 			0
+		)
+	)
+
+	nightlights_available = int(
+		data.get("nightlights_available", starting_nightlights)
+	)
+
+	broken_nightlights_in_repair_queue = int(
+		data.get("broken_nightlights_in_repair_queue", 0)
+	)
+
+	nightlight_max_integrity = float(
+		data.get("nightlight_max_integrity", nightlight_max_integrity)
+	)
+
+	nightlight_wear_per_second = float(
+		data.get("nightlight_wear_per_second", nightlight_wear_per_second)
+	)
+
+	damaged_nightlight_repair_cost_scrap = int(
+		data.get(
+			"damaged_nightlight_repair_cost_scrap",
+			damaged_nightlight_repair_cost_scrap
+		)
+	)
+
+	nightlight_repair_rate_per_second = float(
+		data.get(
+			"nightlight_repair_rate_per_second",
+			nightlight_repair_rate_per_second
+		)
+	)
+
+	broken_nightlight_repair_scrap_cost = int(
+		data.get(
+			"broken_nightlight_repair_scrap_cost",
+			broken_nightlight_repair_scrap_cost
 		)
 	)
 
@@ -1934,6 +2719,42 @@ func load_save_data(data: Dictionary) -> void:
 			)
 		}
 
+	placed_nightlights.clear()
+
+	var saved_nightlights: Array = data.get("placed_nightlights", [])
+
+	for nightlight_variant in saved_nightlights:
+		var nightlight_data: Dictionary = nightlight_variant
+
+		var nightlight_grid_cell := Vector2i(
+			int(nightlight_data.get("grid_x", 0)),
+			int(nightlight_data.get("grid_y", 0))
+		)
+
+		if get_cell_type(nightlight_grid_cell) != "open":
+			continue
+
+		var nightlight_key: String = get_nightlight_key(
+			nightlight_grid_cell
+		)
+
+		placed_nightlights[nightlight_key] = {
+			"grid_cell": nightlight_grid_cell,
+			"current_integrity": clampf(
+				float(
+					nightlight_data.get(
+						"current_integrity",
+						nightlight_max_integrity
+					)
+				),
+				0.0,
+				nightlight_max_integrity
+			),
+			"repair_cost_paid": bool(
+				nightlight_data.get("repair_cost_paid", false)
+			)
+		}
+
 	placed_fences.clear()
 
 	var saved_fences: Array = data.get("placed_fences", [])
@@ -1976,6 +2797,10 @@ func load_save_data(data: Dictionary) -> void:
 		}
 
 	inventory_changed.emit(pesticide_turrets_available)
+	nightlight_inventory_changed.emit(nightlights_available)
+	nightlight_repair_queue_changed.emit(
+		broken_nightlights_in_repair_queue
+	)
 
 	turret_repair_queue_changed.emit(
 		broken_pesticide_turrets_in_repair_queue
@@ -1993,10 +2818,13 @@ func load_save_data(data: Dictionary) -> void:
 	if active_farm_map != null and is_instance_valid(active_farm_map):
 		rebuild_farm_turrets()
 		rebuild_farm_fences()
+		rebuild_farm_nightlights()
 
 	print(
 		"[Defense] Loaded save data. Turrets: ",
 		placed_turrets.size(),
+		" | Nightlights: ",
+		placed_nightlights.size(),
 		" | Fences: ",
 		placed_fences.size()
 	)
@@ -2007,9 +2835,23 @@ func reset_for_new_game() -> void:
 	placed_turrets.clear()
 
 	fences_available = base_starting_fences
+	nightlights_available = base_starting_nightlights
+	broken_nightlights_in_repair_queue = 0
 	broken_fences_in_repair_queue = 0
 	placed_fences.clear()
+	placed_nightlights.clear()
 
+	nightlight_max_integrity = base_nightlight_max_integrity
+	nightlight_wear_per_second = base_nightlight_wear_per_second
+	damaged_nightlight_repair_cost_scrap = (
+		base_damaged_nightlight_repair_cost_scrap
+	)
+	nightlight_repair_rate_per_second = (
+		base_nightlight_repair_rate_per_second
+	)
+	broken_nightlight_repair_scrap_cost = (
+		base_broken_nightlight_repair_scrap_cost
+	)
 	fence_max_health = base_fence_max_health
 	fence_repair_rate_per_second = base_fence_repair_rate_per_second
 	fence_damage_multiplier = base_fence_damage_multiplier
@@ -2017,6 +2859,10 @@ func reset_for_new_game() -> void:
 	_create_starting_perimeter_fences()
 
 	inventory_changed.emit(pesticide_turrets_available)
+	nightlight_inventory_changed.emit(nightlights_available)
+	nightlight_repair_queue_changed.emit(
+		broken_nightlights_in_repair_queue
+	)
 	turret_repair_queue_changed.emit(
 		broken_pesticide_turrets_in_repair_queue
 	)
@@ -2030,6 +2876,7 @@ func reset_for_new_game() -> void:
 	if active_farm_map != null and is_instance_valid(active_farm_map):
 		rebuild_farm_turrets()
 		rebuild_farm_fences()
+		rebuild_farm_nightlights()
 
 	print("[Defense] Reset for new game.")
 	

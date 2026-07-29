@@ -70,10 +70,11 @@ text = "PESTICIDE  TURRET x2"
 layout_mode = 2
 text = "FENCE x12"
 
-[node name="LockedTool1Button" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=691902822]
+[node name="NightLightButton" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=691902822]
 layout_mode = 2
 disabled = true
-text = "LOCKED"
+text = "NIGHTLIGHT
+"
 
 [node name="LockedTool2Button" type="Button" parent="RootControl/MainPanel/Sidebar/VBoxContainer" unique_id=1183805318]
 layout_mode = 2

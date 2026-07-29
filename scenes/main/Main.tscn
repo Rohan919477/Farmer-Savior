@@ -37,6 +37,7 @@
 [ext_resource type="PackedScene" uid="uid://w1ao620jew7c" path="res://scenes/ui/GameOverUI.tscn" id="34_vs4dm"]
 [ext_resource type="PackedScene" uid="uid://12f2j84j5vhb" path="res://scenes/ui/SaveSlotUI.tscn" id="36_vs4dm"]
 [ext_resource type="PackedScene" uid="uid://dwvv5hc1itgad" path="res://scenes/ui/PauseMenu.tscn" id="37_gwlw1"]
+[ext_resource type="PackedScene" uid="uid://by1ncmshnmqmr" path="res://scenes/farm/NightLight.tscn" id="38_vennj"]
 
 [node name="Main" type="Node2D" unique_id=1618782487]
 script = ExtResource("1_3km4f")
@@ -80,24 +81,8 @@ map_menu_path = NodePath("../MapMenu")
 script = ExtResource("16_hjnkw")
 pesticide_turret_scene = ExtResource("17_rikml")
 fence_segment_scene = ExtResource("18_roob6")
-grid_columns = null
-grid_rows = null
-farm_grid_origin = null
-farm_grid_cell_size = null
-max_pesticide_turrets = null
-pesticide_turret_max_integrity = null
-pesticide_turret_max_durability = null
-starting_fences = null
-fence_max_health = null
-create_starting_perimeter_fence = null
-damaged_fence_repair_cost_scrap = null
-fence_repair_rate_per_second = null
-fence_damage_multiplier = null
-fence_craft_scrap_cost = null
-fence_craft_seed_cost = null
-broken_fence_repair_scrap_cost = null
+nightlight_scene = ExtResource("38_vennj")
 minimum_broken_segments_for_passable_gap = 2
-debug_fence_logging = null
 
 [node name="CropManager" type="Node" parent="." unique_id=61324828]
 script = ExtResource("24_j0f7u")
