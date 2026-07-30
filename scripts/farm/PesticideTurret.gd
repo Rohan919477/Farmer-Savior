@@ -1,13 +1,26 @@
 extends Node2D
 class_name PesticideTurret
 
+const ANIM_IDLE: StringName = "idle"
+const ANIM_FIRE: StringName = "fire"
+const ANIM_DAMAGED_IDLE: StringName = "damagedIdle"
+const ANIM_BROKEN: StringName = "broken"
+
+@export_group("Combat")
 @export var attack_damage: int = 8
 @export var attack_interval: float = 1.0
 @export var attack_range: float = 180.0
 @export var durability_cost_per_attack: float = 1.0
 
+@export_group("Animation")
+@export var fire_frame_time: float = 0.12
+
+@export_group("Health Bar")
+@export var show_health_bar_always: bool = true
+
 @onready var range_area: Area2D = $RangeArea
-@onready var turret_sprite: Sprite2D = $Sprite2D
+@onready var turret_sprite: AnimatedSprite2D = $BodySprite
+@onready var health_bar: ProgressBar = $HealthBar
 
 var enemies_in_range: Array[Node2D] = []
 var attack_cooldown: float = 0.0
@@ -15,7 +28,10 @@ var attack_cooldown: float = 0.0
 var defense_manager: DefenseManager = null
 var turret_key: String = ""
 var turret_state: String = "perfect"
+
 var base_modulate: Color = Color.WHITE
+var visual_token: int = 0
+
 
 func _ready() -> void:
 	add_to_group("farm_defenses")
@@ -26,7 +42,11 @@ func _ready() -> void:
 	range_area.body_entered.connect(_on_range_area_body_entered)
 	range_area.body_exited.connect(_on_range_area_body_exited)
 
+	_configure_animation_settings()
+	_setup_health_bar()
 	_apply_condition_visual()
+	_update_health_bar()
+
 
 func configure_turret(
 	new_defense_manager: DefenseManager,
@@ -42,7 +62,8 @@ func configure_turret(
 			_on_turret_condition_changed
 		)
 
-	_refresh_from_manager()
+	_refresh_from_manager(true)
+
 
 func _physics_process(delta: float) -> void:
 	if is_broken():
@@ -61,25 +82,29 @@ func _physics_process(delta: float) -> void:
 	if target == null:
 		return
 
-	if target.has_method("take_damage"):
-		target.call("take_damage", attack_damage)
+	if not target.has_method("take_damage"):
+		return
 
-		attack_cooldown = attack_interval
-		show_spray_feedback()
+	target.call("take_damage", attack_damage)
 
-		if defense_manager != null and not turret_key.is_empty():
-			defense_manager.consume_pesticide_turret_durability(
-				turret_key,
-				durability_cost_per_attack
-			)
+	attack_cooldown = attack_interval
 
-		print(
-			"Pesticide Turret sprayed ",
-			target.name,
-			" for ",
-			attack_damage,
-			" poison damage."
+	if defense_manager != null and not turret_key.is_empty():
+		defense_manager.consume_pesticide_turret_durability(
+			turret_key,
+			durability_cost_per_attack
 		)
+
+	show_spray_feedback()
+
+	print(
+		"Pesticide Turret sprayed ",
+		target.name,
+		" for ",
+		attack_damage,
+		" poison damage."
+	)
+
 
 func is_broken() -> bool:
 	if defense_manager == null or turret_key.is_empty():
@@ -90,11 +115,14 @@ func is_broken() -> bool:
 		== DefenseManager.PLACEABLE_STATE_BROKEN
 	)
 
+
 func can_be_targeted_by_enemy() -> bool:
 	return not is_broken()
 
+
 func get_target_position() -> Vector2:
 	return global_position
+
 
 func take_damage(damage_amount: float) -> void:
 	if defense_manager == null or turret_key.is_empty():
@@ -105,10 +133,14 @@ func take_damage(damage_amount: float) -> void:
 		damage_amount
 	)
 
-func _refresh_from_manager() -> void:
+	_update_health_bar()
+
+
+func _refresh_from_manager(force_visual_update: bool = false) -> void:
 	if defense_manager == null or turret_key.is_empty():
 		return
 
+	var previous_state: String = turret_state
 	turret_state = defense_manager.get_turret_state(turret_key)
 
 	var is_currently_broken: bool = (
@@ -120,21 +152,161 @@ func _refresh_from_manager() -> void:
 	if is_currently_broken:
 		enemies_in_range.clear()
 
-	_apply_condition_visual()
+	_update_health_bar()
+
+	var state_changed: bool = previous_state != turret_state
+
+	if force_visual_update or state_changed or is_currently_broken:
+		visual_token += 1
+		_apply_condition_visual()
+
 
 func _apply_condition_visual() -> void:
 	if turret_sprite == null:
 		return
 
+	turret_sprite.modulate = base_modulate
+
 	if turret_state == DefenseManager.PLACEABLE_STATE_BROKEN:
-		turret_sprite.modulate = Color(0.25, 0.25, 0.25)
+		if not _play_animation(ANIM_BROKEN, true):
+			turret_sprite.modulate = Color(0.25, 0.25, 0.25)
+
 		return
 
 	if turret_state == DefenseManager.PLACEABLE_STATE_DAMAGED:
-		turret_sprite.modulate = Color(1.0, 0.72, 0.35)
+		if not _play_animation(ANIM_DAMAGED_IDLE, true):
+			turret_sprite.modulate = Color(1.0, 0.72, 0.35)
+
 		return
 
-	turret_sprite.modulate = base_modulate
+	_play_animation(ANIM_IDLE, true)
+
+
+func _configure_animation_settings() -> void:
+	if turret_sprite == null:
+		return
+
+	if turret_sprite.sprite_frames == null:
+		return
+
+	if _has_animation(ANIM_IDLE):
+		turret_sprite.sprite_frames.set_animation_loop(ANIM_IDLE, true)
+
+	if _has_animation(ANIM_FIRE):
+		turret_sprite.sprite_frames.set_animation_loop(ANIM_FIRE, false)
+		turret_sprite.sprite_frames.set_animation_speed(
+			ANIM_FIRE,
+			1.0 / fire_frame_time
+		)
+
+	if _has_animation(ANIM_DAMAGED_IDLE):
+		turret_sprite.sprite_frames.set_animation_loop(ANIM_DAMAGED_IDLE, true)
+
+	if _has_animation(ANIM_BROKEN):
+		turret_sprite.sprite_frames.set_animation_loop(ANIM_BROKEN, true)
+
+
+func _setup_health_bar() -> void:
+	if health_bar == null:
+		return
+
+	health_bar.min_value = 0.0
+	health_bar.max_value = 100.0
+	health_bar.value = 100.0
+	health_bar.visible = show_health_bar_always
+
+
+func _update_health_bar() -> void:
+	if health_bar == null:
+		return
+
+	var health_percent: float = _get_turret_health_percent()
+
+	health_bar.value = health_percent * 100.0
+
+	if show_health_bar_always:
+		health_bar.visible = true
+	else:
+		health_bar.visible = health_percent < 1.0 and health_percent > 0.0
+
+
+func _get_turret_health_percent() -> float:
+	if defense_manager == null or turret_key.is_empty():
+		return 1.0
+
+	if defense_manager.has_method("get_pesticide_turret_integrity_percent"):
+		return clampf(
+			float(
+				defense_manager.call(
+					"get_pesticide_turret_integrity_percent",
+					turret_key
+				)
+			),
+			0.0,
+			1.0
+		)
+
+	if turret_state == DefenseManager.PLACEABLE_STATE_BROKEN:
+		return 0.0
+
+	if turret_state == DefenseManager.PLACEABLE_STATE_DAMAGED:
+		return 0.5
+
+	return 1.0
+
+
+func _has_animation(animation_name: StringName) -> bool:
+	if turret_sprite == null:
+		return false
+
+	if turret_sprite.sprite_frames == null:
+		return false
+
+	return turret_sprite.sprite_frames.has_animation(animation_name)
+
+
+func _play_animation(
+	animation_name: StringName,
+	restart_animation: bool = false
+) -> bool:
+	if not _has_animation(animation_name):
+		push_warning(
+			"PesticideTurret missing animation: " + String(animation_name)
+		)
+		return false
+
+	if restart_animation:
+		turret_sprite.stop()
+		turret_sprite.frame = 0
+		turret_sprite.play(animation_name)
+		return true
+
+	if turret_sprite.animation != animation_name:
+		turret_sprite.play(animation_name)
+
+	return true
+
+
+func _get_animation_duration(
+	animation_name: StringName,
+	fallback_duration: float
+) -> float:
+	if not _has_animation(animation_name):
+		return fallback_duration
+
+	var frame_count: int = turret_sprite.sprite_frames.get_frame_count(
+		animation_name
+	)
+
+	var animation_speed: float = turret_sprite.sprite_frames.get_animation_speed(
+		animation_name
+	)
+
+	if frame_count <= 0 or animation_speed <= 0.0:
+		return fallback_duration
+
+	return float(frame_count) / animation_speed
+
 
 func is_nighttime() -> bool:
 	var time_manager: Node = get_tree().get_first_node_in_group(
@@ -148,6 +320,7 @@ func is_nighttime() -> bool:
 		return bool(time_manager.call("is_nighttime"))
 
 	return false
+
 
 func get_nearest_enemy() -> Node2D:
 	var nearest_enemy: Node2D = null
@@ -173,13 +346,43 @@ func get_nearest_enemy() -> Node2D:
 
 	return nearest_enemy
 
+
 func show_spray_feedback() -> void:
+	if not _has_animation(ANIM_FIRE):
+		_show_old_spray_flash()
+		return
+
+	if is_broken():
+		_apply_condition_visual()
+		return
+
+	visual_token += 1
+	var current_token: int = visual_token
+
+	_play_animation(ANIM_FIRE, true)
+
+	var fire_duration: float = _get_animation_duration(
+		ANIM_FIRE,
+		fire_frame_time * 3.0
+	)
+
+	await get_tree().create_timer(fire_duration).timeout
+
+	if current_token == visual_token and is_instance_valid(turret_sprite):
+		_apply_condition_visual()
+
+
+func _show_old_spray_flash() -> void:
+	visual_token += 1
+	var current_token: int = visual_token
+
 	turret_sprite.modulate = Color(0.55, 1.0, 0.55, 1.0)
 
 	await get_tree().create_timer(0.12).timeout
 
-	if is_instance_valid(turret_sprite):
+	if current_token == visual_token and is_instance_valid(turret_sprite):
 		_apply_condition_visual()
+
 
 func _on_range_area_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("enemies"):
@@ -188,9 +391,11 @@ func _on_range_area_body_entered(body: Node2D) -> void:
 	if not enemies_in_range.has(body):
 		enemies_in_range.append(body)
 
+
 func _on_range_area_body_exited(body: Node2D) -> void:
 	if enemies_in_range.has(body):
 		enemies_in_range.erase(body)
+
 
 func _on_turret_condition_changed(
 	changed_turret_key: String,
@@ -199,4 +404,4 @@ func _on_turret_condition_changed(
 	if changed_turret_key != turret_key:
 		return
 
-	_refresh_from_manager()
+	_refresh_from_manager(false)

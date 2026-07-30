@@ -3,6 +3,56 @@
 [ext_resource type="Script" uid="uid://eeoq8rjeogc" path="res://scripts/farm/PesticideTurret.gd" id="1_nvrrb"]
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_77ox7"]
 [ext_resource type="Script" uid="uid://bsud0qhpjun5o" path="res://scripts/visuals/SimpleDropShadow.gd" id="3_77ox7"]
+[ext_resource type="Texture2D" uid="uid://b6ulhahe4umy6" path="res://sprites/farm/PesticideTurret/PesticideTurret_broken_01.png" id="3_xj683"]
+[ext_resource type="Texture2D" uid="uid://db0ijfc0tq5ui" path="res://sprites/farm/PesticideTurret/PesticideTurret_damagedIdle_01.png" id="4_g1s2j"]
+[ext_resource type="Texture2D" uid="uid://gt43i7pndfmj" path="res://sprites/farm/PesticideTurret/PesticideTurret_fire_01.png" id="5_4ix5h"]
+[ext_resource type="Texture2D" uid="uid://ci541jw54iexf" path="res://sprites/farm/PesticideTurret/PesticideTurret_fire_02.png" id="6_njgmx"]
+[ext_resource type="Texture2D" uid="uid://csuvhqo6m6aos" path="res://sprites/farm/PesticideTurret/PesticideTurret_fire_03.png" id="7_7qmgf"]
+[ext_resource type="Texture2D" uid="uid://bdetqyed3uq2e" path="res://sprites/farm/PesticideTurret/PesticideTurret_idle_01.png" id="9_w37f5"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tvinq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_xj683")
+}],
+"loop": 0,
+"name": &"broken",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_g1s2j")
+}],
+"loop": 0,
+"name": &"damagedIdle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_4ix5h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_njgmx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_7qmgf")
+}],
+"loop": 0,
+"name": &"fire",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_w37f5")
+}],
+"loop": 0,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tvinq"]
+radius = 50.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nvrrb"]
 radius = 180.0
@@ -12,9 +62,34 @@ z_index = 20
 script = ExtResource("1_nvrrb")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1905290471]
+visible = false
 modulate = Color(0.16862746, 0.19607843, 1, 1)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("2_77ox7")
+
+[node name="BodySprite" type="AnimatedSprite2D" parent="." unique_id=1209508598]
+scale = Vector2(0.1, 0.1)
+sprite_frames = SubResource("SpriteFrames_tvinq")
+animation = &"idle"
+
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=110400010]
+offset_left = -35.0
+offset_top = -70.0
+offset_right = 35.0
+offset_bottom = -43.0
+
+[node name="RepairPrompt" type="Label" parent="." unique_id=933202826]
+visible = false
+offset_top = -15.0
+offset_right = 171.0
+offset_bottom = 34.0
+text = "Hold E to repair turret
+"
+
+[node name="RepairArea" type="Area2D" parent="." unique_id=1842833131]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RepairArea" unique_id=1691679904]
+shape = SubResource("CircleShape2D_tvinq")
 
 [node name="RangeArea" type="Area2D" parent="." unique_id=759263508]
 collision_layer = 0

@@ -4,29 +4,81 @@
 [ext_resource type="PackedScene" uid="uid://d4hnqicq4jwab" path="res://scenes/items/SeedDrop.tscn" id="2_j1e2c"]
 [ext_resource type="PackedScene" uid="uid://6vktlkqluj5r" path="res://scenes/items/ScrapDrop.tscn" id="3_j2tnu"]
 [ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="4_2el5p"]
+[ext_resource type="Texture2D" uid="uid://bk7rx1jkeh1s4" path="res://sprites/enemies/mutant_boss/basic_attack/frame_01.png" id="5_ci6r1"]
 [ext_resource type="Script" uid="uid://bsud0qhpjun5o" path="res://scripts/visuals/SimpleDropShadow.gd" id="5_j1e2c"]
+[ext_resource type="Texture2D" uid="uid://xk3v0lnotrrc" path="res://sprites/enemies/mutant_boss/basic_attack/frame_02.png" id="6_qyep0"]
+[ext_resource type="Texture2D" uid="uid://g7eup0rctdsj" path="res://sprites/enemies/mutant_boss/basic_attack/frame_03.png" id="7_rgfg8"]
+[ext_resource type="Texture2D" uid="uid://501mu0vtgx6f" path="res://sprites/enemies/mutant_boss/basic_attack/frame_04.png" id="8_yr7dx"]
+[ext_resource type="Texture2D" uid="uid://dmcjsj8hs44wg" path="res://sprites/enemies/mutant_boss/basic_attack/frame_05.png" id="9_0yiet"]
+[ext_resource type="Texture2D" uid="uid://buo64mraog16k" path="res://sprites/enemies/mutant_boss/basic_attack/frame_06.png" id="10_8ey2i"]
+[ext_resource type="Texture2D" uid="uid://cepy8bww4o088" path="res://sprites/enemies/mutant_boss/death/frame_01.png" id="11_gfuho"]
+[ext_resource type="Texture2D" uid="uid://djakctr61s22r" path="res://sprites/enemies/mutant_boss/death/frame_02.png" id="12_hyerk"]
+[ext_resource type="Texture2D" uid="uid://dvekq0o1g08u7" path="res://sprites/enemies/mutant_boss/hurt/frame_01.png" id="13_6ox45"]
+[ext_resource type="Texture2D" uid="uid://pmxt5fjx2f66" path="res://sprites/enemies/mutant_boss/walk/frame_01.png" id="14_74qk4"]
+[ext_resource type="Texture2D" uid="uid://dl2mhq1vh12aq" path="res://sprites/enemies/mutant_boss/walk/frame_02.png" id="15_jry56"]
+[ext_resource type="Texture2D" uid="uid://lc2wrpuel7bl" path="res://sprites/enemies/mutant_boss/walk/frame_03.png" id="16_vqi70"]
+[ext_resource type="Texture2D" uid="uid://c8i0thpg32mco" path="res://sprites/enemies/mutant_boss/walk/frame_04.png" id="17_etlpc"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_j1e2c"]
 animations = [{
-"frames": [],
-"loop": true,
-"name": &"attack",
-"speed": 5.0
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_ci6r1")
 }, {
-"frames": [],
-"loop": true,
+"duration": 1.0,
+"texture": ExtResource("6_qyep0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_rgfg8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_yr7dx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_0yiet")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_8ey2i")
+}],
+"loop": 0,
+"name": &"basic_attack",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("11_gfuho")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_hyerk")
+}],
+"loop": 0,
 "name": &"death",
-"speed": 5.0
+"speed": 3.0
 }, {
-"frames": [],
-"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_6ox45")
+}],
+"loop": 0,
 "name": &"hurt",
-"speed": 5.0
+"speed": 1.0
 }, {
-"frames": [],
-"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_74qk4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_jry56")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_vqi70")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_etlpc")
+}],
+"loop": 1,
 "name": &"walk",
-"speed": 5.0
+"speed": 6.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_e1v0j"]
@@ -45,11 +97,15 @@ seed_drop_chance = 1.0
 scrap_drop_chance = 1.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
+visible = false
 modulate = Color(0.81, 0.3645, 0.32399997, 1)
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("4_2el5p")
 
 [node name="BodySprite" type="AnimatedSprite2D" parent="." unique_id=829837742]
+z_index = 1
+texture_filter = 1
+scale = Vector2(0.16, 0.16)
 sprite_frames = SubResource("SpriteFrames_j1e2c")
 animation = &"walk"
 

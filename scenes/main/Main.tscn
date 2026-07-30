@@ -47,7 +47,7 @@ script = ExtResource("1_u1xfj")
 
 [node name="TimeManager" type="Node" parent="." unique_id=428679080 groups=["time_manager"]]
 script = ExtResource("2_nha0i")
-minutes_per_real_second = 5.0
+minutes_per_real_second = 30.0
 
 [node name="SaveManager" type="Node" parent="." unique_id=1792121914]
 script = ExtResource("3_q24mn")
