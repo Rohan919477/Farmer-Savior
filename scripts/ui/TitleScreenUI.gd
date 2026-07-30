@@ -7,29 +7,48 @@ signal settings_pressed
 signal glossary_pressed
 signal credits_pressed
 
-# Kept so older Main.gd references do not instantly break.
+# Retained for compatibility with older references.
 signal play_pressed
 
+
 @onready var root_control: Control = $RootControl
-@onready var backdrop: ColorRect = $RootControl/Backdrop
+@onready var background: TextureRect = $RootControl/Background
 @onready var center_panel: Panel = $RootControl/CenterPanel
 
-@onready var title_label: Label = $RootControl/CenterPanel/TitleLabel
-@onready var subtitle_label: Label = $RootControl/CenterPanel/SubtitleLabel
+@onready var title_label: Label = (
+	$RootControl/CenterPanel/TitleLabel
+)
+@onready var subtitle_label: Label = (
+	$RootControl/CenterPanel/SubtitleLabel
+)
 
-@onready var play_button: Button = $RootControl/CenterPanel/PlayButton
-@onready var load_save_button: Button = $RootControl/CenterPanel/LoadSaveButton
-@onready var settings_button: Button = $RootControl/CenterPanel/SettingsButton
-@onready var glossary_button: Button = $RootControl/CenterPanel/GlossaryButton
-@onready var credits_button: Button = $RootControl/CenterPanel/CreditsButton
+@onready var play_button: Button = (
+	$RootControl/CenterPanel/PlayButton
+)
+@onready var load_save_button: Button = (
+	$RootControl/CenterPanel/LoadSaveButton
+)
+@onready var settings_button: Button = (
+	$RootControl/CenterPanel/SettingsButton
+)
+@onready var glossary_button: Button = (
+	$RootControl/CenterPanel/GlossaryButton
+)
+@onready var credits_button: Button = (
+	$RootControl/CenterPanel/CreditsButton
+)
 
 @onready var placeholder_label: Label = (
 	$RootControl/CenterPanel/PlaceholderLabel
 )
 
+
 func _ready() -> void:
 	if root_control == null:
-		print(name, " is missing RootControl. Check the scene tree.")
+		print(
+			name,
+			" is missing RootControl. Check the scene tree."
+		)
 		return
 
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -41,10 +60,14 @@ func _ready() -> void:
 	root_control.visible = false
 	root_control.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
-	backdrop.color = Color(0.015, 0.02, 0.015, 1.0)
+	if background != null:
+		background.set_anchors_and_offsets_preset(
+			Control.PRESET_FULL_RECT
+		)
 
-	_apply_panel_style()
+		# The artwork must not block button input.
+		background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 	_setup_text()
 	_setup_buttons()
 	_connect_buttons()
@@ -53,33 +76,36 @@ func _ready() -> void:
 
 	call_deferred("show_title_screen")
 
+
 func show_title_screen() -> void:
 	root_control.visible = true
 	_layout_ui()
 	get_tree().paused = true
 
+
 func hide_title_screen() -> void:
 	root_control.visible = false
+
 
 func is_title_screen_open() -> bool:
 	return root_control.visible
 
+
 func _setup_text() -> void:
-	title_label.text = "FARMER SAVIOR"
-	subtitle_label.text = "A farm-defence survival prototype"
+	# The title and subtitle are already part of the artwork.
+	if title_label != null:
+		title_label.visible = false
 
-	placeholder_label.text = (
-		"Settings, Glossary, and Credits are planned "
-		+ "for a later iteration."
-	)
+	if subtitle_label != null:
+		subtitle_label.visible = false
 
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	placeholder_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# This label remains hidden until a placeholder button is pressed.
+	if placeholder_label != null:
+		placeholder_label.visible = false
+		placeholder_label.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_CENTER
+		)
 
-	title_label.add_theme_font_size_override("font_size", 34)
-	subtitle_label.add_theme_font_size_override("font_size", 16)
-	placeholder_label.add_theme_font_size_override("font_size", 13)
 
 func _setup_buttons() -> void:
 	play_button.text = "NEW GAME"
@@ -88,102 +114,172 @@ func _setup_buttons() -> void:
 	glossary_button.text = "GLOSSARY"
 	credits_button.text = "CREDITS"
 
-	play_button.focus_mode = Control.FOCUS_NONE
-	load_save_button.focus_mode = Control.FOCUS_NONE
-	settings_button.focus_mode = Control.FOCUS_NONE
-	glossary_button.focus_mode = Control.FOCUS_NONE
-	credits_button.focus_mode = Control.FOCUS_NONE
+	play_button.focus_mode = Control.FOCUS_ALL
+	load_save_button.focus_mode = Control.FOCUS_ALL
+	settings_button.focus_mode = Control.FOCUS_ALL
+	glossary_button.focus_mode = Control.FOCUS_ALL
+	credits_button.focus_mode = Control.FOCUS_ALL
 
 	load_save_button.tooltip_text = (
 		"Load a saved game from Autosave or a manual slot."
 	)
 
 	settings_button.tooltip_text = (
-		"Placeholder — planned for a later iteration."
+		"Settings are planned for a later iteration."
 	)
 
 	glossary_button.tooltip_text = (
-		"Placeholder — discovered enemy records will be added later."
+		"Discovered enemy records will be added later."
 	)
 
 	credits_button.tooltip_text = (
-		"Placeholder — planned for a later iteration."
+		"Credits are planned for a later iteration."
 	)
 
+
 func _connect_buttons() -> void:
-	play_button.pressed.connect(_on_new_game_button_pressed)
-	load_save_button.pressed.connect(_on_load_save_button_pressed)
-	settings_button.pressed.connect(_on_settings_button_pressed)
-	glossary_button.pressed.connect(_on_glossary_button_pressed)
-	credits_button.pressed.connect(_on_credits_button_pressed)
+	if not play_button.pressed.is_connected(
+		_on_new_game_button_pressed
+	):
+		play_button.pressed.connect(
+			_on_new_game_button_pressed
+		)
 
-func _apply_panel_style() -> void:
-	var panel_style := StyleBoxFlat.new()
+	if not load_save_button.pressed.is_connected(
+		_on_load_save_button_pressed
+	):
+		load_save_button.pressed.connect(
+			_on_load_save_button_pressed
+		)
 
-	panel_style.bg_color = Color(0.08, 0.10, 0.07, 1.0)
-	panel_style.border_color = Color(0.70, 0.58, 0.24, 1.0)
+	if not settings_button.pressed.is_connected(
+		_on_settings_button_pressed
+	):
+		settings_button.pressed.connect(
+			_on_settings_button_pressed
+		)
 
-	panel_style.set_border_width_all(3)
-	panel_style.set_corner_radius_all(18)
+	if not glossary_button.pressed.is_connected(
+		_on_glossary_button_pressed
+	):
+		glossary_button.pressed.connect(
+			_on_glossary_button_pressed
+		)
 
-	center_panel.add_theme_stylebox_override("panel", panel_style)
+	if not credits_button.pressed.is_connected(
+		_on_credits_button_pressed
+	):
+		credits_button.pressed.connect(
+			_on_credits_button_pressed
+		)
+
 
 func _layout_ui() -> void:
-	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var viewport_size: Vector2 = (
+		get_viewport().get_visible_rect().size
+	)
 
-	backdrop.position = Vector2.ZERO
-	backdrop.size = viewport_size
+	if background != null:
+		background.position = Vector2.ZERO
+		background.size = viewport_size
 
-	var panel_size := Vector2(440.0, 500.0)
+	var panel_size: Vector2 = Vector2(
+		336.0,
+		306.0
+	)
 
-	center_panel.position = (viewport_size - panel_size) * 0.5
+	var edge_margin: float = 24.0
+
 	center_panel.size = panel_size
+	center_panel.position = Vector2(
+		viewport_size.x
+			- panel_size.x
+			- edge_margin,
+		viewport_size.y
+			- panel_size.y
+			- edge_margin
+	)
 
-	title_label.position = Vector2(20.0, 34.0)
-	title_label.size = Vector2(400.0, 48.0)
+	var button_position_x: float = 28.0
+	var button_width: float = 280.0
+	var button_height: float = 44.0
 
-	subtitle_label.position = Vector2(20.0, 90.0)
-	subtitle_label.size = Vector2(400.0, 30.0)
+	play_button.position = Vector2(
+		button_position_x,
+		23.0
+	)
+	play_button.size = Vector2(
+		button_width,
+		button_height
+	)
 
-	var button_x: float = 70.0
-	var button_width: float = 300.0
-	var button_height: float = 42.0
+	load_save_button.position = Vector2(
+		button_position_x,
+		77.0
+	)
+	load_save_button.size = Vector2(
+		button_width,
+		button_height
+	)
 
-	play_button.position = Vector2(button_x, 140.0)
-	play_button.size = Vector2(button_width, button_height)
+	settings_button.position = Vector2(
+		button_position_x,
+		131.0
+	)
+	settings_button.size = Vector2(
+		button_width,
+		button_height
+	)
 
-	load_save_button.position = Vector2(button_x, 194.0)
-	load_save_button.size = Vector2(button_width, button_height)
+	glossary_button.position = Vector2(
+		button_position_x,
+		185.0
+	)
+	glossary_button.size = Vector2(
+		button_width,
+		button_height
+	)
 
-	settings_button.position = Vector2(button_x, 248.0)
-	settings_button.size = Vector2(button_width, button_height)
+	credits_button.position = Vector2(
+		button_position_x,
+		239.0
+	)
+	credits_button.size = Vector2(
+		button_width,
+		button_height
+	)
 
-	glossary_button.position = Vector2(button_x, 302.0)
-	glossary_button.size = Vector2(button_width, button_height)
-
-	credits_button.position = Vector2(button_x, 356.0)
-	credits_button.size = Vector2(button_width, button_height)
-
-	placeholder_label.position = Vector2(32.0, 416.0)
-	placeholder_label.size = Vector2(376.0, 52.0)
 
 func _on_new_game_button_pressed() -> void:
 	new_game_pressed.emit()
 
+
 func _on_load_save_button_pressed() -> void:
 	load_save_pressed.emit()
 
+
 func _on_settings_button_pressed() -> void:
 	settings_pressed.emit()
-	_show_placeholder_message("Settings are planned for a later iteration.")
+	_show_placeholder_message(
+		"Settings are planned for a later iteration."
+	)
+
 
 func _on_glossary_button_pressed() -> void:
 	glossary_pressed.emit()
-	_show_placeholder_message("Glossary is planned for a later iteration.")
+	_show_placeholder_message(
+		"Glossary is planned for a later iteration."
+	)
+
 
 func _on_credits_button_pressed() -> void:
 	credits_pressed.emit()
-	_show_placeholder_message("Credits are planned for a later iteration.")
+	_show_placeholder_message(
+		"Credits are planned for a later iteration."
+	)
+
 
 func _show_placeholder_message(message: String) -> void:
-	placeholder_label.text = message
+	# Keep the title menu visually clean for now.
+	# The message is printed instead of displaying the old label.
+	print("[Title Screen] ", message)

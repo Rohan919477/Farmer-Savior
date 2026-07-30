@@ -1,6 +1,55 @@
 [gd_scene format=3 uid="uid://b3nvl7g5yluyy"]
 
 [ext_resource type="Script" uid="uid://d35jo6x72cxmr" path="res://scripts/ui/TitleScreenUI.gd" id="1_nnurv"]
+[ext_resource type="Texture2D" uid="uid://qhw1ablokj6j" path="res://assets/ui/title_screen/farmer_savior_title_background.png" id="2_vpdn1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2qrlq"]
+bg_color = Color(0.050980393, 0.047058824, 0.039215688, 0.6862745)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.54901963, 0.4392157, 0.18431373, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ep7x"]
+bg_color = Color(0.09019608, 0.07450981, 0.0627451, 0.9490196)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.65882355, 0.5372549, 0.23921569, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_la8wy"]
+bg_color = Color(0.38039216, 0.105882354, 0.105882354, 0.9607843)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8352941, 0.7137255, 0.32941177, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uhi5t"]
+bg_color = Color(0.14117648, 0.105882354, 0.078431375, 0.9490196)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.9411765, 0.80784315, 0.40784314, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="TitleScreenUI" type="CanvasLayer" unique_id=2101743907]
 layer = 200
@@ -12,52 +61,128 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Backdrop" type="ColorRect" parent="RootControl" unique_id=61906293]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="Background" type="TextureRect" parent="RootControl" unique_id=1660028846]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_vpdn1")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="CenterPanel" type="Panel" parent="RootControl" unique_id=71890434]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -370.0
+offset_right = -64.0
+offset_bottom = -64.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_2qrlq")
 
 [node name="TitleLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1037425502]
+visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
 
 [node name="SubtitleLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1691617920]
+visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
 
 [node name="PlayButton" type="Button" parent="RootControl/CenterPanel" unique_id=701020116]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 28.0
+offset_top = 23.0
+offset_right = 308.0
+offset_bottom = 67.0
+theme_override_colors/font_color = Color(0.9529412, 0.90588236, 0.80784315, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9019608, 0.6313726, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.5058824, 0.47843137, 0.4392157, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_6ep7x")
+theme_override_styles/hover = SubResource("StyleBoxFlat_la8wy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_uhi5t")
 
-[node name="LoadSaveButton" type="Button" parent="RootControl/CenterPanel" unique_id=1692685919]
+[node name="LoadSaveButton" type="Button" parent="RootControl/CenterPanel" unique_id=2029799471]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 28.0
+offset_top = 77.0
+offset_right = 308.0
+offset_bottom = 121.0
+theme_override_colors/font_color = Color(0.9529412, 0.90588236, 0.80784315, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9019608, 0.6313726, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.5058824, 0.47843137, 0.4392157, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_6ep7x")
+theme_override_styles/hover = SubResource("StyleBoxFlat_la8wy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_uhi5t")
 
-[node name="SettingsButton" type="Button" parent="RootControl/CenterPanel" unique_id=1580591568]
+[node name="SettingsButton" type="Button" parent="RootControl/CenterPanel" unique_id=547712506]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 28.0
+offset_top = 131.0
+offset_right = 308.0
+offset_bottom = 175.0
+theme_override_colors/font_color = Color(0.9529412, 0.90588236, 0.80784315, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9019608, 0.6313726, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.5058824, 0.47843137, 0.4392157, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_6ep7x")
+theme_override_styles/hover = SubResource("StyleBoxFlat_la8wy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_uhi5t")
 
-[node name="GlossaryButton" type="Button" parent="RootControl/CenterPanel" unique_id=1762711071]
+[node name="GlossaryButton" type="Button" parent="RootControl/CenterPanel" unique_id=456747596]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 28.0
+offset_top = 185.0
+offset_right = 308.0
+offset_bottom = 229.0
+theme_override_colors/font_color = Color(0.9529412, 0.90588236, 0.80784315, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9019608, 0.6313726, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.5058824, 0.47843137, 0.4392157, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_6ep7x")
+theme_override_styles/hover = SubResource("StyleBoxFlat_la8wy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_uhi5t")
 
-[node name="CreditsButton" type="Button" parent="RootControl/CenterPanel" unique_id=681703525]
+[node name="CreditsButton" type="Button" parent="RootControl/CenterPanel" unique_id=1736635732]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 28.0
+offset_top = 185.0
+offset_right = 308.0
+offset_bottom = 229.0
+theme_override_colors/font_color = Color(0.9529412, 0.90588236, 0.80784315, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9019608, 0.6313726, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.5058824, 0.47843137, 0.4392157, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_6ep7x")
+theme_override_styles/hover = SubResource("StyleBoxFlat_la8wy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_uhi5t")
 
 [node name="PlaceholderLabel" type="Label" parent="RootControl/CenterPanel" unique_id=1333253392]
+visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0

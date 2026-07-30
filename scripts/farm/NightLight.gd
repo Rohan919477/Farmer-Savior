@@ -4,7 +4,7 @@ class_name NightLight
 const REPAIR_RANGE: float = 42.0
 const REPAIR_PROMPT_OFFSET: Vector2 = Vector2(-56.0, -48.0)
 
-@export var light_radius: float = 2.6
+@export var light_radius: float = 5.0
 @export var light_energy: float = 1.35
 @export var flicker_enabled: bool = true
 @export var flicker_strength: float = 0.08

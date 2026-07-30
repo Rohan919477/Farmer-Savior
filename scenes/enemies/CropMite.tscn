@@ -5,6 +5,70 @@
 [ext_resource type="PackedScene" uid="uid://d4hnqicq4jwab" path="res://scenes/items/SeedDrop.tscn" id="2_jhbwk"]
 [ext_resource type="PackedScene" uid="uid://6vktlkqluj5r" path="res://scenes/items/ScrapDrop.tscn" id="3_3wn2q"]
 [ext_resource type="Script" uid="uid://bsud0qhpjun5o" path="res://scripts/visuals/SimpleDropShadow.gd" id="5_jhbwk"]
+[ext_resource type="Texture2D" uid="uid://w83dmbscxiqt" path="res://sprites/enemies/crop_mite/basic_attack/frame_01.png" id="5_s3lsu"]
+[ext_resource type="Texture2D" uid="uid://bxifieay30qqs" path="res://sprites/enemies/crop_mite/basic_attack/frame_02.png" id="6_fne1n"]
+[ext_resource type="Texture2D" uid="uid://baoefvnqixpcx" path="res://sprites/enemies/crop_mite/basic_attack/frame_03.png" id="7_onbth"]
+[ext_resource type="Texture2D" uid="uid://b7mnh2v4r7yr4" path="res://sprites/enemies/crop_mite/death/frame_01.png" id="8_yexll"]
+[ext_resource type="Texture2D" uid="uid://ccep6d7anlnqd" path="res://sprites/enemies/crop_mite/death/frame_02.png" id="9_yshsh"]
+[ext_resource type="Texture2D" uid="uid://cqig7rlplxa0c" path="res://sprites/enemies/crop_mite/death/frame_03.png" id="10_acaa7"]
+[ext_resource type="Texture2D" uid="uid://gdtcexit1j81" path="res://sprites/enemies/crop_mite/death/frame_04.png" id="11_s4in0"]
+[ext_resource type="Texture2D" uid="uid://b4xgkn3l36q58" path="res://sprites/enemies/crop_mite/hurt/frame_01.png" id="12_jjy01"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_r205f"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_s3lsu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_fne1n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_onbth")
+}],
+"loop": false,
+"name": &"basic_attack",
+"speed": 12.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_yexll")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_yshsh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_acaa7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_s4in0")
+}],
+"loop": false,
+"name": &"death",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("12_jjy01")
+}],
+"loop": false,
+"name": &"hurt",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_s3lsu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_fne1n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_onbth")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 10.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_e1v0j"]
 size = Vector2(32, 32)
@@ -23,9 +87,17 @@ seed_drop_chance = 1.0
 scrap_drop_chance = 1.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
+visible = false
 modulate = Color(0.79944247, 0.7986141, 0.027240464, 1)
 scale = Vector2(0.18, 0.18)
 texture = ExtResource("2_6oap1")
+
+[node name="BodySprite" type="AnimatedSprite2D" parent="." unique_id=1674056076]
+z_index = 1
+texture_filter = 1
+scale = Vector2(0.2, 0.2)
+sprite_frames = SubResource("SpriteFrames_r205f")
+animation = &"walk"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1537155070]
 shape = SubResource("RectangleShape2D_e1v0j")
