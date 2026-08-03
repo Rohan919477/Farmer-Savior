@@ -10,6 +10,9 @@ signal back_to_title_requested
 @onready var settings_button: Button = $Settings
 @onready var load_save_button: Button = $"Load Save"
 @onready var back_to_title_button: Button = $"Back To Title"
+@onready var settings_menu: SettingsMenu = (
+	get_node_or_null("SettingsMenu") as SettingsMenu
+)
 
 var pause_open: bool = false
 
@@ -41,6 +44,9 @@ func open_pause_menu() -> void:
 	back_to_title_button.visible = true
 	confirm_panel.visible = false
 
+	if settings_menu != null:
+		settings_menu.close()
+
 	_layout_ui()
 
 func close_pause_menu(resume_game: bool = true) -> void:
@@ -64,6 +70,9 @@ func close_pause_menu(resume_game: bool = true) -> void:
 	if confirm_panel != null:
 		confirm_panel.visible = false
 
+	if settings_menu != null:
+		settings_menu.close()
+
 	if resume_game:
 		get_tree().paused = false
 
@@ -72,6 +81,9 @@ func is_pause_menu_open() -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not pause_open:
+		return
+
+	if settings_menu != null and settings_menu.visible:
 		return
 
 	if event.is_action_pressed("ui_cancel"):
@@ -188,6 +200,10 @@ func _on_resume_pressed() -> void:
 	resume_requested.emit()
 
 func _on_settings_pressed() -> void:
+	if settings_menu != null:
+		settings_menu.open()
+		return
+
 	settings_requested.emit()
 
 func _on_load_save_pressed() -> void:

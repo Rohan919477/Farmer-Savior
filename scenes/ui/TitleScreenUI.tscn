@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d35jo6x72cxmr" path="res://scripts/ui/TitleScreenUI.gd" id="1_nnurv"]
 [ext_resource type="Texture2D" uid="uid://qhw1ablokj6j" path="res://assets/ui/title_screen/farmer_savior_title_background.png" id="2_vpdn1"]
+[ext_resource type="PackedScene" uid="uid://djwvj306ypg4i" path="res://scenes/ui/SettingsMenu.tscn" id="3_wb4ym"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2qrlq"]
 bg_color = Color(0.050980393, 0.047058824, 0.039215688, 0.6862745)
@@ -186,3 +187,5 @@ visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
+
+[node name="SettingsMenu" parent="." instance=ExtResource("3_wb4ym")]

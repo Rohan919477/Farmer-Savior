@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dwvv5hc1itgad"]
 
 [ext_resource type="Script" uid="uid://8tetmqu3rqlu" path="res://scripts/ui/PauseMenuUI.gd" id="1_vb6pq"]
+[ext_resource type="PackedScene" uid="uid://djwvj306ypg4i" path="res://scenes/ui/SettingsMenu.tscn" id="2_22dkh"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=2061990389]
 layer = 220
@@ -21,3 +22,5 @@ offset_bottom = 8.0
 [node name="Back To Title" type="Button" parent="." unique_id=95174518]
 offset_right = 8.0
 offset_bottom = 8.0
+
+[node name="SettingsMenu" parent="." instance=ExtResource("2_22dkh")]

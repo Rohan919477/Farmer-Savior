@@ -42,6 +42,10 @@ signal play_pressed
 	$RootControl/CenterPanel/PlaceholderLabel
 )
 
+@onready var settings_menu: SettingsMenu = (
+	get_node_or_null("SettingsMenu") as SettingsMenu
+)
+
 
 func _ready() -> void:
 	if root_control == null:
@@ -86,6 +90,9 @@ func show_title_screen() -> void:
 func hide_title_screen() -> void:
 	root_control.visible = false
 
+	if settings_menu != null:
+		settings_menu.close()
+
 
 func is_title_screen_open() -> bool:
 	return root_control.visible
@@ -125,7 +132,7 @@ func _setup_buttons() -> void:
 	)
 
 	settings_button.tooltip_text = (
-		"Settings are planned for a later iteration."
+		"Change keyboard and mouse controls."
 	)
 
 	glossary_button.tooltip_text = (
@@ -260,9 +267,9 @@ func _on_load_save_button_pressed() -> void:
 
 func _on_settings_button_pressed() -> void:
 	settings_pressed.emit()
-	_show_placeholder_message(
-		"Settings are planned for a later iteration."
-	)
+
+	if settings_menu != null:
+		settings_menu.open()
 
 
 func _on_glossary_button_pressed() -> void:
