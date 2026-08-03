@@ -446,6 +446,7 @@ func _physics_process(delta: float) -> void:
 			durability_cost_per_attack
 		)
 
+	_play_audio_sfx("turret_fire")
 	show_spray_feedback()
 
 	print(
@@ -658,6 +659,18 @@ func _get_animation_duration(
 
 	return float(frame_count) / animation_speed
 
+
+
+func _play_audio_sfx(sfx_name: String) -> void:
+	var audio_manager: Node = get_tree().get_first_node_in_group(
+		"audio_manager"
+	)
+
+	if audio_manager == null:
+		return
+
+	if audio_manager.has_method("play_sfx"):
+		audio_manager.call("play_sfx", sfx_name)
 
 func is_nighttime() -> bool:
 	var time_manager: Node = get_tree().get_first_node_in_group(

@@ -1,13 +1,29 @@
 extends Node
 
+@export_group("Music and Ambience")
 @export_file("*.wav", "*.ogg", "*.mp3") var farm_music_path: String = "res://assets/audio/music/farm_ambient_loop.wav"
 @export_file("*.wav", "*.ogg", "*.mp3") var night_ambience_path: String = "res://assets/audio/ambience/night_ambience_loop.wav"
 
-@export var farm_music_volume_db: float = -4.0
-@export var farm_music_night_volume_db: float = -16.0
-@export var night_ambience_volume_db: float = -4.0
+@export var farm_music_volume_db: float = -10.0
+@export var farm_music_night_volume_db: float = -24.0
+@export var night_ambience_volume_db: float = -8.0
 @export var muted_volume_db: float = -80.0
-@export var fade_duration: float = 0.0
+@export var fade_duration: float = 2.0
+
+@export_group("Sound Effects")
+@export_file("*.wav", "*.ogg", "*.mp3") var pistol_shot_sfx_path: String = "res://assets/audio/sfx/pistol_shot.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var reload_sfx_path: String = "res://assets/audio/sfx/reload.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var enemy_hit_sfx_path: String = "res://assets/audio/sfx/enemy_hit.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var enemy_death_sfx_path: String = "res://assets/audio/sfx/enemy_death.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var pickup_collected_sfx_path: String = "res://assets/audio/sfx/pickup_collected.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var turret_fire_sfx_path: String = "res://assets/audio/sfx/turret_fire.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var night_starts_sfx_path: String = "res://assets/audio/sfx/night_starts.wav"
+@export_file("*.wav", "*.ogg", "*.mp3") var button_click_sfx_path: String = "res://assets/audio/sfx/button_click.wav"
+
+@export var sfx_volume_db: float = -6.0
+@export var max_simultaneous_sfx: int = 16
+@export var automatic_button_click_sfx: bool = true
+@export var debug_audio: bool = false
 
 var music_player: AudioStreamPlayer
 var night_ambience_player: AudioStreamPlayer
@@ -15,8 +31,11 @@ var night_ambience_player: AudioStreamPlayer
 var current_mode: String = ""
 var connected_time_manager: Node = null
 var active_tweens: Array[Tween] = []
+var sfx_streams: Dictionary = {}
 
 var audio_watchdog_timer: float = 0.0
+var button_scan_timer: float = 0.0
+var night_start_sfx_played_today: bool = false
 
 
 func _ready() -> void:
@@ -25,23 +44,27 @@ func _ready() -> void:
 
 	_create_audio_players()
 	_load_audio_streams()
+	_load_sfx_streams()
 
-	music_player.volume_db = 0.0
-	music_player.play()
+	play_day_audio(false)
 
-	print("[AudioManager TEST] Farm stream: ", music_player.stream)
-	print("[AudioManager TEST] Farm length: ", music_player.stream.get_length())
-	print("[AudioManager TEST] Farm playing after play(): ", music_player.playing)
+	if debug_audio:
+		call_deferred("_debug_audio_state")
 
 
-#func _process(delta: float) -> void:
-#	_try_connect_to_time_manager()
-#
-#	audio_watchdog_timer -= delta
-#
-#	if audio_watchdog_timer <= 0.0:
-#		audio_watchdog_timer = 0.5
-#		_keep_active_audio_playing()
+func _process(delta: float) -> void:
+	_try_connect_to_time_manager()
+
+	audio_watchdog_timer -= delta
+	if audio_watchdog_timer <= 0.0:
+		audio_watchdog_timer = 0.5
+		_keep_active_audio_playing()
+
+	if automatic_button_click_sfx:
+		button_scan_timer -= delta
+		if button_scan_timer <= 0.0:
+			button_scan_timer = 0.75
+			_connect_button_sfx_recursive(get_tree().root)
 
 
 func _create_audio_players() -> void:
@@ -61,18 +84,30 @@ func _create_audio_players() -> void:
 
 
 func _load_audio_streams() -> void:
-	music_player.stream = _load_stream(farm_music_path)
-	night_ambience_player.stream = _load_stream(night_ambience_path)
+	music_player.stream = _load_stream(farm_music_path, true)
+	night_ambience_player.stream = _load_stream(night_ambience_path, true)
 
 
-func _load_stream(path: String) -> AudioStream:
+func _load_sfx_streams() -> void:
+	sfx_streams.clear()
+	sfx_streams["pistol_shot"] = _load_stream(pistol_shot_sfx_path, false)
+	sfx_streams["reload"] = _load_stream(reload_sfx_path, false)
+	sfx_streams["enemy_hit"] = _load_stream(enemy_hit_sfx_path, false)
+	sfx_streams["enemy_death"] = _load_stream(enemy_death_sfx_path, false)
+	sfx_streams["pickup_collected"] = _load_stream(pickup_collected_sfx_path, false)
+	sfx_streams["turret_fire"] = _load_stream(turret_fire_sfx_path, false)
+	sfx_streams["night_starts"] = _load_stream(night_starts_sfx_path, false)
+	sfx_streams["button_click"] = _load_stream(button_click_sfx_path, false)
+
+
+func _load_stream(path: String, should_loop: bool) -> AudioStream:
 	var stream: AudioStream = load(path) as AudioStream
 
 	if stream == null:
 		push_warning("[AudioManager] Missing audio stream: " + path)
 		return null
 
-	if stream is AudioStreamWAV:
+	if should_loop and stream is AudioStreamWAV:
 		var wav_stream: AudioStreamWAV = stream as AudioStreamWAV
 		wav_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 
@@ -133,8 +168,13 @@ func _on_time_changed(
 func _on_night_started() -> void:
 	play_night_audio(true)
 
+	if not night_start_sfx_played_today:
+		night_start_sfx_played_today = true
+		play_sfx("night_starts", 0.0, 0.0)
+
 
 func _on_day_started(_day_number: int) -> void:
+	night_start_sfx_played_today = false
 	play_day_audio(true)
 
 
@@ -221,7 +261,8 @@ func _play_player_if_needed(
 		return
 
 	if player.stream == null:
-		print("[AudioManager] ", label, " stream is NULL.")
+		if debug_audio:
+			print("[AudioManager] ", label, " stream is NULL.")
 		return
 
 	if player.playing:
@@ -229,14 +270,101 @@ func _play_player_if_needed(
 
 	player.play(0.0)
 
-	print(
-		"[AudioManager] Started/restarted ",
-		label,
-		" | length: ",
-		player.stream.get_length(),
-		" | volume: ",
-		player.volume_db
-	)
+	if debug_audio:
+		print(
+			"[AudioManager] Started/restarted ",
+			label,
+			" | length: ",
+			player.stream.get_length(),
+			" | volume: ",
+			player.volume_db
+		)
+
+
+func play_sfx(
+	sfx_name: String,
+	volume_offset_db: float = 0.0,
+	pitch_variation: float = 0.04
+) -> void:
+	var stream: AudioStream = sfx_streams.get(sfx_name, null) as AudioStream
+
+	if stream == null:
+		if debug_audio:
+			print("[AudioManager] Missing SFX: ", sfx_name)
+		return
+
+	if _get_active_sfx_count() >= max_simultaneous_sfx:
+		return
+
+	var sfx_player: AudioStreamPlayer = AudioStreamPlayer.new()
+	sfx_player.name = "SFX_" + sfx_name
+	sfx_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	sfx_player.bus = "Master"
+	sfx_player.stream = stream
+	sfx_player.volume_db = sfx_volume_db + _get_sfx_volume_offset(sfx_name) + volume_offset_db
+
+	if pitch_variation > 0.0:
+		sfx_player.pitch_scale = randf_range(
+			1.0 - pitch_variation,
+			1.0 + pitch_variation
+		)
+	else:
+		sfx_player.pitch_scale = 1.0
+
+	add_child(sfx_player)
+	sfx_player.finished.connect(sfx_player.queue_free)
+	sfx_player.play()
+
+
+func _get_sfx_volume_offset(sfx_name: String) -> float:
+	match sfx_name:
+		"pistol_shot":
+			return -2.0
+		"reload":
+			return -3.0
+		"enemy_hit":
+			return -4.0
+		"enemy_death":
+			return -3.0
+		"pickup_collected":
+			return -2.0
+		"turret_fire":
+			return -4.0
+		"night_starts":
+			return 0.0
+		"button_click":
+			return -8.0
+		_:
+			return 0.0
+
+
+func _get_active_sfx_count() -> int:
+	var count: int = 0
+
+	for child: Node in get_children():
+		if child is AudioStreamPlayer:
+			if String(child.name).begins_with("SFX_"):
+				count += 1
+
+	return count
+
+
+func _connect_button_sfx_recursive(node: Node) -> void:
+	if node is BaseButton:
+		var base_button: BaseButton = node as BaseButton
+
+		if not base_button.has_meta("audio_click_sfx_connected"):
+			base_button.set_meta("audio_click_sfx_connected", true)
+
+			if not base_button.pressed.is_connected(_on_any_button_pressed):
+				base_button.pressed.connect(_on_any_button_pressed)
+
+	for child: Node in node.get_children():
+		_connect_button_sfx_recursive(child)
+
+
+func _on_any_button_pressed() -> void:
+	play_sfx("button_click", 0.0, 0.0)
 
 
 func _set_player_volume(
@@ -279,7 +407,7 @@ func _debug_audio_state() -> void:
 
 	var master_bus_index: int = AudioServer.get_bus_index("Master")
 
-	print("[AudioManager] ---- AUDIO DEBUG ----")
+	print("[AudioManager] ---- AUDIO DEBUG ----")	
 	print("[AudioManager] Master muted: ", AudioServer.is_bus_mute(master_bus_index))
 	print("[AudioManager] Master volume db: ", AudioServer.get_bus_volume_db(master_bus_index))
 

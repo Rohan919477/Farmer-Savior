@@ -1165,6 +1165,9 @@ func take_damage(amount: int) -> void:
 
 	show_hit_feedback()
 
+	if current_health > 0:
+		_play_audio_sfx("enemy_hit")
+
 	if current_health <= 0:
 		die()
 
@@ -1189,6 +1192,7 @@ func _on_damage_area_body_exited(_body: Node) -> void:
 
 func die() -> void:
 	print(enemy_name, " died.")
+	_play_audio_sfx("enemy_death")
 	drop_resources()
 	queue_free()
 
@@ -1222,6 +1226,18 @@ func drop_resources() -> void:
 
 	if scrap_drop_scene != null and randf() <= scrap_drop_chance:
 		spawn_drop(scrap_drop_scene, Vector2(14.0, 8.0))
+
+
+func _play_audio_sfx(sfx_name: String) -> void:
+	var audio_manager: Node = get_tree().get_first_node_in_group(
+		"audio_manager"
+	)
+
+	if audio_manager == null:
+		return
+
+	if audio_manager.has_method("play_sfx"):
+		audio_manager.call("play_sfx", sfx_name)
 
 func apply_day_scaling(day_number: int) -> void:
 	var day_offset: int = day_number - 1

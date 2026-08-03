@@ -70,6 +70,7 @@ func fire(direction: Vector2) -> bool:
 		bullet.setup(direction)
 
 	_begin_fire_cooldown()
+	_play_audio_sfx("pistol_shot")
 
 	return true
 
@@ -104,6 +105,7 @@ func start_reload() -> bool:
 	is_reloading = true
 	can_fire = false
 
+	_play_audio_sfx("reload")
 	reload_started.emit(reload_time)
 	_finish_reload_after_delay()
 
@@ -224,6 +226,18 @@ func load_save_data(save_data: Dictionary) -> void:
 	can_fire = true
 
 	_emit_ammo_changed()
+
+
+func _play_audio_sfx(sfx_name: String) -> void:
+	var audio_manager: Node = get_tree().get_first_node_in_group(
+		"audio_manager"
+	)
+
+	if audio_manager == null:
+		return
+
+	if audio_manager.has_method("play_sfx"):
+		audio_manager.call("play_sfx", sfx_name)
 
 
 func _emit_ammo_changed() -> void:

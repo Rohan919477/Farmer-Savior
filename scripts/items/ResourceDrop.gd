@@ -81,4 +81,17 @@ func _on_body_entered(body: Node2D) -> void:
 		resource_type
 	)
 
+	_play_audio_sfx("pickup_collected")
 	queue_free()
+
+
+func _play_audio_sfx(sfx_name: String) -> void:
+	var audio_manager: Node = get_tree().get_first_node_in_group(
+		"audio_manager"
+	)
+
+	if audio_manager == null:
+		return
+
+	if audio_manager.has_method("play_sfx"):
+		audio_manager.call("play_sfx", sfx_name)
