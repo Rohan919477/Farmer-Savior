@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://7wa80ghpbegr"]
 
 [ext_resource type="Script" uid="uid://bto30scxia3iv" path="res://scripts/ui/HUD.gd" id="1_kw0id"]
+[ext_resource type="Texture2D" uid="uid://dhvyh2t4pyx2k" path="res://sprites/ui/hud/HUD_WeaponAmmoPanel_01.png" id="2_6ll6g"]
+[ext_resource type="Texture2D" uid="uid://cwl4dwk1ew545" path="res://sprites/ui/hud/HUD_PistolIcon_01.png" id="3_4ed8p"]
 
 [sub_resource type="FontVariation" id="FontVariation_kw0id"]
 
@@ -51,3 +53,63 @@ visible = false
 offset_right = 40.0
 offset_bottom = 23.0
 text = "Objective"
+
+[node name="WeaponAmmoHud" type="Control" parent="." unique_id=294827996]
+layout_mode = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -420.0
+offset_top = -135.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="PanelTexture" type="TextureRect" parent="WeaponAmmoHud" unique_id=1939591134]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 115.0
+texture = ExtResource("2_6ll6g")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PistolIcon" type="TextureRect" parent="WeaponAmmoHud" unique_id=663151102]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 33.0
+offset_right = 106.0
+offset_bottom = 87.0
+texture = ExtResource("3_4ed8p")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AmmoLabel" type="Label" parent="WeaponAmmoHud" unique_id=403784014]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 36.0
+offset_right = 280.0
+offset_bottom = 85.0
+theme_override_colors/font_color = Color(0.92879117, 0.7367979, 0.72153056, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 30
+text = "06/06
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReserveAmmoLabel" type="Label" parent="WeaponAmmoHud" unique_id=1811482769]
+layout_mode = 0
+offset_left = 305.0
+offset_top = 35.0
+offset_right = 383.0
+offset_bottom = 79.0
+theme_override_colors/font_color = Color(0.8, 0.85882354, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 28
+text = "200x"
+horizontal_alignment = 1
+vertical_alignment = 1

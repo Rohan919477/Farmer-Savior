@@ -315,10 +315,17 @@ func _get_player_save_data() -> Dictionary:
 	if player == null:
 		return {}
 
-	if player.has_method("get_save_data"):
-		return player.call("get_save_data")
+	var player_save_data: Dictionary = {}
 
-	return {}
+	if player.has_method("get_save_data"):
+		player_save_data = player.call("get_save_data")
+
+	var pistol_node: Node = player.get_node_or_null("Pistol")
+
+	if pistol_node != null and pistol_node.has_method("get_save_data"):
+		player_save_data["pistol"] = pistol_node.call("get_save_data")
+
+	return player_save_data
 
 func _get_inventory_save_data() -> Dictionary:
 	var inventory_manager: Node = get_tree().get_first_node_in_group(

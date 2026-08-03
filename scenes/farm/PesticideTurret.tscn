@@ -54,11 +54,14 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_tvinq"]
 radius = 50.0
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_blocker"]
+size = Vector2(26, 22)
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_nvrrb"]
 radius = 180.0
 
 [node name="PesticideTurret" type="Node2D" unique_id=1304110094]
-z_index = 20
+z_index = 0
 script = ExtResource("1_nvrrb")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1905290471]
@@ -68,15 +71,23 @@ scale = Vector2(0.25, 0.25)
 texture = ExtResource("2_77ox7")
 
 [node name="BodySprite" type="AnimatedSprite2D" parent="." unique_id=1209508598]
-scale = Vector2(0.1, 0.1)
+scale = Vector2(0.04, 0.04)
 sprite_frames = SubResource("SpriteFrames_tvinq")
 animation = &"idle"
 
+[node name="Blocker" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Blocker"]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_blocker")
+
 [node name="HealthBar" type="ProgressBar" parent="." unique_id=110400010]
-offset_left = -35.0
-offset_top = -70.0
-offset_right = 35.0
-offset_bottom = -43.0
+offset_left = -32.0
+offset_top = -45.0
+offset_right = 32.0
+offset_bottom = -33.0
 
 [node name="RepairPrompt" type="Label" parent="." unique_id=933202826]
 visible = false

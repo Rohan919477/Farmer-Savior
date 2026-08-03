@@ -1,0 +1,2177 @@
+[
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      60,
+      75
+    ],
+    "final_size": [
+      68,
+      83
+    ],
+    "cropped": true,
+    "source_file": "propassets_001.png",
+    "output_file": "prop_001.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      68,
+      76
+    ],
+    "final_size": [
+      76,
+      84
+    ],
+    "cropped": true,
+    "source_file": "propassets_002.png",
+    "output_file": "prop_002.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      68,
+      73
+    ],
+    "final_size": [
+      76,
+      81
+    ],
+    "cropped": true,
+    "source_file": "propassets_003.png",
+    "output_file": "prop_003.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      68,
+      74
+    ],
+    "final_size": [
+      76,
+      82
+    ],
+    "cropped": true,
+    "source_file": "propassets_004.png",
+    "output_file": "prop_004.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      70,
+      77
+    ],
+    "final_size": [
+      78,
+      85
+    ],
+    "cropped": true,
+    "source_file": "propassets_005.png",
+    "output_file": "prop_005.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      68,
+      79
+    ],
+    "final_size": [
+      76,
+      87
+    ],
+    "cropped": true,
+    "source_file": "propassets_006.png",
+    "output_file": "prop_006.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      66,
+      78
+    ],
+    "final_size": [
+      74,
+      86
+    ],
+    "cropped": true,
+    "source_file": "propassets_007.png",
+    "output_file": "prop_007.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      120,
+      100
+    ],
+    "final_size": [
+      128,
+      108
+    ],
+    "cropped": true,
+    "source_file": "propassets_008.png",
+    "output_file": "prop_008.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      128,
+      94
+    ],
+    "final_size": [
+      136,
+      102
+    ],
+    "cropped": true,
+    "source_file": "propassets_009.png",
+    "output_file": "prop_009.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      74,
+      99
+    ],
+    "final_size": [
+      82,
+      107
+    ],
+    "cropped": true,
+    "source_file": "propassets_010.png",
+    "output_file": "prop_010.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      69,
+      89
+    ],
+    "final_size": [
+      77,
+      97
+    ],
+    "cropped": true,
+    "source_file": "propassets_011.png",
+    "output_file": "prop_011.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      71,
+      75
+    ],
+    "final_size": [
+      79,
+      83
+    ],
+    "cropped": true,
+    "source_file": "propassets_012.png",
+    "output_file": "prop_012.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      53,
+      71
+    ],
+    "final_size": [
+      61,
+      79
+    ],
+    "cropped": true,
+    "source_file": "propassets_013.png",
+    "output_file": "prop_013.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      49,
+      58
+    ],
+    "final_size": [
+      57,
+      66
+    ],
+    "cropped": true,
+    "source_file": "propassets_014.png",
+    "output_file": "prop_014.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      47,
+      55
+    ],
+    "final_size": [
+      55,
+      63
+    ],
+    "cropped": true,
+    "source_file": "propassets_015.png",
+    "output_file": "prop_015.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      88,
+      67
+    ],
+    "final_size": [
+      96,
+      75
+    ],
+    "cropped": true,
+    "source_file": "propassets_016.png",
+    "output_file": "prop_016.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      90,
+      73
+    ],
+    "final_size": [
+      98,
+      81
+    ],
+    "cropped": true,
+    "source_file": "propassets_017.png",
+    "output_file": "prop_017.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      89,
+      66
+    ],
+    "final_size": [
+      97,
+      74
+    ],
+    "cropped": true,
+    "source_file": "propassets_018.png",
+    "output_file": "prop_018.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      78,
+      62
+    ],
+    "final_size": [
+      86,
+      70
+    ],
+    "cropped": true,
+    "source_file": "propassets_019.png",
+    "output_file": "prop_019.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      76,
+      57
+    ],
+    "final_size": [
+      84,
+      65
+    ],
+    "cropped": true,
+    "source_file": "propassets_020.png",
+    "output_file": "prop_020.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      71,
+      54
+    ],
+    "final_size": [
+      79,
+      64
+    ],
+    "cropped": true,
+    "source_file": "propassets_021.png",
+    "output_file": "prop_021.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      75,
+      61
+    ],
+    "final_size": [
+      83,
+      69
+    ],
+    "cropped": true,
+    "source_file": "propassets_022.png",
+    "output_file": "prop_022.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      59,
+      48
+    ],
+    "final_size": [
+      67,
+      56
+    ],
+    "cropped": true,
+    "source_file": "propassets_023.png",
+    "output_file": "prop_023.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      54,
+      48
+    ],
+    "final_size": [
+      62,
+      56
+    ],
+    "cropped": true,
+    "source_file": "propassets_024.png",
+    "output_file": "prop_024.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      45,
+      59
+    ],
+    "final_size": [
+      53,
+      67
+    ],
+    "cropped": true,
+    "source_file": "propassets_025.png",
+    "output_file": "prop_025.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      43,
+      51
+    ],
+    "final_size": [
+      51,
+      59
+    ],
+    "cropped": true,
+    "source_file": "propassets_026.png",
+    "output_file": "prop_026.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      63,
+      60
+    ],
+    "final_size": [
+      71,
+      68
+    ],
+    "cropped": true,
+    "source_file": "propassets_027.png",
+    "output_file": "prop_027.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      87,
+      60
+    ],
+    "final_size": [
+      95,
+      68
+    ],
+    "cropped": true,
+    "source_file": "propassets_028.png",
+    "output_file": "prop_028.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      90,
+      50
+    ],
+    "final_size": [
+      98,
+      58
+    ],
+    "cropped": true,
+    "source_file": "propassets_029.png",
+    "output_file": "prop_029.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      48,
+      48
+    ],
+    "final_size": [
+      56,
+      56
+    ],
+    "cropped": true,
+    "source_file": "propassets_030.png",
+    "output_file": "prop_030.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      85,
+      83
+    ],
+    "final_size": [
+      93,
+      91
+    ],
+    "cropped": true,
+    "source_file": "propassets_031.png",
+    "output_file": "prop_031.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      83,
+      83
+    ],
+    "final_size": [
+      91,
+      91
+    ],
+    "cropped": true,
+    "source_file": "propassets_032.png",
+    "output_file": "prop_032.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      82,
+      81
+    ],
+    "final_size": [
+      90,
+      89
+    ],
+    "cropped": true,
+    "source_file": "propassets_033.png",
+    "output_file": "prop_033.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      68,
+      79
+    ],
+    "final_size": [
+      76,
+      87
+    ],
+    "cropped": true,
+    "source_file": "propassets_034.png",
+    "output_file": "prop_034.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      81,
+      81
+    ],
+    "final_size": [
+      89,
+      89
+    ],
+    "cropped": true,
+    "source_file": "propassets_035.png",
+    "output_file": "prop_035.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      60,
+      71
+    ],
+    "final_size": [
+      68,
+      79
+    ],
+    "cropped": true,
+    "source_file": "propassets_036.png",
+    "output_file": "prop_036.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      117,
+      86
+    ],
+    "final_size": [
+      125,
+      94
+    ],
+    "cropped": true,
+    "source_file": "propassets_037.png",
+    "output_file": "prop_037.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      93,
+      87
+    ],
+    "final_size": [
+      101,
+      95
+    ],
+    "cropped": true,
+    "source_file": "propassets_038.png",
+    "output_file": "prop_038.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      119,
+      85
+    ],
+    "final_size": [
+      127,
+      93
+    ],
+    "cropped": true,
+    "source_file": "propassets_039.png",
+    "output_file": "prop_039.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      93,
+      75
+    ],
+    "final_size": [
+      101,
+      83
+    ],
+    "cropped": true,
+    "source_file": "propassets_040.png",
+    "output_file": "prop_040.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      125,
+      85
+    ],
+    "final_size": [
+      133,
+      93
+    ],
+    "cropped": true,
+    "source_file": "propassets_041.png",
+    "output_file": "prop_041.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      140,
+      62
+    ],
+    "final_size": [
+      148,
+      70
+    ],
+    "cropped": true,
+    "source_file": "propassets_042.png",
+    "output_file": "prop_042.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      74,
+      128
+    ],
+    "final_size": [
+      82,
+      136
+    ],
+    "cropped": true,
+    "source_file": "propassets_043.png",
+    "output_file": "prop_043.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      51,
+      38
+    ],
+    "final_size": [
+      59,
+      46
+    ],
+    "cropped": true,
+    "source_file": "propassets_044.png",
+    "output_file": "prop_044.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      75,
+      135
+    ],
+    "final_size": [
+      83,
+      143
+    ],
+    "cropped": true,
+    "source_file": "propassets_045.png",
+    "output_file": "prop_045.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      77,
+      135
+    ],
+    "final_size": [
+      85,
+      143
+    ],
+    "cropped": true,
+    "source_file": "propassets_046.png",
+    "output_file": "prop_046.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      65,
+      69
+    ],
+    "final_size": [
+      73,
+      77
+    ],
+    "cropped": true,
+    "source_file": "propassets_047.png",
+    "output_file": "prop_047.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      79,
+      130
+    ],
+    "final_size": [
+      87,
+      138
+    ],
+    "cropped": true,
+    "source_file": "propassets_048.png",
+    "output_file": "prop_048.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      61,
+      50
+    ],
+    "final_size": [
+      69,
+      58
+    ],
+    "cropped": true,
+    "source_file": "propassets_049.png",
+    "output_file": "prop_049.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      51,
+      100
+    ],
+    "final_size": [
+      63,
+      108
+    ],
+    "cropped": true,
+    "source_file": "propassets_050.png",
+    "output_file": "prop_050.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      52,
+      42
+    ],
+    "final_size": [
+      60,
+      52
+    ],
+    "cropped": true,
+    "source_file": "propassets_051.png",
+    "output_file": "prop_051.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      60,
+      108
+    ],
+    "final_size": [
+      68,
+      116
+    ],
+    "cropped": true,
+    "source_file": "propassets_052.png",
+    "output_file": "prop_052.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      69,
+      119
+    ],
+    "final_size": [
+      77,
+      127
+    ],
+    "cropped": true,
+    "source_file": "propassets_053.png",
+    "output_file": "prop_053.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      27,
+      119
+    ],
+    "final_size": [
+      37,
+      127
+    ],
+    "cropped": true,
+    "source_file": "propassets_054.png",
+    "output_file": "prop_054.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      54,
+      117
+    ],
+    "final_size": [
+      64,
+      125
+    ],
+    "cropped": true,
+    "source_file": "propassets_055.png",
+    "output_file": "prop_055.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      52,
+      120
+    ],
+    "final_size": [
+      60,
+      128
+    ],
+    "cropped": true,
+    "source_file": "propassets_056.png",
+    "output_file": "prop_056.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      51,
+      111
+    ],
+    "final_size": [
+      59,
+      119
+    ],
+    "cropped": true,
+    "source_file": "propassets_057.png",
+    "output_file": "prop_057.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      58,
+      132
+    ],
+    "final_size": [
+      66,
+      140
+    ],
+    "cropped": true,
+    "source_file": "propassets_058.png",
+    "output_file": "prop_058.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      29,
+      38
+    ],
+    "final_size": [
+      37,
+      48
+    ],
+    "cropped": true,
+    "source_file": "propassets_059.png",
+    "output_file": "prop_059.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      45,
+      45
+    ],
+    "final_size": [
+      53,
+      53
+    ],
+    "cropped": true,
+    "source_file": "propassets_060.png",
+    "output_file": "prop_060.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      66,
+      110
+    ],
+    "final_size": [
+      74,
+      118
+    ],
+    "cropped": true,
+    "source_file": "propassets_061.png",
+    "output_file": "prop_061.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      69,
+      68
+    ],
+    "final_size": [
+      77,
+      76
+    ],
+    "cropped": true,
+    "source_file": "propassets_062.png",
+    "output_file": "prop_062.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      27,
+      52
+    ],
+    "final_size": [
+      37,
+      60
+    ],
+    "cropped": true,
+    "source_file": "propassets_063.png",
+    "output_file": "prop_063.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 1,
+    "original_size": [
+      35,
+      55
+    ],
+    "final_size": [
+      45,
+      65
+    ],
+    "cropped": true,
+    "source_file": "propassets_064.png",
+    "output_file": "prop_064.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      60,
+      84
+    ],
+    "final_size": [
+      68,
+      94
+    ],
+    "cropped": true,
+    "source_file": "propassets_065.png",
+    "output_file": "prop_065.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      53,
+      63
+    ],
+    "final_size": [
+      61,
+      73
+    ],
+    "cropped": true,
+    "source_file": "propassets_066.png",
+    "output_file": "prop_066.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      57,
+      49
+    ],
+    "final_size": [
+      65,
+      57
+    ],
+    "cropped": true,
+    "source_file": "propassets_067.png",
+    "output_file": "prop_067.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      47,
+      37
+    ],
+    "final_size": [
+      55,
+      45
+    ],
+    "cropped": true,
+    "source_file": "propassets_068.png",
+    "output_file": "prop_068.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      15,
+      23
+    ],
+    "final_size": [
+      23,
+      31
+    ],
+    "cropped": true,
+    "source_file": "propassets_069.png",
+    "output_file": "prop_069.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      85,
+      105
+    ],
+    "final_size": [
+      93,
+      113
+    ],
+    "cropped": true,
+    "source_file": "propassets_070.png",
+    "output_file": "prop_070.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      75,
+      101
+    ],
+    "final_size": [
+      83,
+      109
+    ],
+    "cropped": true,
+    "source_file": "propassets_071.png",
+    "output_file": "prop_071.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      65,
+      111
+    ],
+    "final_size": [
+      73,
+      119
+    ],
+    "cropped": true,
+    "source_file": "propassets_072.png",
+    "output_file": "prop_072.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      82,
+      99
+    ],
+    "final_size": [
+      90,
+      107
+    ],
+    "cropped": true,
+    "source_file": "propassets_073.png",
+    "output_file": "prop_073.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      65,
+      94
+    ],
+    "final_size": [
+      73,
+      102
+    ],
+    "cropped": true,
+    "source_file": "propassets_074.png",
+    "output_file": "prop_074.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      46,
+      89
+    ],
+    "final_size": [
+      54,
+      97
+    ],
+    "cropped": true,
+    "source_file": "propassets_075.png",
+    "output_file": "prop_075.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      44,
+      84
+    ],
+    "final_size": [
+      52,
+      92
+    ],
+    "cropped": true,
+    "source_file": "propassets_076.png",
+    "output_file": "prop_076.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      68,
+      93
+    ],
+    "final_size": [
+      76,
+      101
+    ],
+    "cropped": true,
+    "source_file": "propassets_077.png",
+    "output_file": "prop_077.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      79,
+      91
+    ],
+    "final_size": [
+      87,
+      99
+    ],
+    "cropped": true,
+    "source_file": "propassets_078.png",
+    "output_file": "prop_078.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      77,
+      86
+    ],
+    "final_size": [
+      85,
+      94
+    ],
+    "cropped": true,
+    "source_file": "propassets_079.png",
+    "output_file": "prop_079.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      79,
+      90
+    ],
+    "final_size": [
+      87,
+      98
+    ],
+    "cropped": true,
+    "source_file": "propassets_080.png",
+    "output_file": "prop_080.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      97,
+      88
+    ],
+    "final_size": [
+      105,
+      96
+    ],
+    "cropped": true,
+    "source_file": "propassets_081.png",
+    "output_file": "prop_081.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      171,
+      86
+    ],
+    "final_size": [
+      179,
+      94
+    ],
+    "cropped": true,
+    "source_file": "propassets_082.png",
+    "output_file": "prop_082.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      99,
+      78
+    ],
+    "final_size": [
+      107,
+      86
+    ],
+    "cropped": true,
+    "source_file": "propassets_083.png",
+    "output_file": "prop_083.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      137,
+      77
+    ],
+    "final_size": [
+      145,
+      85
+    ],
+    "cropped": true,
+    "source_file": "propassets_084.png",
+    "output_file": "prop_084.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      82,
+      79
+    ],
+    "final_size": [
+      92,
+      87
+    ],
+    "cropped": true,
+    "source_file": "propassets_085.png",
+    "output_file": "prop_085.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      72,
+      79
+    ],
+    "final_size": [
+      80,
+      87
+    ],
+    "cropped": true,
+    "source_file": "propassets_086.png",
+    "output_file": "prop_086.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      157,
+      108
+    ],
+    "final_size": [
+      167,
+      116
+    ],
+    "cropped": true,
+    "source_file": "propassets_087.png",
+    "output_file": "prop_087.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      148,
+      93
+    ],
+    "final_size": [
+      158,
+      101
+    ],
+    "cropped": true,
+    "source_file": "propassets_088.png",
+    "output_file": "prop_088.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      71,
+      77
+    ],
+    "final_size": [
+      81,
+      85
+    ],
+    "cropped": true,
+    "source_file": "propassets_089.png",
+    "output_file": "prop_089.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      63,
+      56
+    ],
+    "final_size": [
+      73,
+      66
+    ],
+    "cropped": true,
+    "source_file": "propassets_090.png",
+    "output_file": "prop_090.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      61,
+      58
+    ],
+    "final_size": [
+      69,
+      68
+    ],
+    "cropped": true,
+    "source_file": "propassets_091.png",
+    "output_file": "prop_091.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      67,
+      58
+    ],
+    "final_size": [
+      79,
+      70
+    ],
+    "cropped": true,
+    "source_file": "propassets_092.png",
+    "output_file": "prop_092.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 1,
+    "original_size": [
+      134,
+      85
+    ],
+    "final_size": [
+      146,
+      93
+    ],
+    "cropped": true,
+    "source_file": "propassets_093.png",
+    "output_file": "prop_093.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 2,
+    "original_size": [
+      166,
+      96
+    ],
+    "final_size": [
+      172,
+      104
+    ],
+    "cropped": true,
+    "source_file": "propassets_094.png",
+    "output_file": "prop_094.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      23,
+      16
+    ],
+    "final_size": [
+      33,
+      26
+    ],
+    "cropped": true,
+    "source_file": "propassets_095.png",
+    "output_file": "prop_095.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      130,
+      98
+    ],
+    "final_size": [
+      138,
+      106
+    ],
+    "cropped": true,
+    "source_file": "propassets_096.png",
+    "output_file": "prop_096.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      37,
+      32
+    ],
+    "final_size": [
+      47,
+      40
+    ],
+    "cropped": true,
+    "source_file": "propassets_097.png",
+    "output_file": "prop_097.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 1,
+    "original_size": [
+      39,
+      33
+    ],
+    "final_size": [
+      49,
+      43
+    ],
+    "cropped": true,
+    "source_file": "propassets_098.png",
+    "output_file": "prop_098.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      29,
+      25
+    ],
+    "final_size": [
+      37,
+      33
+    ],
+    "cropped": true,
+    "source_file": "propassets_099.png",
+    "output_file": "prop_099.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      24,
+      17
+    ],
+    "final_size": [
+      34,
+      27
+    ],
+    "cropped": true,
+    "source_file": "propassets_100.png",
+    "output_file": "prop_100.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      26,
+      17
+    ],
+    "final_size": [
+      36,
+      27
+    ],
+    "cropped": true,
+    "source_file": "propassets_101.png",
+    "output_file": "prop_101.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      45,
+      27
+    ],
+    "final_size": [
+      57,
+      37
+    ],
+    "cropped": true,
+    "source_file": "propassets_102.png",
+    "output_file": "prop_102.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      30,
+      21
+    ],
+    "final_size": [
+      40,
+      29
+    ],
+    "cropped": true,
+    "source_file": "propassets_103.png",
+    "output_file": "prop_103.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      21,
+      16
+    ],
+    "final_size": [
+      31,
+      26
+    ],
+    "cropped": true,
+    "source_file": "propassets_104.png",
+    "output_file": "prop_104.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      50,
+      26
+    ],
+    "final_size": [
+      60,
+      35
+    ],
+    "cropped": true,
+    "source_file": "propassets_105.png",
+    "output_file": "prop_105.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      147,
+      100
+    ],
+    "final_size": [
+      155,
+      108
+    ],
+    "cropped": true,
+    "source_file": "propassets_106.png",
+    "output_file": "prop_106.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      125,
+      109
+    ],
+    "final_size": [
+      133,
+      117
+    ],
+    "cropped": true,
+    "source_file": "propassets_107.png",
+    "output_file": "prop_107.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      85,
+      122
+    ],
+    "final_size": [
+      93,
+      130
+    ],
+    "cropped": true,
+    "source_file": "propassets_108.png",
+    "output_file": "prop_108.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      135,
+      125
+    ],
+    "final_size": [
+      143,
+      133
+    ],
+    "cropped": true,
+    "source_file": "propassets_109.png",
+    "output_file": "prop_109.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      160,
+      120
+    ],
+    "final_size": [
+      168,
+      128
+    ],
+    "cropped": true,
+    "source_file": "propassets_110.png",
+    "output_file": "prop_110.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      152,
+      109
+    ],
+    "final_size": [
+      160,
+      117
+    ],
+    "cropped": true,
+    "source_file": "propassets_111.png",
+    "output_file": "prop_111.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      20,
+      28
+    ],
+    "final_size": [
+      30,
+      36
+    ],
+    "cropped": true,
+    "source_file": "propassets_112.png",
+    "output_file": "prop_112.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      164,
+      121
+    ],
+    "final_size": [
+      173,
+      129
+    ],
+    "cropped": true,
+    "source_file": "propassets_113.png",
+    "output_file": "prop_113.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      33,
+      21
+    ],
+    "final_size": [
+      43,
+      31
+    ],
+    "cropped": true,
+    "source_file": "propassets_114.png",
+    "output_file": "prop_114.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      62,
+      49
+    ],
+    "final_size": [
+      74,
+      59
+    ],
+    "cropped": true,
+    "source_file": "propassets_115.png",
+    "output_file": "prop_115.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      38,
+      31
+    ],
+    "final_size": [
+      46,
+      41
+    ],
+    "cropped": true,
+    "source_file": "propassets_116.png",
+    "output_file": "prop_116.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      88,
+      73
+    ],
+    "final_size": [
+      96,
+      81
+    ],
+    "cropped": true,
+    "source_file": "propassets_117.png",
+    "output_file": "prop_117.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 1,
+    "original_size": [
+      43,
+      37
+    ],
+    "final_size": [
+      53,
+      47
+    ],
+    "cropped": true,
+    "source_file": "propassets_118.png",
+    "output_file": "prop_118.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      32,
+      42
+    ],
+    "final_size": [
+      44,
+      54
+    ],
+    "cropped": true,
+    "source_file": "propassets_119.png",
+    "output_file": "prop_119.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      46,
+      38
+    ],
+    "final_size": [
+      56,
+      49
+    ],
+    "cropped": true,
+    "source_file": "propassets_120.png",
+    "output_file": "prop_120.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      26,
+      23
+    ],
+    "final_size": [
+      36,
+      33
+    ],
+    "cropped": true,
+    "source_file": "propassets_121.png",
+    "output_file": "prop_121.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      58,
+      52
+    ],
+    "final_size": [
+      70,
+      64
+    ],
+    "cropped": true,
+    "source_file": "propassets_122.png",
+    "output_file": "prop_122.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      28,
+      23
+    ],
+    "final_size": [
+      38,
+      33
+    ],
+    "cropped": true,
+    "source_file": "propassets_123.png",
+    "output_file": "prop_123.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      37,
+      25
+    ],
+    "final_size": [
+      45,
+      35
+    ],
+    "cropped": true,
+    "source_file": "propassets_124.png",
+    "output_file": "prop_124.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      28,
+      22
+    ],
+    "final_size": [
+      36,
+      30
+    ],
+    "cropped": true,
+    "source_file": "propassets_125.png",
+    "output_file": "prop_125.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      28,
+      23
+    ],
+    "final_size": [
+      38,
+      31
+    ],
+    "cropped": true,
+    "source_file": "propassets_126.png",
+    "output_file": "prop_126.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      45,
+      31
+    ],
+    "final_size": [
+      56,
+      41
+    ],
+    "cropped": true,
+    "source_file": "propassets_127.png",
+    "output_file": "prop_127.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 1,
+    "original_size": [
+      48,
+      34
+    ],
+    "final_size": [
+      54,
+      40
+    ],
+    "cropped": true,
+    "source_file": "propassets_128.png",
+    "output_file": "prop_128.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      34,
+      27
+    ],
+    "final_size": [
+      44,
+      35
+    ],
+    "cropped": true,
+    "source_file": "propassets_129.png",
+    "output_file": "prop_129.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      37,
+      23
+    ],
+    "final_size": [
+      47,
+      33
+    ],
+    "cropped": true,
+    "source_file": "propassets_130.png",
+    "output_file": "prop_130.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      168,
+      167
+    ],
+    "final_size": [
+      176,
+      175
+    ],
+    "cropped": true,
+    "source_file": "propassets_131.png",
+    "output_file": "prop_131.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      117,
+      165
+    ],
+    "final_size": [
+      125,
+      173
+    ],
+    "cropped": true,
+    "source_file": "propassets_132.png",
+    "output_file": "prop_132.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      146,
+      172
+    ],
+    "final_size": [
+      154,
+      180
+    ],
+    "cropped": true,
+    "source_file": "propassets_133.png",
+    "output_file": "prop_133.png"
+  },
+  {
+    "removed_components": 1,
+    "removed_pixels": 1,
+    "original_size": [
+      85,
+      83
+    ],
+    "final_size": [
+      92,
+      93
+    ],
+    "cropped": true,
+    "source_file": "propassets_134.png",
+    "output_file": "prop_134.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      95,
+      142
+    ],
+    "final_size": [
+      105,
+      150
+    ],
+    "cropped": true,
+    "source_file": "propassets_135.png",
+    "output_file": "prop_135.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      34,
+      30
+    ],
+    "final_size": [
+      44,
+      40
+    ],
+    "cropped": true,
+    "source_file": "propassets_136.png",
+    "output_file": "prop_136.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      100,
+      150
+    ],
+    "final_size": [
+      110,
+      158
+    ],
+    "cropped": true,
+    "source_file": "propassets_137.png",
+    "output_file": "prop_137.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      81,
+      97
+    ],
+    "final_size": [
+      91,
+      105
+    ],
+    "cropped": true,
+    "source_file": "propassets_138.png",
+    "output_file": "prop_138.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      144,
+      153
+    ],
+    "final_size": [
+      152,
+      161
+    ],
+    "cropped": true,
+    "source_file": "propassets_139.png",
+    "output_file": "prop_139.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      149,
+      147
+    ],
+    "final_size": [
+      157,
+      155
+    ],
+    "cropped": true,
+    "source_file": "propassets_140.png",
+    "output_file": "prop_140.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      162,
+      144
+    ],
+    "final_size": [
+      170,
+      152
+    ],
+    "cropped": true,
+    "source_file": "propassets_141.png",
+    "output_file": "prop_141.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      43,
+      38
+    ],
+    "final_size": [
+      53,
+      48
+    ],
+    "cropped": true,
+    "source_file": "propassets_142.png",
+    "output_file": "prop_142.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      83,
+      78
+    ],
+    "final_size": [
+      93,
+      86
+    ],
+    "cropped": true,
+    "source_file": "propassets_143.png",
+    "output_file": "prop_143.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      36,
+      40
+    ],
+    "final_size": [
+      44,
+      48
+    ],
+    "cropped": true,
+    "source_file": "propassets_144.png",
+    "output_file": "prop_144.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      59,
+      44
+    ],
+    "final_size": [
+      67,
+      52
+    ],
+    "cropped": true,
+    "source_file": "propassets_145.png",
+    "output_file": "prop_145.png"
+  }
+]

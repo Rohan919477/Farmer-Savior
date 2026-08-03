@@ -3,6 +3,8 @@ extends Area2D
 @export var interaction_name: String = "Interact"
 @export var interaction_type: String = "map_menu"
 @export var target_location_id: String = ""
+@export var prompt_follows_player: bool = true
+@export var prompt_offset: Vector2 = Vector2(-120.0, -86.0)
 
 var player_nearby: bool = false
 var nearby_player: Node = null
@@ -20,12 +22,47 @@ func _ready() -> void:
 	body_exited.connect(_on_body_exited)
 
 	if prompt_label != null:
-		prompt_label.text = interaction_name + "\nPress E"
+		prompt_label.text = _get_prompt_text()
 		prompt_label.visible = false
+		prompt_label.z_index = 500
+		prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		prompt_label.add_theme_font_size_override("font_size", 18)
+		prompt_label.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.92, 0.55, 1.0)
+		)
+		prompt_label.add_theme_color_override(
+			"font_outline_color",
+			Color(0.02, 0.0, 0.0, 1.0)
+		)
+		prompt_label.add_theme_constant_override("outline_size", 4)
 
 	if highlight_visual != null:
 		highlight_visual.visible = false
 
+
+func _get_prompt_text() -> String:
+	if interaction_type == "travel" and target_location_id == "house":
+		return "Press E to enter House"
+
+	return "Press E - " + interaction_name
+
+
+func _update_prompt_position() -> void:
+	if prompt_label == null:
+		return
+
+	if not prompt_follows_player:
+		return
+
+	if nearby_player == null or not is_instance_valid(nearby_player):
+		return
+
+	prompt_label.global_position = (
+		nearby_player.global_position
+		+ prompt_offset
+	)
 
 func is_gameplay_input_blocked() -> bool:
 	var main_node: Node = get_tree().get_first_node_in_group(
@@ -44,6 +81,8 @@ func is_gameplay_input_blocked() -> bool:
 
 
 func _process(_delta: float) -> void:
+	_update_prompt_position()
+
 	if not player_nearby:
 		return
 
@@ -126,6 +165,9 @@ func _on_body_entered(body: Node) -> void:
 	player_nearby = true
 	nearby_player = body
 
+	if prompt_label != null:
+		prompt_label.text = _get_prompt_text()
+	_update_prompt_position()
 	show_interaction_feedback()
 
 	print(
@@ -151,7 +193,7 @@ func show_interaction_feedback() -> void:
 		prompt_label.visible = true
 
 	if highlight_visual != null:
-		highlight_visual.visible = true
+		highlight_visual.visible = false
 
 
 func hide_interaction_feedback() -> void:

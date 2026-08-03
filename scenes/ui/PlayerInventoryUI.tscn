@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://8keld1ucb18n"]
 
 [ext_resource type="Script" uid="uid://cxt15hqj141jp" path="res://scripts/ui/PlayerInventoryUI.gd" id="1_7ov7q"]
+[ext_resource type="Texture2D" uid="uid://b208ayxn0tvsx" path="res://sprites/ui/hud/HUD_BagIcon_01.png" id="2_tw5vl"]
+[ext_resource type="Script" uid="uid://b2wcvoqgonfyr" path="res://scenes/ui/bag_button.gd" id="3_dsayc"]
 
 [node name="PlayerInventoryUI" type="CanvasLayer" unique_id=298674892]
 layer = 30
@@ -15,17 +17,21 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="OpenInventoryButton" type="Button" parent="RootControl" unique_id=289057318]
+[node name="BagButton" type="TextureButton" parent="RootControl" unique_id=1622040865]
+custom_minimum_size = Vector2(72, 72)
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = -74.0
-offset_right = 112.0
-offset_bottom = -24.0
+offset_left = 20.0
+offset_top = -92.0
+offset_right = 92.0
+offset_bottom = -20.0
 tooltip_text = "Inventory (I)"
-text = "BAG"
+texture_normal = ExtResource("2_tw5vl")
+ignore_texture_size = true
+stretch_mode = 5
+script = ExtResource("3_dsayc")
 
 [node name="Overlay" type="ColorRect" parent="RootControl" unique_id=1381828998]
 visible = false

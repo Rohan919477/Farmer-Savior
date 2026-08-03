@@ -12,6 +12,26 @@ extends CanvasLayer
 	get_node_or_null("TutorialObjectiveLabel") as Label
 )
 
+@onready var weapon_ammo_hud: Control = (
+	get_node_or_null("WeaponAmmoHud") as Control
+)
+
+@onready var weapon_panel_texture: TextureRect = (
+	get_node_or_null("WeaponAmmoHud/PanelTexture") as TextureRect
+)
+
+@onready var pistol_icon: TextureRect = (
+	get_node_or_null("WeaponAmmoHud/PistolIcon") as TextureRect
+)
+
+@onready var ammo_label: Label = (
+	get_node_or_null("WeaponAmmoHud/AmmoLabel") as Label
+)
+
+@onready var reserve_ammo_label: Label = (
+	get_node_or_null("WeaponAmmoHud/ReserveAmmoLabel") as Label
+)
+
 var warning_tween: Tween
 var fade_tween: Tween
 var tutorial_feedback_tween: Tween
@@ -35,11 +55,16 @@ var health_bar_inner_width: float = 252.0
 var health_bar_inner_height: float = 12.0
 var health_base_position: Vector2 = Vector2.ZERO
 var horror_ui_font: Font = null
+var weapon_hud_size: Vector2 = Vector2(438.0, 90.0)
+var current_weapon_ammo: int = 6
+var current_weapon_magazine_size: int = 6
+var current_weapon_reserve_ammo: int = 200
 
 func _ready() -> void:
 	horror_ui_font = _create_horror_ui_font()
 	_apply_time_display_style()
 	_build_health_hud()
+	_setup_weapon_ammo_hud()
 
 	fade_overlay.visible = false
 	fade_overlay.modulate = Color(1, 1, 1, 0)
@@ -61,17 +86,29 @@ func _ready() -> void:
 		tutorial_objective_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tutorial_objective_label.add_theme_font_size_override(
 			"font_size",
-			17
+			20
 		)
+
 		tutorial_objective_label.add_theme_color_override(
 			"font_color",
-			Color(1.0, 0.92, 0.55, 1.0)
+			Color(1.0, 0.92, 0.45, 1.0)
+		)
+
+		tutorial_objective_label.add_theme_color_override(
+			"font_outline_color",
+			Color(0.02, 0.0, 0.0, 1.0)
+		)
+
+		tutorial_objective_label.add_theme_constant_override(
+			"outline_size",
+			4
 		)
 
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_on_viewport_size_changed()
 
 	call_deferred("_connect_player_health")
+	call_deferred("_connect_weapon_ammo_hud_to_player")
 
 func _on_viewport_size_changed() -> void:
 	_resize_fade_overlay()
@@ -79,6 +116,7 @@ func _on_viewport_size_changed() -> void:
 	_layout_enemy_count()
 	_layout_tutorial_objective()
 	_layout_health_hud()
+	_layout_weapon_ammo_hud()
 
 func _resize_fade_overlay() -> void:
 	fade_overlay.position = Vector2.ZERO
@@ -142,11 +180,12 @@ func _layout_tutorial_objective() -> void:
 		get_viewport().get_visible_rect().size
 	)
 
-	tutorial_objective_label.position = Vector2(18.0, 54.0)
+	tutorial_objective_label.position = Vector2(18.0, 94.0)
 	tutorial_objective_label.size = Vector2(
 		viewport_size.x - 36.0,
 		52.0
 	)
+	tutorial_objective_label.z_index = 100
 
 func _build_health_hud() -> void:
 	health_root = Control.new()
@@ -288,6 +327,183 @@ func _layout_health_hud() -> void:
 		)
 
 	_refresh_health_visuals()
+
+func _setup_weapon_ammo_hud() -> void:
+	if weapon_ammo_hud == null:
+		return
+
+	weapon_ammo_hud.visible = true
+	weapon_ammo_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	weapon_ammo_hud.z_index = 50
+
+	if weapon_panel_texture != null:
+		weapon_panel_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		weapon_panel_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		weapon_panel_texture.stretch_mode = TextureRect.STRETCH_SCALE
+
+	if pistol_icon != null:
+		pistol_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pistol_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pistol_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+	if ammo_label != null:
+		ammo_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ammo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ammo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		ammo_label.add_theme_font_size_override("font_size", 30)
+		ammo_label.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.90, 0.62, 1.0)
+		)
+		ammo_label.add_theme_color_override(
+			"font_outline_color",
+			Color(0.015, 0.006, 0.002, 1.0)
+		)
+		ammo_label.add_theme_constant_override("outline_size", 5)
+
+	if reserve_ammo_label != null:
+		reserve_ammo_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		reserve_ammo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		reserve_ammo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		reserve_ammo_label.add_theme_font_size_override("font_size", 28)
+		reserve_ammo_label.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.90, 0.62, 1.0)
+		)
+		reserve_ammo_label.add_theme_color_override(
+			"font_outline_color",
+			Color(0.015, 0.006, 0.002, 1.0)
+		)
+		reserve_ammo_label.add_theme_constant_override("outline_size", 5)
+
+	update_weapon_ammo(
+		current_weapon_ammo,
+		current_weapon_magazine_size,
+		current_weapon_reserve_ammo
+	)
+
+
+func _layout_weapon_ammo_hud() -> void:
+	if weapon_ammo_hud == null:
+		return
+
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var bottom_right_padding: Vector2 = Vector2(14.0, 14.0)
+
+	weapon_ammo_hud.position = Vector2(
+		viewport_size.x - weapon_hud_size.x - bottom_right_padding.x,
+		viewport_size.y - weapon_hud_size.y - bottom_right_padding.y
+	)
+
+	weapon_ammo_hud.size = weapon_hud_size
+	weapon_ammo_hud.scale = Vector2.ONE
+	weapon_ammo_hud.pivot_offset = Vector2.ZERO
+
+	if weapon_panel_texture != null:
+		weapon_panel_texture.position = Vector2.ZERO
+		weapon_panel_texture.size = weapon_hud_size
+		weapon_panel_texture.scale = Vector2.ONE
+
+	if pistol_icon != null:
+		pistol_icon.position = Vector2(20.0, 19.0)
+		pistol_icon.size = Vector2(88.0, 52.0)
+		pistol_icon.scale = Vector2.ONE
+
+	if ammo_label != null:
+		ammo_label.position = Vector2(112.0, 23.0)
+		ammo_label.size = Vector2(205.0, 42.0)
+		ammo_label.scale = Vector2.ONE
+
+	if reserve_ammo_label != null:
+		reserve_ammo_label.position = Vector2(334.0, 23.0)
+		reserve_ammo_label.size = Vector2(84.0, 42.0)
+		reserve_ammo_label.scale = Vector2.ONE
+
+func _connect_weapon_ammo_hud_to_player() -> void:
+	await get_tree().process_frame
+
+	var player_node: Node = get_tree().get_first_node_in_group("player")
+
+	if player_node == null:
+		return
+
+	var pistol_node: Node = player_node.get_node_or_null("Pistol")
+
+	if pistol_node == null:
+		return
+
+	if pistol_node.has_signal("ammo_changed"):
+		var ammo_callable: Callable = Callable(
+			self,
+			"_on_pistol_ammo_changed"
+		)
+
+		if not pistol_node.is_connected("ammo_changed", ammo_callable):
+			pistol_node.connect("ammo_changed", ammo_callable)
+
+	var current_ammo: int = current_weapon_ammo
+	var magazine_size: int = current_weapon_magazine_size
+	var reserve_ammo: int = current_weapon_reserve_ammo
+
+	if pistol_node.has_method("get_current_ammo"):
+		current_ammo = int(pistol_node.call("get_current_ammo"))
+
+	if pistol_node.has_method("get_magazine_size"):
+		magazine_size = int(pistol_node.call("get_magazine_size"))
+
+	if pistol_node.has_method("get_reserve_ammo"):
+		reserve_ammo = int(pistol_node.call("get_reserve_ammo"))
+	elif pistol_node.has_method("get_pistol_reserve_ammo"):
+		reserve_ammo = int(pistol_node.call("get_pistol_reserve_ammo"))
+
+	update_weapon_ammo(
+		current_ammo,
+		magazine_size,
+		reserve_ammo
+	)
+
+
+func _on_pistol_ammo_changed(
+	current_ammo: int,
+	magazine_size: int,
+	reserve_ammo: int = 200
+) -> void:
+	update_weapon_ammo(
+		current_ammo,
+		magazine_size,
+		reserve_ammo
+	)
+
+
+func update_weapon_ammo(
+	current_ammo: int,
+	magazine_size: int,
+	reserve_ammo: int
+) -> void:
+	current_weapon_ammo = clampi(
+		current_ammo,
+		0,
+		maxi(1, magazine_size)
+	)
+
+	current_weapon_magazine_size = maxi(
+		1,
+		magazine_size
+	)
+
+	current_weapon_reserve_ammo = maxi(
+		0,
+		reserve_ammo
+	)
+
+	if ammo_label != null:
+		ammo_label.text = "%02d / %02d" % [
+			current_weapon_ammo,
+			current_weapon_magazine_size
+		]
+
+	if reserve_ammo_label != null:
+		reserve_ammo_label.text = str(current_weapon_reserve_ammo) + "x"
 
 func _connect_player_health() -> void:
 	await get_tree().process_frame

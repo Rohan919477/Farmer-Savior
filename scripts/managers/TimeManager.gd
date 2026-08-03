@@ -26,7 +26,7 @@ func _ready() -> void:
 	emit_time_changed()
 
 func _process(delta: float) -> void:
-	if _is_tutorial_world_soft_paused():
+	if _is_tutorial_clock_paused():
 		return
 
 	if phase == "night_cleanup":
@@ -139,13 +139,16 @@ func get_time_text() -> String:
 func emit_time_changed() -> void:
 	time_changed.emit(day_number, get_hour(), get_minute(), phase)
 
-func _is_tutorial_world_soft_paused() -> bool:
+func _is_tutorial_clock_paused() -> bool:
 	var tutorial_manager: Node = get_tree().get_first_node_in_group(
 		"tutorial_manager"
 	)
 
 	if tutorial_manager == null:
 		return false
+
+	if tutorial_manager.has_method("should_pause_time"):
+		return bool(tutorial_manager.call("should_pause_time"))
 
 	if tutorial_manager.has_method("is_world_soft_paused"):
 		return bool(tutorial_manager.call("is_world_soft_paused"))

@@ -39,12 +39,12 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 @export var fence_segment_scene: PackedScene
 @export var nightlight_scene: PackedScene
 
-# The farm remains 1280 × 896 world units.
-# 40 × 28 cells at 32 × 32 preserves that map size.
-@export var grid_columns: int = 40
-@export var grid_rows: int = 28
+# Expanded farm map: 1792 × 1280 world units.
+# 56 × 40 cells at 32 × 32 gives more room for combat, farming, and defences.
+@export var grid_columns: int = 56
+@export var grid_rows: int = 40
 
-@export var farm_grid_origin: Vector2 = Vector2(-640.0, -448.0)
+@export var farm_grid_origin: Vector2 = Vector2(-896.0, -640.0)
 @export var farm_grid_cell_size: Vector2 = Vector2(32.0, 32.0)
 
 @export var max_pesticide_turrets: int = 2
@@ -274,16 +274,16 @@ func get_cell_type(grid_cell: Vector2i) -> String:
 	if is_boundary_cell(grid_cell):
 		return "boundary"
 
-	# House zone scaled from the former 20 × 14 grid.
-	if is_cell_in_range(grid_cell, 4, 11, 4, 9):
+	# Farmhouse zone. Keep it unavailable for defence placement.
+	if is_cell_in_range(grid_cell, 5, 15, 4, 12):
 		return "house"
 
-	# Truck zone scaled from the former 20 × 14 grid.
-	if is_cell_in_range(grid_cell, 28, 33, 4, 7):
+	# Truck zone. Keep it unavailable for defence placement.
+	if is_cell_in_range(grid_cell, 42, 50, 4, 9):
 		return "truck"
 
-	# Farmland zone scaled from the former 20 × 14 grid.
-	if is_cell_in_range(grid_cell, 14, 25, 18, 23):
+	# Larger crop/farmland zone near the lower centre of the farm.
+	if is_cell_in_range(grid_cell, 18, 37, 28, 36):
 		return "farmland"
 
 	return "open"

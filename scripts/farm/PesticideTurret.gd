@@ -18,9 +18,27 @@ const ANIM_BROKEN: StringName = "broken"
 @export_group("Health Bar")
 @export var show_health_bar_always: bool = true
 
+@export_group("Repair and Collision")
+@export var repair_range: float = 44.0
+@export var visual_scale: float = 0.04
+@export var blocker_size: Vector2 = Vector2(26.0, 22.0)
+@export var blocker_offset: Vector2 = Vector2(0.0, 8.0)
+@export var repair_prompt_offset: Vector2 = Vector2(-72.0, -64.0)
+@export var health_bar_position: Vector2 = Vector2(-32.0, -45.0)
+@export var health_bar_size: Vector2 = Vector2(64.0, 12.0)
+
 @onready var range_area: Area2D = $RangeArea
 @onready var turret_sprite: AnimatedSprite2D = $BodySprite
 @onready var health_bar: ProgressBar = $HealthBar
+@onready var repair_area: Area2D = get_node_or_null("RepairArea") as Area2D
+@onready var repair_area_shape: CollisionShape2D = (
+	get_node_or_null("RepairArea/CollisionShape2D") as CollisionShape2D
+)
+@onready var repair_prompt: Label = get_node_or_null("RepairPrompt") as Label
+@onready var blocker: StaticBody2D = get_node_or_null("Blocker") as StaticBody2D
+@onready var blocker_shape: CollisionShape2D = (
+	get_node_or_null("Blocker/CollisionShape2D") as CollisionShape2D
+)
 
 var enemies_in_range: Array[Node2D] = []
 var attack_cooldown: float = 0.0
@@ -31,6 +49,8 @@ var turret_state: String = "perfect"
 
 var base_modulate: Color = Color.WHITE
 var visual_token: int = 0
+var player_in_repair_range: Node = null
+var repair_debug_session_active: bool = false
 
 
 func _ready() -> void:
@@ -39,13 +59,21 @@ func _ready() -> void:
 
 	base_modulate = turret_sprite.modulate
 
-	range_area.body_entered.connect(_on_range_area_body_entered)
-	range_area.body_exited.connect(_on_range_area_body_exited)
+	_setup_visual_layout()
+	_setup_physical_blocker()
+	_setup_repair_area()
+
+	if not range_area.body_entered.is_connected(_on_range_area_body_entered):
+		range_area.body_entered.connect(_on_range_area_body_entered)
+
+	if not range_area.body_exited.is_connected(_on_range_area_body_exited):
+		range_area.body_exited.connect(_on_range_area_body_exited)
 
 	_configure_animation_settings()
 	_setup_health_bar()
 	_apply_condition_visual()
 	_update_health_bar()
+	_update_repair_prompt()
 
 
 func configure_turret(
@@ -63,6 +91,329 @@ func configure_turret(
 		)
 
 	_refresh_from_manager(true)
+
+
+func _process(delta: float) -> void:
+	_position_world_ui()
+	_update_repair_prompt()
+
+	if _can_repair_now() and Input.is_action_pressed("repair_fence"):
+		_repair_while_holding(delta)
+	else:
+		repair_debug_session_active = false
+
+
+func _setup_visual_layout() -> void:
+	# The generated turret frames are 1024 x 1536. At 0.1 scale they become
+	# visually larger than one farm grid cell and cover nearby fence edges.
+	# Keep the object readable, but make it behave like a one-cell defense.
+	if turret_sprite != null:
+		turret_sprite.scale = Vector2(visual_scale, visual_scale)
+		turret_sprite.position = Vector2.ZERO
+		turret_sprite.z_index = 0
+
+	z_index = 0
+
+	if health_bar != null:
+		health_bar.position = health_bar_position
+		health_bar.size = health_bar_size
+		health_bar.z_index = 30
+
+	if repair_prompt != null:
+		repair_prompt.visible = false
+		repair_prompt.z_index = 31
+		repair_prompt.size = Vector2(150.0, 38.0)
+		repair_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		repair_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		repair_prompt.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.83, 0.46, 1.0)
+		)
+		repair_prompt.add_theme_color_override(
+			"font_shadow_color",
+			Color(0.0, 0.0, 0.0, 0.92)
+		)
+		repair_prompt.add_theme_constant_override("shadow_offset_x", 1)
+		repair_prompt.add_theme_constant_override("shadow_offset_y", 1)
+
+
+func _setup_physical_blocker() -> void:
+	if blocker == null:
+		blocker = StaticBody2D.new()
+		blocker.name = "Blocker"
+		add_child(blocker)
+
+	if blocker_shape == null:
+		blocker_shape = blocker.get_node_or_null(
+			"CollisionShape2D"
+		) as CollisionShape2D
+
+	if blocker_shape == null:
+		blocker_shape = CollisionShape2D.new()
+		blocker_shape.name = "CollisionShape2D"
+		blocker.add_child(blocker_shape)
+
+	var rectangle_shape: RectangleShape2D = (
+		blocker_shape.shape as RectangleShape2D
+	)
+
+	if rectangle_shape == null:
+		rectangle_shape = RectangleShape2D.new()
+		blocker_shape.shape = rectangle_shape
+
+	rectangle_shape.size = blocker_size
+	blocker_shape.position = blocker_offset
+
+	# Same blocker layer used by fences.
+	# Player and enemies already collide with this layer.
+	blocker.collision_layer = 4
+	blocker.collision_mask = 0
+
+
+func _setup_repair_area() -> void:
+	if repair_area == null:
+		repair_area = Area2D.new()
+		repair_area.name = "RepairArea"
+		add_child(repair_area)
+
+	if repair_area_shape == null:
+		repair_area_shape = repair_area.get_node_or_null(
+			"CollisionShape2D"
+		) as CollisionShape2D
+
+	if repair_area_shape == null:
+		repair_area_shape = CollisionShape2D.new()
+		repair_area_shape.name = "CollisionShape2D"
+		repair_area.add_child(repair_area_shape)
+
+	var circle_shape: CircleShape2D = (
+		repair_area_shape.shape as CircleShape2D
+	)
+
+	if circle_shape == null:
+		circle_shape = CircleShape2D.new()
+		repair_area_shape.shape = circle_shape
+
+	circle_shape.radius = repair_range
+
+	repair_area.collision_layer = 0
+	repair_area.collision_mask = 1
+	repair_area.monitoring = true
+	repair_area.monitorable = false
+
+	if not repair_area.body_entered.is_connected(
+		_on_repair_area_body_entered
+	):
+		repair_area.body_entered.connect(
+			_on_repair_area_body_entered
+		)
+
+	if not repair_area.body_exited.is_connected(
+		_on_repair_area_body_exited
+	):
+		repair_area.body_exited.connect(
+			_on_repair_area_body_exited
+		)
+
+	if repair_prompt == null:
+		repair_prompt = Label.new()
+		repair_prompt.name = "RepairPrompt"
+		add_child(repair_prompt)
+
+
+func _position_world_ui() -> void:
+	if health_bar != null:
+		health_bar.global_position = global_position + health_bar_position
+		health_bar.rotation = 0.0
+
+	if repair_prompt != null:
+		repair_prompt.global_position = global_position + repair_prompt_offset
+		repair_prompt.rotation = 0.0
+
+
+func _can_repair_now() -> bool:
+	return (
+		turret_state == DefenseManager.PLACEABLE_STATE_DAMAGED
+		and player_in_repair_range != null
+		and _is_daytime()
+		and not _is_gameplay_input_blocked()
+	)
+
+
+func _update_repair_prompt() -> void:
+	if repair_prompt == null:
+		return
+
+	var should_show_prompt: bool = _can_repair_now()
+	repair_prompt.visible = should_show_prompt
+
+	if not should_show_prompt:
+		return
+
+	if Input.is_action_pressed("repair_fence"):
+		return
+
+	if defense_manager != null and defense_manager.has_method(
+		"is_pesticide_turret_repair_cost_paid"
+	):
+		if bool(
+			defense_manager.call(
+				"is_pesticide_turret_repair_cost_paid",
+				turret_key
+			)
+		):
+			repair_prompt.text = "Fix Turret (Hold F)"
+			return
+
+	repair_prompt.text = (
+		"Fix Turret (Hold F)\nScrap: %d"
+		% _get_damaged_repair_cost()
+	)
+
+
+func _repair_while_holding(delta: float) -> void:
+	if defense_manager == null:
+		return
+
+	if turret_key.is_empty():
+		return
+
+	if not defense_manager.has_method("repair_pesticide_turret"):
+		return
+
+	var repair_cost_was_paid: bool = false
+
+	if defense_manager.has_method("is_pesticide_turret_repair_cost_paid"):
+		repair_cost_was_paid = bool(
+			defense_manager.call(
+				"is_pesticide_turret_repair_cost_paid",
+				turret_key
+			)
+		)
+
+	if not repair_cost_was_paid:
+		var repair_cost: int = _get_damaged_repair_cost()
+
+		if repair_cost > 0:
+			if player_in_repair_range == null:
+				return
+
+			if not player_in_repair_range.has_method("spend_resource"):
+				return
+
+			var spent_successfully: bool = bool(
+				player_in_repair_range.call(
+					"spend_resource",
+					"scrap",
+					repair_cost
+				)
+			)
+
+			if not spent_successfully:
+				repair_prompt.text = "Need %d Scrap" % repair_cost
+				repair_debug_session_active = false
+				return
+
+		if defense_manager.has_method(
+			"mark_pesticide_turret_repair_cost_paid"
+		):
+			defense_manager.call(
+				"mark_pesticide_turret_repair_cost_paid",
+				turret_key
+			)
+
+	if not repair_debug_session_active:
+		print(
+			"[Pesticide Turret Repair] Started repairing ",
+			turret_key
+		)
+		repair_debug_session_active = true
+
+	repair_prompt.text = "Fixing Turret..."
+
+	defense_manager.call(
+		"repair_pesticide_turret",
+		turret_key,
+		_get_repair_rate() * delta
+	)
+
+	_refresh_from_manager(false)
+	_update_health_bar()
+
+	if turret_state == DefenseManager.PLACEABLE_STATE_PERFECT:
+		print(
+			"[Pesticide Turret Repair] Completed repair for ",
+			turret_key
+		)
+		repair_debug_session_active = false
+
+
+func _get_damaged_repair_cost() -> int:
+	if defense_manager == null:
+		return 1
+
+	if defense_manager.has_method(
+		"get_damaged_pesticide_turret_repair_cost_scrap"
+	):
+		return int(
+			defense_manager.call(
+				"get_damaged_pesticide_turret_repair_cost_scrap"
+			)
+		)
+
+	if "damaged_pesticide_turret_repair_cost_scrap" in defense_manager:
+		return int(
+			defense_manager.get(
+				"damaged_pesticide_turret_repair_cost_scrap"
+			)
+		)
+
+	return 1
+
+
+func _get_repair_rate() -> float:
+	if defense_manager == null:
+		return 20.0
+
+	if defense_manager.has_method("get_pesticide_turret_repair_rate_per_second"):
+		return float(
+			defense_manager.call(
+				"get_pesticide_turret_repair_rate_per_second"
+			)
+		)
+
+	if "pesticide_turret_repair_rate_per_second" in defense_manager:
+		return float(
+			defense_manager.get("pesticide_turret_repair_rate_per_second")
+		)
+
+	return 20.0
+
+
+func _is_daytime() -> bool:
+	var time_manager: Node = get_tree().get_first_node_in_group(
+		"time_manager"
+	)
+
+	if time_manager == null:
+		return true
+
+	if time_manager.has_method("is_nighttime"):
+		return not bool(time_manager.call("is_nighttime"))
+
+	return true
+
+
+func _is_gameplay_input_blocked() -> bool:
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if main_node == null:
+		return false
+
+	if main_node.has_method("is_gameplay_input_blocked"):
+		return bool(main_node.call("is_gameplay_input_blocked"))
+
+	return false
 
 
 func _physics_process(delta: float) -> void:
@@ -395,6 +746,18 @@ func _on_range_area_body_entered(body: Node2D) -> void:
 func _on_range_area_body_exited(body: Node2D) -> void:
 	if enemies_in_range.has(body):
 		enemies_in_range.erase(body)
+
+
+
+func _on_repair_area_body_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		player_in_repair_range = body
+
+
+func _on_repair_area_body_exited(body: Node2D) -> void:
+	if body == player_in_repair_range:
+		player_in_repair_range = null
+		repair_debug_session_active = false
 
 
 func _on_turret_condition_changed(

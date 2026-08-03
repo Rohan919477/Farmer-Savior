@@ -955,7 +955,7 @@ func show_game_over_after_death() -> void:
 # ---------------------------------------------------------
 
 func get_save_data() -> Dictionary:
-	return {
+	var save_data: Dictionary = {
 		"position_x": global_position.x,
 		"position_y": global_position.y,
 		"current_health": current_health,
@@ -969,6 +969,11 @@ func get_save_data() -> Dictionary:
 			facing_direction.y,
 		"is_dead": is_dead
 	}
+
+	if pistol != null and pistol.has_method("get_save_data"):
+		save_data["pistol"] = pistol.call("get_save_data")
+
+	return save_data
 
 
 func load_save_data(data: Dictionary) -> void:
@@ -1053,7 +1058,13 @@ func load_save_data(data: Dictionary) -> void:
 
 	if pistol != null:
 		pistol.rotation = facing_direction.angle()
-		pistol.reset_weapon()
+
+		var pistol_save_data: Dictionary = data.get("pistol", {})
+
+		if not pistol_save_data.is_empty() and pistol.has_method("load_save_data"):
+			pistol.call("load_save_data", pistol_save_data)
+		elif pistol.has_method("reset_weapon"):
+			pistol.call("reset_weapon")
 	
 	hurt_feedback_serial += 1
 	reset_hurt_feedback()

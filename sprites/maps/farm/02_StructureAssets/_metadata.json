@@ -1,0 +1,227 @@
+[
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      528,
+      450
+    ],
+    "final_size": [
+      540,
+      462
+    ],
+    "cropped": true,
+    "source_file": "structureassets_001.png",
+    "output_file": "structure_001.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      213,
+      220
+    ],
+    "final_size": [
+      225,
+      232
+    ],
+    "cropped": true,
+    "source_file": "structureassets_002.png",
+    "output_file": "structure_002.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      298,
+      219
+    ],
+    "final_size": [
+      310,
+      231
+    ],
+    "cropped": true,
+    "source_file": "structureassets_003.png",
+    "output_file": "structure_003.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      252,
+      211
+    ],
+    "final_size": [
+      264,
+      223
+    ],
+    "cropped": true,
+    "source_file": "structureassets_004.png",
+    "output_file": "structure_004.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      220,
+      175
+    ],
+    "final_size": [
+      232,
+      187
+    ],
+    "cropped": true,
+    "source_file": "structureassets_005.png",
+    "output_file": "structure_005.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      268,
+      183
+    ],
+    "final_size": [
+      280,
+      195
+    ],
+    "cropped": true,
+    "source_file": "structureassets_006.png",
+    "output_file": "structure_006.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      104,
+      177
+    ],
+    "final_size": [
+      116,
+      189
+    ],
+    "cropped": true,
+    "source_file": "structureassets_007.png",
+    "output_file": "structure_007.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      89,
+      85
+    ],
+    "final_size": [
+      101,
+      97
+    ],
+    "cropped": true,
+    "source_file": "structureassets_008.png",
+    "output_file": "structure_008.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      350,
+      186
+    ],
+    "final_size": [
+      362,
+      198
+    ],
+    "cropped": true,
+    "source_file": "structureassets_009.png",
+    "output_file": "structure_009.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      349,
+      186
+    ],
+    "final_size": [
+      361,
+      198
+    ],
+    "cropped": true,
+    "source_file": "structureassets_010.png",
+    "output_file": "structure_010.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      603,
+      257
+    ],
+    "final_size": [
+      615,
+      269
+    ],
+    "cropped": true,
+    "source_file": "structureassets_011.png",
+    "output_file": "structure_011.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      344,
+      296
+    ],
+    "final_size": [
+      356,
+      308
+    ],
+    "cropped": true,
+    "source_file": "structureassets_012.png",
+    "output_file": "structure_012.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      317,
+      258
+    ],
+    "final_size": [
+      329,
+      270
+    ],
+    "cropped": true,
+    "source_file": "structureassets_013.png",
+    "output_file": "structure_013.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      399,
+      280
+    ],
+    "final_size": [
+      411,
+      292
+    ],
+    "cropped": true,
+    "source_file": "structureassets_014.png",
+    "output_file": "structure_014.png"
+  },
+  {
+    "removed_components": 0,
+    "removed_pixels": 0,
+    "original_size": [
+      274,
+      196
+    ],
+    "final_size": [
+      286,
+      208
+    ],
+    "cropped": true,
+    "source_file": "structureassets_015.png",
+    "output_file": "structure_015.png"
+  }
+]

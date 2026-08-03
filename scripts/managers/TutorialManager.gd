@@ -44,6 +44,8 @@ var baseline_seed_count: int = 0
 var baseline_scrap_count: int = 0
 
 var tutorial_world_soft_paused: bool = false
+var tutorial_clock_paused: bool = false
+var tutorial_night_sequence_started: bool = false
 
 @onready var main_node: Node = get_parent()
 @onready var tutorial_popup_ui: TutorialPopupUI = (
@@ -123,6 +125,12 @@ func start_tutorial() -> void:
 		return
 
 	tutorial_active = true
+	tutorial_clock_paused = true
+	tutorial_night_sequence_started = false
+
+	if time_manager != null and time_manager.has_method("set_time_of_day"):
+		time_manager.call("set_time_of_day", 17, 0)
+
 	_set_step(STEP_INTRO)
 
 	_show_popup(
@@ -186,6 +194,9 @@ func on_preparation_system_opened(system_name: String) -> void:
 	
 func is_world_soft_paused() -> bool:
 	return tutorial_world_soft_paused
+
+func should_pause_time() -> bool:
+	return tutorial_clock_paused
 
 func handle_midnight_reached() -> bool:
 	if current_step != STEP_SURVIVE_TO_MIDNIGHT:
@@ -464,13 +475,16 @@ func _begin_prep_objective() -> void:
 	_show_objective("Open the War Table or Workshop once.")
 
 func _begin_night_survival_objective() -> void:
+	tutorial_night_sequence_started = true
+	tutorial_clock_paused = false
+
 	_set_step(STEP_SURVIVE_TO_MIDNIGHT)
 	_show_objective("Survive until midnight.")
 
 	if time_manager != null and time_manager.has_method(
 		"set_time_of_day"
 	):
-		time_manager.call("set_time_of_day", 17, 50)
+		time_manager.call("set_time_of_day", 17, 0)
 
 func _begin_boss_fight() -> void:
 	_set_step(STEP_BOSS_FIGHT)
@@ -507,6 +521,7 @@ func _complete_tutorial() -> void:
 	tutorial_completed = true
 	tutorial_active = false
 	tutorial_world_soft_paused = false
+	tutorial_clock_paused = false
 
 	training_enemy = null
 	tutorial_boss = null

@@ -5,8 +5,8 @@ const SLOTS_PER_PAGE: int = 16
 
 @export var inventory_slot_scene: PackedScene
 
-@onready var open_inventory_button: Button = (
-	$RootControl/OpenInventoryButton
+@onready var open_inventory_button: BaseButton = (
+	$RootControl/BagButton
 )
 
 @onready var overlay: ColorRect = $RootControl/Overlay
@@ -70,7 +70,29 @@ func _ready() -> void:
 	overlay.visible = false
 	inventory_panel.visible = false
 
+	_layout_open_inventory_button()
+	get_viewport().size_changed.connect(_layout_open_inventory_button)
+
 	call_deferred("_connect_systems")
+
+func _layout_open_inventory_button() -> void:
+	if open_inventory_button == null:
+		return
+
+	open_inventory_button.anchor_left = 0.0
+	open_inventory_button.anchor_right = 0.0
+	open_inventory_button.anchor_top = 1.0
+	open_inventory_button.anchor_bottom = 1.0
+
+	open_inventory_button.offset_left = 20.0
+	open_inventory_button.offset_top = -116.0
+	open_inventory_button.offset_right = 116.0
+	open_inventory_button.offset_bottom = -20.0
+
+	open_inventory_button.custom_minimum_size = Vector2(96.0, 96.0)
+	open_inventory_button.scale = Vector2.ONE
+	open_inventory_button.pivot_offset = Vector2(48.0, 48.0)
+
 
 func _process(delta: float) -> void:
 	if not inventory_open:
@@ -99,7 +121,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_workshop_open():
 		return
 		
-	if event.is_action_pressed("inventory"):
+	if event.is_action_pressed("Inventory"):
 		if inventory_open:
 			close_inventory()
 		else:
