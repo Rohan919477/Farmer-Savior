@@ -49,6 +49,7 @@ const SLOTS_PER_PAGE: int = 16
 
 var inventory_manager: InventoryManager = null
 var player: Node = null
+var main_node: Node = null
 
 var inventory_open: bool = false
 var current_page_index: int = 0
@@ -57,6 +58,7 @@ var selected_slot_index: int = -1
 var slot_controls: Array[InventorySlotUI] = []
 
 var stats_refresh_timer: float = 0.0
+var open_button_refresh_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("player_inventory_ui")
@@ -95,6 +97,12 @@ func _layout_open_inventory_button() -> void:
 
 
 func _process(delta: float) -> void:
+	open_button_refresh_timer -= delta
+
+	if open_button_refresh_timer <= 0.0:
+		open_button_refresh_timer = 0.10
+		_update_open_inventory_button_state()
+
 	if not inventory_open:
 		return
 
@@ -103,7 +111,8 @@ func _process(delta: float) -> void:
 	if stats_refresh_timer <= 0.0:
 		stats_refresh_timer = 0.15
 		refresh_player_information()
-		
+	
+
 func is_workshop_open() -> bool:
 	var workshop_ui: Node = get_tree().get_first_node_in_group(
 		"workshop_ui"
@@ -117,14 +126,41 @@ func is_workshop_open() -> bool:
 
 	return false
 
-func _unhandled_input(event: InputEvent) -> void:
-	if is_workshop_open():
+func _is_inventory_opening_blocked() -> bool:
+	if inventory_open:
+		return false
+
+	if main_node == null:
+		main_node = get_tree().get_first_node_in_group("main")
+
+	if main_node != null and main_node.has_method("is_gameplay_input_blocked"):
+		return bool(main_node.call("is_gameplay_input_blocked"))
+
+	return is_workshop_open()
+
+func _update_open_inventory_button_state() -> void:
+	if open_inventory_button == null:
 		return
-		
+
+	var should_show_button: bool = (
+		not inventory_open
+		and not _is_inventory_opening_blocked()
+	)
+
+	open_inventory_button.visible = should_show_button
+	open_inventory_button.disabled = not should_show_button
+
+	if should_show_button:
+		open_inventory_button.mouse_filter = Control.MOUSE_FILTER_STOP
+		open_inventory_button.modulate = Color.WHITE
+	else:
+		open_inventory_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("Inventory"):
 		if inventory_open:
 			close_inventory()
-		else:
+		elif not _is_inventory_opening_blocked():
 			open_inventory()
 
 		get_viewport().set_input_as_handled()
@@ -142,6 +178,7 @@ func _connect_systems() -> void:
 	) as InventoryManager
 
 	player = get_tree().get_first_node_in_group("player")
+	main_node = get_tree().get_first_node_in_group("main")
 
 	if inventory_manager == null:
 		print("PlayerInventoryUI could not find InventoryManager.")
@@ -161,6 +198,10 @@ func is_inventory_open() -> bool:
 	return inventory_open
 
 func open_inventory() -> void:
+	if _is_inventory_opening_blocked():
+		_update_open_inventory_button_state()
+		return
+
 	if inventory_manager == null:
 		_connect_systems()
 
@@ -183,7 +224,7 @@ func close_inventory() -> void:
 
 	overlay.visible = false
 	inventory_panel.visible = false
-	open_inventory_button.visible = true
+	_update_open_inventory_button_state()
 
 func _build_slot_controls() -> void:
 	if inventory_slot_scene == null:

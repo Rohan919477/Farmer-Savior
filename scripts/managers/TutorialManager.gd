@@ -39,6 +39,7 @@ var current_step: String = STEP_NONE
 var start_move_position: Vector2 = Vector2.ZERO
 var training_enemy: Node2D = null
 var tutorial_boss: Node2D = null
+var war_table_opened_for_tutorial: bool = false
 
 var baseline_seed_count: int = 0
 var baseline_scrap_count: int = 0
@@ -127,6 +128,7 @@ func start_tutorial() -> void:
 	tutorial_active = true
 	tutorial_clock_paused = true
 	tutorial_night_sequence_started = false
+	war_table_opened_for_tutorial = false
 
 	if time_manager != null and time_manager.has_method("set_time_of_day"):
 		time_manager.call("set_time_of_day", 17, 0)
@@ -160,12 +162,9 @@ func on_preparation_system_opened(system_name: String) -> void:
 			if system_name != "War Table":
 				return
 
-			_hide_objective()
-
-			_show_popup(
-				STEP_WORKSHOP_POPUP,
-				"The War Table marks where the farm will bleed.\n\n"
-				+ "Now open the Workshop. Spend your Scrap before night."
+			war_table_opened_for_tutorial = true
+			_show_objective(
+				"Look over the War Table, then close it yourself."
 			)
 
 		STEP_USE_WORKSHOP:
@@ -192,6 +191,22 @@ func on_preparation_system_opened(system_name: String) -> void:
 				+ "Buy Field Conditioning I."
 			)
 	
+func on_war_table_closed() -> void:
+	if current_step != STEP_USE_WAR_TABLE:
+		return
+
+	if not war_table_opened_for_tutorial:
+		return
+
+	war_table_opened_for_tutorial = false
+	_hide_objective()
+
+	_show_popup(
+		STEP_WORKSHOP_POPUP,
+		"The War Table marks where the farm will bleed.\n\n"
+		+ "Now open the Workshop. Spend your Scrap before night."
+	)
+
 func is_world_soft_paused() -> bool:
 	return tutorial_world_soft_paused
 
@@ -223,6 +238,7 @@ func on_tutorial_boss_defeated() -> void:
 		return
 
 	tutorial_boss = null
+	war_table_opened_for_tutorial = false
 
 	_show_popup(
 		STEP_BOSS_DEFEATED_POPUP,
@@ -525,6 +541,7 @@ func _complete_tutorial() -> void:
 
 	training_enemy = null
 	tutorial_boss = null
+	war_table_opened_for_tutorial = false
 
 	_disable_workshop_tutorial_focus()
 	_hide_objective()
@@ -546,19 +563,18 @@ func _get_action_hint(action_name: String) -> String:
 	if events.is_empty():
 		return action_name
 
-	var event: InputEvent = events[0]
+	return _format_input_event(events[0])
 
+func _format_input_event(event: InputEvent) -> String:
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
-		var keycode: int = key_event.keycode
+		var keycode: Key = key_event.physical_keycode
 
-		if keycode == 0:
-			keycode = key_event.physical_keycode
+		if keycode == KEY_NONE:
+			keycode = key_event.keycode
 
-		var key_text: String = OS.get_keycode_string(keycode)
-
-		if not key_text.strip_edges().is_empty():
-			return key_text.strip_edges()
+		if keycode != KEY_NONE:
+			return OS.get_keycode_string(keycode)
 
 	if event is InputEventMouseButton:
 		var mouse_event: InputEventMouseButton = event as InputEventMouseButton
@@ -570,14 +586,16 @@ func _get_action_hint(action_name: String) -> String:
 				return "Right Click"
 			MOUSE_BUTTON_MIDDLE:
 				return "Middle Click"
+			MOUSE_BUTTON_WHEEL_UP:
+				return "Mouse Wheel Up"
+			MOUSE_BUTTON_WHEEL_DOWN:
+				return "Mouse Wheel Down"
 
 	var event_text: String = event.as_text()
-
 	event_text = event_text.replace(" (Physical)", "")
 	event_text = event_text.replace(" - Physical", "")
 	event_text = event_text.replace("Physical - ", "")
 	event_text = event_text.replace("Pressed ", "")
-	event_text = event_text.strip_edges()
 
 	return event_text
 

@@ -95,6 +95,15 @@ func _ready() -> void:
 					_on_normal_night_finished
 				)
 
+	if defense_placement_ui != null:
+		if defense_placement_ui.has_signal("defense_placement_closed"):
+			if not defense_placement_ui.defense_placement_closed.is_connected(
+				_on_defense_placement_closed
+			):
+				defense_placement_ui.defense_placement_closed.connect(
+					_on_defense_placement_closed
+				)
+
 	if save_slot_ui != null:
 		if save_slot_ui.has_signal("save_slot_selected"):
 			if not save_slot_ui.save_slot_selected.is_connected(
@@ -742,6 +751,13 @@ func open_defense_placement() -> void:
 func close_defense_placement() -> void:
 	if defense_placement_ui != null:
 		defense_placement_ui.close_ui()
+
+func _on_defense_placement_closed() -> void:
+	if tutorial_manager == null:
+		return
+
+	if tutorial_manager.has_method("on_war_table_closed"):
+		tutorial_manager.call("on_war_table_closed")
 
 func open_workshop() -> void:
 	if _is_house_object_blocked_by_night("Workshop"):
