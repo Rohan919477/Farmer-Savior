@@ -9,11 +9,21 @@ signal normal_night_finished
 @export var max_alive_normal_night_enemies: int = 8
 @export var normal_night_spawn_interval: float = 1.7
 
+@export var rot_crop_unlock_day: int = 2
+@export var blight_pig_unlock_day: int = 3
+@export var crop_mite_spawn_weight: int = 6
+@export var rot_crop_spawn_weight: int = 3
+@export var blight_pig_spawn_weight: int = 2
+@export var guarantee_blight_pig_each_night: bool = true
+@export var guaranteed_blight_pig_after_spawns: int = 2
+
 var normal_night_active: bool = false
 var normal_night_spawns_remaining: int = 0
 var normal_night_spawn_timer: float = 0.0
 var normal_night_finished_emitted: bool = false
 var last_reported_normal_night_enemies_left: int = -1
+var normal_night_spawn_count_this_night: int = 0
+var normal_night_blight_pig_spawned: bool = false
 
 @export var crop_mite_scene: PackedScene
 @export var blight_pig_scene: PackedScene
@@ -137,11 +147,19 @@ func spawn_enemy() -> Node2D:
 		print("Enemy scene is not assigned.")
 		return null
 
-	return spawn_specific_enemy_scene(
+	var spawned_enemy: Node2D = spawn_specific_enemy_scene(
 		enemy_scene,
 		spawn_position,
 		true
 	)
+
+	if spawned_enemy != null and normal_night_active:
+		normal_night_spawn_count_this_night += 1
+
+		if enemy_scene == blight_pig_scene:
+			normal_night_blight_pig_spawned = true
+
+	return spawned_enemy
 	
 func spawn_specific_enemy_scene(
 	enemy_scene: PackedScene,
@@ -362,21 +380,86 @@ func get_random_exterior_spawn_position() -> Vector2:
 			)
 
 func choose_enemy_scene() -> PackedScene:
+	var day_number: int = _get_current_day_number()
+
+	if _should_force_blight_pig_spawn(day_number):
+		print(
+			"[SpawnManager] Guaranteeing Blight Pig spawn for day ",
+			day_number
+		)
+		return blight_pig_scene
+
 	var enemy_options: Array[PackedScene] = []
 
-	if crop_mite_scene != null:
-		enemy_options.append(crop_mite_scene)
+	_append_weighted_enemy_scene(
+		enemy_options,
+		crop_mite_scene,
+		crop_mite_spawn_weight
+	)
 
-	if blight_pig_scene != null:
-		enemy_options.append(blight_pig_scene)
+	if day_number >= rot_crop_unlock_day:
+		_append_weighted_enemy_scene(
+			enemy_options,
+			rot_crop_scene,
+			rot_crop_spawn_weight
+		)
 
-	if rot_crop_scene != null:
-		enemy_options.append(rot_crop_scene)
+	if day_number >= blight_pig_unlock_day:
+		_append_weighted_enemy_scene(
+			enemy_options,
+			blight_pig_scene,
+			blight_pig_spawn_weight
+		)
 
 	if enemy_options.is_empty():
 		return null
 
 	return enemy_options.pick_random()
+
+
+func _append_weighted_enemy_scene(
+	enemy_options: Array[PackedScene],
+	enemy_scene: PackedScene,
+	weight: int
+) -> void:
+	if enemy_scene == null:
+		return
+
+	var safe_weight: int = maxi(1, weight)
+
+	for _index in range(safe_weight):
+		enemy_options.append(enemy_scene)
+
+
+func _should_force_blight_pig_spawn(day_number: int) -> bool:
+	if not guarantee_blight_pig_each_night:
+		return false
+
+	if not normal_night_active:
+		return false
+
+	if day_number < blight_pig_unlock_day:
+		return false
+
+	if blight_pig_scene == null:
+		return false
+
+	if normal_night_blight_pig_spawned:
+		return false
+
+	if normal_night_spawns_remaining <= 1:
+		return true
+
+	return normal_night_spawn_count_this_night >= (
+		guaranteed_blight_pig_after_spawns
+	)
+
+
+func _get_current_day_number() -> int:
+	if time_manager != null and time_manager.has_method("get_day_number"):
+		return int(time_manager.call("get_day_number"))
+
+	return 1
 
 func check_night_cleanup_complete() -> void:
 	if cleanup_cleared_emitted:
@@ -412,6 +495,8 @@ func _on_day_started(_day_number: int) -> void:
 	clear_active_enemies()
 	spawn_cooldown = 0.0
 	cleanup_cleared_emitted = false
+	normal_night_spawn_count_this_night = 0
+	normal_night_blight_pig_spawned = false
 	
 func _is_tutorial_world_soft_paused() -> bool:
 	var tutorial_manager: Node = get_tree().get_first_node_in_group(
@@ -431,6 +516,8 @@ func begin_normal_night_combat(day_number: int) -> void:
 	normal_night_finished_emitted = false
 	normal_night_spawn_timer = 0.0
 	last_reported_normal_night_enemies_left = -1
+	normal_night_spawn_count_this_night = 0
+	normal_night_blight_pig_spawned = false
 	spawn_cooldown = 0.0
 	cleanup_cleared_emitted = false
 
@@ -454,6 +541,8 @@ func stop_normal_night_combat() -> void:
 	normal_night_spawn_timer = 0.0
 	normal_night_finished_emitted = false
 	last_reported_normal_night_enemies_left = -1
+	normal_night_spawn_count_this_night = 0
+	normal_night_blight_pig_spawned = false
 
 	_emit_normal_night_enemy_count()
 
