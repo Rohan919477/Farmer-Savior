@@ -268,11 +268,12 @@ func remove_crop_without_harvest(grid_cell: Vector2i) -> bool:
 	return true
 
 func request_crop_slot_interaction(grid_cell: Vector2i) -> void:
-	capture_crop_click_until_release = true
-
 	if not is_daytime():
-		print("[Crop] Planting and harvesting are available only during daytime.")
+		# At night the farm plot should not consume mouse input.
+		# Shooting must still work over the crop area during combat.
 		return
+
+	capture_crop_click_until_release = true
 
 	var crop_state: String = get_crop_state(grid_cell)
 

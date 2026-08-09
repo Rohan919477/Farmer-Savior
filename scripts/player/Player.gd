@@ -476,6 +476,14 @@ func is_crop_click_being_captured() -> bool:
 	return false
 
 
+func is_pointer_over_ui_control() -> bool:
+	var hovered_control: Control = (
+		get_viewport().gui_get_hovered_control()
+	)
+
+	return hovered_control != null
+
+
 func handle_combat_input() -> void:
 	if is_crop_click_being_captured():
 		return
@@ -489,10 +497,16 @@ func handle_combat_input() -> void:
 		return
 
 	if Input.is_action_just_pressed("shoot"):
+		if is_pointer_over_ui_control():
+			return
+
 		fire_pistol()
 		return
 
 	if Input.is_action_just_pressed("melee_attack"):
+		if is_pointer_over_ui_control():
+			return
+
 		use_hoe_swing()
 
 

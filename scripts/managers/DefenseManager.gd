@@ -55,7 +55,7 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 
 # War Table starting inventory.
 @export var starting_fences: int = 12
-@export var starting_nightlights: int = 2
+@export var starting_nightlights: int = 8
 @export var nightlight_max_integrity: float = 100.0
 @export var nightlight_wear_per_second: float = 0.20
 @export var damaged_nightlight_repair_cost_scrap: int = 1
@@ -79,7 +79,7 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 
 var pesticide_turrets_available: int = 2
 var fences_available: int = 12
-var nightlights_available: int = 2
+var nightlights_available: int = 8
 
 # Example:
 # {
@@ -125,7 +125,7 @@ var base_pesticide_turret_max_durability: float = 100.0
 var base_damaged_pesticide_turret_repair_cost_scrap: int = 1
 var base_pesticide_turret_repair_rate_per_second: float = 20.0
 var base_starting_fences: int = 12
-var base_starting_nightlights: int = 2
+var base_starting_nightlights: int = 8
 var base_nightlight_max_integrity: float = 100.0
 var base_nightlight_wear_per_second: float = 0.20
 var base_damaged_nightlight_repair_cost_scrap: int = 1

@@ -198,6 +198,8 @@ func is_inventory_open() -> bool:
 	return inventory_open
 
 func open_inventory() -> void:
+	get_viewport().set_input_as_handled()
+
 	if _is_inventory_opening_blocked():
 		_update_open_inventory_button_state()
 		return

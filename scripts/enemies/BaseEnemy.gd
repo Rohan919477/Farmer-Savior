@@ -415,6 +415,15 @@ func _refresh_primary_target() -> void:
 		current_primary_target = _get_nearest_attackable_placeable()
 		return
 
+	if defense_manager != null:
+		if defense_manager.is_world_position_inside_farm_perimeter(
+			global_position
+		):
+			# After an enemy breaches the perimeter, it should pressure
+			# the player instead of wandering after distant placeables.
+			current_primary_target = player
+			return
+
 	var nearest_placeable: Node2D = (
 		_get_nearest_attackable_placeable()
 	)

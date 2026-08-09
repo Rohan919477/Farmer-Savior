@@ -15,6 +15,7 @@ var crop_manager: CropManager = null
 var grid_cell: Vector2i = Vector2i.ZERO
 var is_hovered: bool = false
 var click_locked: bool = false
+var crop_input_enabled: bool = true
 
 func _ready() -> void:
 	_setup_input_area()
@@ -25,6 +26,34 @@ func _ready() -> void:
 
 	hover_label.visible = false
 	queue_redraw()
+
+
+func _process(_delta: float) -> void:
+	_update_crop_input_enabled()
+
+
+func _update_crop_input_enabled() -> void:
+	var should_enable_input: bool = true
+
+	if crop_manager != null and crop_manager.has_method("is_daytime"):
+		should_enable_input = bool(crop_manager.call("is_daytime"))
+
+	if crop_input_enabled == should_enable_input:
+		return
+
+	crop_input_enabled = should_enable_input
+
+	if plot_area != null:
+		plot_area.input_pickable = crop_input_enabled
+
+	if not crop_input_enabled:
+		is_hovered = false
+		click_locked = false
+
+		if hover_label != null:
+			hover_label.visible = false
+
+		queue_redraw()
 
 func configure_slot(
 	new_crop_manager: CropManager,
@@ -40,6 +69,7 @@ func configure_slot(
 			_on_crop_data_changed
 		)
 
+	_update_crop_input_enabled()
 	_refresh_visual()
 
 func _setup_input_area() -> void:
@@ -155,6 +185,13 @@ func _on_plot_input_event(
 	if crop_manager == null:
 		print("[Crop Slot] Click received, but CropManager is missing.")
 		return
+
+	if crop_manager.has_method("is_daytime"):
+		if not bool(crop_manager.call("is_daytime")):
+			# Do not consume nighttime clicks. The player must be able
+			# to shoot over the farm plot during night combat.
+			click_locked = false
+			return
 
 	if debug_crop_slot_logging:
 		print("[Crop Slot] Left-clicked: ", grid_cell)

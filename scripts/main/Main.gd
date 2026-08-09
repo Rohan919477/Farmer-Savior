@@ -13,6 +13,11 @@ const SAVE_SLOT_CONTEXT_BED_SLEEP: String = "bed_sleep"
 
 const HOUSE_EVACUATION_DURATION: float = 20.0
 
+const HOUSE_LIGHT_TEXTURE_SIZE: int = 256
+const HOUSE_LIGHT_COLOR: Color = Color(1.0, 0.72, 0.34, 1.0)
+const HOUSE_LIGHT_ENERGY: float = 0.95
+const HOUSE_LIGHT_Z_INDEX: int = 30
+
 @onready var map_manager: Node = $MapManager
 @onready var time_manager: Node = $TimeManager
 @onready var hud: CanvasLayer = $HUD
@@ -57,9 +62,16 @@ var sleep_transition_running: bool = false
 var pending_manual_save_slot: int = -1
 var active_manual_save_slot: int = -1
 var save_slot_menu_context: String = SAVE_SLOT_CONTEXT_NONE
+var house_light_texture: Texture2D = null
 
 func _ready() -> void:
 	add_to_group("main")
+
+	if map_manager != null and map_manager.has_signal("location_loaded"):
+		if not map_manager.location_loaded.is_connected(
+			_on_location_loaded
+		):
+			map_manager.location_loaded.connect(_on_location_loaded)
 
 	if time_manager.has_signal("night_started"):
 		time_manager.night_started.connect(_on_night_started)
@@ -194,6 +206,83 @@ func _ready() -> void:
 				title_screen_ui.load_save_pressed.connect(
 					_on_title_screen_load_save_pressed
 				)
+
+func _on_location_loaded(location_id: String, loaded_map: Node) -> void:
+	if location_id != "house":
+		return
+
+	_ensure_house_interior_lights(loaded_map)
+
+
+func _ensure_house_interior_lights(loaded_map: Node) -> void:
+	if loaded_map == null:
+		return
+
+	if loaded_map.get_node_or_null("PermanentInteriorLights") != null:
+		return
+
+	var light_root: Node2D = Node2D.new()
+	light_root.name = "PermanentInteriorLights"
+	loaded_map.add_child(light_root)
+
+	var light_positions: Array[Vector2] = [
+		Vector2(-245.0, -205.0),
+		Vector2(245.0, -205.0),
+		Vector2(-245.0, 205.0),
+		Vector2(245.0, 205.0)
+	]
+
+	for index in range(light_positions.size()):
+		var point_light: PointLight2D = PointLight2D.new()
+		point_light.name = "InteriorLight%d" % (index + 1)
+		point_light.position = light_positions[index]
+		point_light.texture = _get_house_light_texture()
+		point_light.color = HOUSE_LIGHT_COLOR
+		point_light.energy = HOUSE_LIGHT_ENERGY
+		point_light.shadow_enabled = false
+		point_light.z_index = HOUSE_LIGHT_Z_INDEX
+		light_root.add_child(point_light)
+
+
+func _get_house_light_texture() -> Texture2D:
+	if house_light_texture != null:
+		return house_light_texture
+
+	var image: Image = Image.create(
+		HOUSE_LIGHT_TEXTURE_SIZE,
+		HOUSE_LIGHT_TEXTURE_SIZE,
+		false,
+		Image.FORMAT_RGBA8
+	)
+
+	var center: Vector2 = Vector2(
+		float(HOUSE_LIGHT_TEXTURE_SIZE - 1) * 0.5,
+		float(HOUSE_LIGHT_TEXTURE_SIZE - 1) * 0.5
+	)
+
+	var radius: float = float(HOUSE_LIGHT_TEXTURE_SIZE) * 0.5
+
+	for y in range(HOUSE_LIGHT_TEXTURE_SIZE):
+		for x in range(HOUSE_LIGHT_TEXTURE_SIZE):
+			var distance: float = Vector2(x, y).distance_to(center)
+			var normalized_distance: float = clampf(
+				distance / radius,
+				0.0,
+				1.0
+			)
+
+			var alpha: float = 1.0 - normalized_distance
+			alpha = pow(alpha, 2.0)
+
+			image.set_pixel(
+				x,
+				y,
+				Color(1.0, 1.0, 1.0, alpha)
+			)
+
+	house_light_texture = ImageTexture.create_from_image(image)
+	return house_light_texture
+
 
 func _process(delta: float) -> void:
 	_process_normal_night_state(delta)
