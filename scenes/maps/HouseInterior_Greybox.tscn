@@ -212,7 +212,7 @@ color = Color(0.9882353, 1, 0.34117648, 1)
 
 [node name="Visual" type="Sprite2D" parent="HouseExit" unique_id=559099830]
 z_index = -5
-scale = Vector2(0.2, 0.2)
+scale = Vector2(0.23, 0.23)
 texture = ExtResource("5_juyes")
 
 [node name="PromptLabel" type="Label" parent="HouseExit" unique_id=1411913639]
@@ -238,4 +238,4 @@ position = Vector2(0, 10)
 shape = SubResource("RectangleShape2D_tvinq")
 
 [node name="Bed" parent="." unique_id=1640131424 instance=ExtResource("2_20cke")]
-position = Vector2(-250, 130)
+position = Vector2(-220, 130)

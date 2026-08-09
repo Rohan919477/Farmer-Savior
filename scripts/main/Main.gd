@@ -13,9 +13,10 @@ const SAVE_SLOT_CONTEXT_BED_SLEEP: String = "bed_sleep"
 
 const HOUSE_EVACUATION_DURATION: float = 20.0
 
-const HOUSE_LIGHT_TEXTURE_SIZE: int = 256
-const HOUSE_LIGHT_COLOR: Color = Color(1.0, 0.72, 0.34, 1.0)
-const HOUSE_LIGHT_ENERGY: float = 0.95
+const HOUSE_LIGHT_TEXTURE_SIZE: int = 384
+const HOUSE_LIGHT_TEXTURE_SCALE: float = 2.0
+const HOUSE_LIGHT_COLOR: Color = Color(1.0, 0.78, 0.42, 1.0)
+const HOUSE_LIGHT_ENERGY: float = 2.4
 const HOUSE_LIGHT_Z_INDEX: int = 30
 
 @onready var map_manager: Node = $MapManager
@@ -239,6 +240,7 @@ func _ensure_house_interior_lights(loaded_map: Node) -> void:
 		point_light.texture = _get_house_light_texture()
 		point_light.color = HOUSE_LIGHT_COLOR
 		point_light.energy = HOUSE_LIGHT_ENERGY
+		point_light.texture_scale = HOUSE_LIGHT_TEXTURE_SCALE
 		point_light.shadow_enabled = false
 		point_light.z_index = HOUSE_LIGHT_Z_INDEX
 		light_root.add_child(point_light)
@@ -288,6 +290,10 @@ func _process(delta: float) -> void:
 	_process_normal_night_state(delta)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_fullscreen"):
+		_toggle_fullscreen()
+		return
+
 	if not event.is_action_pressed("ui_cancel"):
 		return
 
@@ -303,6 +309,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if pause_menu.has_method("open_pause_menu"):
 		pause_menu.call("open_pause_menu")
+
+func _toggle_fullscreen() -> void:
+	var window: Window = get_window()
+
+	if window.mode == Window.MODE_EXCLUSIVE_FULLSCREEN:
+		window.mode = Window.MODE_WINDOWED
+	else:
+		window.mode = Window.MODE_EXCLUSIVE_FULLSCREEN
 
 func _should_ignore_pause_input() -> bool:
 	if title_screen_ui != null and title_screen_ui.is_title_screen_open():

@@ -2,7 +2,18 @@ extends Node2D
 class_name CropPlotSlot
 
 @export var debug_crop_slot_logging: bool = false
-
+const BASIC_CROP_GROWING_TEXTURE: Texture2D = preload(
+	"res://sprites/farm/crops/BasicCrop_growing_01.png"
+)
+const BASIC_CROP_READY_TEXTURE: Texture2D = preload(
+	"res://sprites/farm/crops/BasicCrop_ready_01.png"
+)
+const MUTANT_CROP_GROWING_TEXTURE: Texture2D = preload(
+	"res://sprites/farm/crops/MutantCrop_growing_01.png"
+)
+const MUTANT_CROP_READY_TEXTURE: Texture2D = preload(
+	"res://sprites/farm/crops/MutantCrop_ready_01.png"
+)
 const SLOT_SIZE: float = 30.0
 
 @onready var plot_area: Area2D = $PlotArea
@@ -10,6 +21,7 @@ const SLOT_SIZE: float = 30.0
 	$PlotArea/CollisionShape2D
 )
 @onready var hover_label: Label = $HoverLabel
+var crop_sprite: Sprite2D = null
 
 var crop_manager: CropManager = null
 var grid_cell: Vector2i = Vector2i.ZERO
@@ -18,6 +30,7 @@ var click_locked: bool = false
 var crop_input_enabled: bool = true
 
 func _ready() -> void:
+	_ensure_crop_sprite()
 	_setup_input_area()
 
 	plot_area.mouse_entered.connect(_on_mouse_entered)
@@ -25,6 +38,7 @@ func _ready() -> void:
 	plot_area.input_event.connect(_on_plot_input_event)
 
 	hover_label.visible = false
+	_refresh_crop_sprite()
 	queue_redraw()
 
 
@@ -110,21 +124,7 @@ func _draw() -> void:
 		false,
 		1.0
 	)
-
-	match crop_state:
-		"growing":
-			draw_circle(
-				Vector2.ZERO,
-				7.0,
-				Color(0.25, 0.65, 0.20)
-			)
-
-		"ready":
-			draw_circle(
-				Vector2.ZERO,
-				10.0,
-				Color(0.92, 0.78, 0.18)
-			)
+			
 
 	if is_hovered:
 		draw_rect(
@@ -141,7 +141,25 @@ func _refresh_visual() -> void:
 	hover_label.text = crop_manager.get_crop_hover_text(grid_cell)
 	hover_label.visible = is_hovered
 
+	_refresh_crop_sprite()
 	queue_redraw()
+
+func _ensure_crop_sprite() -> void:
+	if crop_sprite != null:
+		return
+
+	if has_node("CropSprite"):
+		crop_sprite = $CropSprite as Sprite2D
+	else:
+		crop_sprite = Sprite2D.new()
+		crop_sprite.name = "CropSprite"
+		add_child(crop_sprite)
+
+	crop_sprite.centered = true
+	crop_sprite.position = Vector2.ZERO
+	crop_sprite.scale = Vector2(0.04, 0.04)
+	crop_sprite.z_index = 20
+	crop_sprite.visible = false
 
 func _on_mouse_entered() -> void:
 	is_hovered = true
@@ -150,6 +168,55 @@ func _on_mouse_entered() -> void:
 		print("[Crop Slot] Mouse entered: ", grid_cell)
 
 	_refresh_visual()
+	
+func _refresh_crop_sprite() -> void:
+	_ensure_crop_sprite()
+
+	if crop_sprite == null:
+		return
+
+	if crop_manager == null:
+		crop_sprite.visible = false
+		crop_sprite.texture = null
+		return
+
+	var crop_state: String = crop_manager.get_crop_state(grid_cell)
+
+	if crop_state == CropManager.CROP_STATE_EMPTY:
+		crop_sprite.visible = false
+		crop_sprite.texture = null
+		return
+
+	var crop_data: Dictionary = crop_manager.get_crop_data(grid_cell)
+	var crop_id: String = str(crop_data.get("crop_id", ""))
+
+	var selected_texture: Texture2D = null
+
+	if crop_id == CropManager.BASIC_CROP_ID:
+		if crop_state == CropManager.CROP_STATE_GROWING:
+			selected_texture = BASIC_CROP_GROWING_TEXTURE
+		elif crop_state == CropManager.CROP_STATE_READY:
+			selected_texture = BASIC_CROP_READY_TEXTURE
+
+	elif crop_id == CropManager.MUTANT_CROP_ID:
+		if crop_state == CropManager.CROP_STATE_GROWING:
+			selected_texture = MUTANT_CROP_GROWING_TEXTURE
+		elif crop_state == CropManager.CROP_STATE_READY:
+			selected_texture = MUTANT_CROP_READY_TEXTURE
+
+	if selected_texture == null:
+		print(
+			"[Crop Slot] No texture selected. Cell: ",
+			grid_cell,
+			" | State: ",
+			crop_state,
+			" | Crop ID: ",
+			crop_id
+		)
+
+	crop_sprite.texture = selected_texture
+	crop_sprite.visible = selected_texture != null
+	crop_sprite.z_index = 20
 
 func _on_mouse_exited() -> void:
 	is_hovered = false

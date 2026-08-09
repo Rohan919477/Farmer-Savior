@@ -5,6 +5,10 @@
 [node name="CropPlotSlot" type="Node2D" unique_id=160374615]
 script = ExtResource("1_pl8u6")
 
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=8743067]
+z_index = 20
+scale = Vector2(0.05, 0.05)
+
 [node name="PlotArea" type="Area2D" parent="." unique_id=1514271677]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlotArea" unique_id=1008748587]
