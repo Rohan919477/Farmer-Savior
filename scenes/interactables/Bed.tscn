@@ -1,16 +1,20 @@
 [gd_scene format=3 uid="uid://c1qf835q7437v"]
 
 [ext_resource type="Script" uid="uid://bxif771o1e1yx" path="res://scripts/interactables/Bed.gd" id="1_njnai"]
-[ext_resource type="Texture2D" uid="uid://ddgq1bxbelcds" path="res://icon.svg" id="2_324ki"]
+[ext_resource type="Texture2D" uid="uid://djfawb65ob60j" path="res://sprites/maps/house/Bed_01.png" id="2_324ki"]
 [ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="3_324ki"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tvinq"]
 size = Vector2(96, 80)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a3kam"]
+size = Vector2(85, 130)
+
 [node name="Bed" type="Node2D" unique_id=1640131424]
 script = ExtResource("1_njnai")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1928147235]
+scale = Vector2(0.19, 0.19)
 texture = ExtResource("2_324ki")
 
 [node name="BedWakeMarker" type="Marker2D" parent="." unique_id=1390071911]
@@ -44,3 +48,11 @@ text = "Bed"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=376614361]
 shape = SubResource("RectangleShape2D_tvinq")
+
+[node name="ObjectCollision" type="StaticBody2D" parent="." unique_id=1689205102]
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObjectCollision" unique_id=882799824]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_a3kam")

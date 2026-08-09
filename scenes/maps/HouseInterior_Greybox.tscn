@@ -1,36 +1,81 @@
 [gd_scene format=3 uid="uid://c063t17x2gye3"]
 
+[ext_resource type="Texture2D" uid="uid://sucjmeabt5q3" path="res://sprites/maps/house/HouseInterior_01.png" id="1_j4yol"]
 [ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="1_uveoq"]
 [ext_resource type="PackedScene" uid="uid://c1qf835q7437v" path="res://scenes/interactables/Bed.tscn" id="2_20cke"]
+[ext_resource type="Texture2D" uid="uid://city13upefruj" path="res://sprites/maps/house/map_table.png" id="3_l67gs"]
+[ext_resource type="Texture2D" uid="uid://ci5bve2828e6s" path="res://sprites/maps/house/war_table.png" id="4_hg8mh"]
+[ext_resource type="Texture2D" uid="uid://bmbhewuae3g8f" path="res://sprites/maps/house/HouseDoor_01.png" id="5_juyes"]
+[ext_resource type="Texture2D" uid="uid://b67nioqve64v7" path="res://sprites/maps/house/workshop.png" id="6_workshop"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_top"]
+size = Vector2(640, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_left"]
+size = Vector2(40, 535)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_right"]
+size = Vector2(40, 535)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_bottom_left"]
+size = Vector2(220, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_bottom_right"]
+size = Vector2(220, 40)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uveoq"]
-size = Vector2(120, 90)
+size = Vector2(110, 75)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tvinq"]
+size = Vector2(70, 90)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_20cke"]
-size = Vector2(120, 90)
+size = Vector2(110, 75)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_df2qc"]
-size = Vector2(120, 90)
+size = Vector2(110, 75)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w62e5"]
 size = Vector2(120, 90)
 
 [node name="HouseInteriorGreybox" type="Node2D" unique_id=785323423]
 
-[node name="Ground" type="ColorRect" parent="." unique_id=1567092862]
-offset_left = -500.0
-offset_top = -300.0
-offset_right = 500.0
-offset_bottom = 300.0
-color = Color(0.53, 0.38530996, 0.11660001, 1)
+[node name="HouseInteriorVisual" type="Sprite2D" parent="." unique_id=141720481]
+z_index = -10
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("1_j4yol")
+
+[node name="HouseCollisionWalls" type="StaticBody2D" parent="." unique_id=177590808]
+collision_layer = 4
+collision_mask = 0
+
+[node name="TopWall" type="CollisionShape2D" parent="HouseCollisionWalls" unique_id=1981541968]
+position = Vector2(0, -280)
+shape = SubResource("RectangleShape2D_house_top")
+
+[node name="LeftWall" type="CollisionShape2D" parent="HouseCollisionWalls" unique_id=480934657]
+position = Vector2(-305, -5)
+shape = SubResource("RectangleShape2D_house_left")
+
+[node name="RightWall" type="CollisionShape2D" parent="HouseCollisionWalls" unique_id=1083386676]
+position = Vector2(305, -5)
+shape = SubResource("RectangleShape2D_house_right")
+
+[node name="BottomLeftWall" type="CollisionShape2D" parent="HouseCollisionWalls" unique_id=933161331]
+position = Vector2(-190, 265)
+shape = SubResource("RectangleShape2D_house_bottom_left")
+
+[node name="BottomRightWall" type="CollisionShape2D" parent="HouseCollisionWalls" unique_id=1901285787]
+position = Vector2(190, 265)
+shape = SubResource("RectangleShape2D_house_bottom_right")
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=844602052]
 
 [node name="DefaultSpawn" type="Marker2D" parent="SpawnPoints" unique_id=751019344]
-position = Vector2(0, 120)
+position = Vector2(0, 175)
 
 [node name="MapTable" type="Area2D" parent="." unique_id=66491364]
-position = Vector2(-200, -80)
+position = Vector2(-220, -75)
 collision_layer = 32768
 script = ExtResource("1_uveoq")
 interaction_name = "Map Table"
@@ -44,13 +89,10 @@ offset_right = 55.0
 offset_bottom = 40.0
 color = Color(0.99215686, 1, 0.6, 0.92156863)
 
-[node name="Visual" type="ColorRect" parent="MapTable" unique_id=1829092026]
+[node name="Visual" type="Sprite2D" parent="MapTable" unique_id=1075464126]
 z_index = 6
-offset_left = -45.0
-offset_top = -30.0
-offset_right = 45.0
-offset_bottom = 30.0
-color = Color(0.12941177, 0.5764706, 0.6901961, 1)
+scale = Vector2(0.075, 0.075)
+texture = ExtResource("3_l67gs")
 
 [node name="PromptLabel" type="Label" parent="MapTable" unique_id=810405840]
 visible = false
@@ -64,8 +106,16 @@ text = "Map Table"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MapTable" unique_id=440689038]
 shape = SubResource("RectangleShape2D_uveoq")
 
+[node name="ObjectCollision" type="StaticBody2D" parent="MapTable" unique_id=1639342387]
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MapTable/ObjectCollision" unique_id=423982999]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_tvinq")
+
 [node name="WarTable" type="Area2D" parent="." unique_id=891067468]
-position = Vector2(0, -80)
+position = Vector2(0, -75)
 collision_layer = 32768
 script = ExtResource("1_uveoq")
 interaction_name = "War Table"
@@ -80,13 +130,10 @@ offset_right = 55.0
 offset_bottom = 40.0
 color = Color(1, 0.20784314, 0.12156863, 1)
 
-[node name="Visual" type="ColorRect" parent="WarTable" unique_id=1373325992]
+[node name="Visual" type="Sprite2D" parent="WarTable" unique_id=1715934966]
 z_index = 6
-offset_left = -45.0
-offset_top = -30.0
-offset_right = 45.0
-offset_bottom = 30.0
-color = Color(0.6392157, 0.011764706, 0.011764706, 1)
+scale = Vector2(0.075, 0.075)
+texture = ExtResource("4_hg8mh")
 
 [node name="PromptLabel" type="Label" parent="WarTable" unique_id=303444905]
 visible = false
@@ -100,8 +147,17 @@ text = "War Table"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WarTable" unique_id=1637262589]
 shape = SubResource("RectangleShape2D_20cke")
 
+[node name="ObjectCollision" type="StaticBody2D" parent="WarTable" unique_id=1040558333]
+position = Vector2(-220, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WarTable/ObjectCollision" unique_id=749562339]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_tvinq")
+
 [node name="Workshop" type="Area2D" parent="." unique_id=26390529]
-position = Vector2(200, -80)
+position = Vector2(220, -75)
 collision_layer = 32768
 script = ExtResource("1_uveoq")
 interaction_name = "Workshop"
@@ -116,13 +172,10 @@ offset_right = 55.0
 offset_bottom = 40.0
 color = Color(0.585062, 0.585062, 0.5850621, 1)
 
-[node name="Visual" type="ColorRect" parent="Workshop" unique_id=1360832563]
+[node name="Visual" type="Sprite2D" parent="Workshop" unique_id=163573589]
 z_index = 6
-offset_left = -45.0
-offset_top = -30.0
-offset_right = 45.0
-offset_bottom = 30.0
-color = Color(0.32156864, 0.32156864, 0.32156864, 1)
+scale = Vector2(0.075, 0.075)
+texture = ExtResource("6_workshop")
 
 [node name="PromptLabel" type="Label" parent="Workshop" unique_id=1087734139]
 visible = false
@@ -136,8 +189,17 @@ text = "Workshop"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Workshop" unique_id=944276647]
 shape = SubResource("RectangleShape2D_df2qc")
 
+[node name="ObjectCollision" type="StaticBody2D" parent="Workshop" unique_id=927285130]
+position = Vector2(-440, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Workshop/ObjectCollision" unique_id=1764346335]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_tvinq")
+
 [node name="HouseExit" type="Area2D" parent="." unique_id=201118473]
-position = Vector2(0, 220)
+position = Vector2(0, 265)
 collision_layer = 32768
 script = ExtResource("1_uveoq")
 interaction_name = "Exit House"
@@ -153,13 +215,10 @@ offset_right = 55.0
 offset_bottom = 40.0
 color = Color(0.9882353, 1, 0.34117648, 1)
 
-[node name="Visual" type="ColorRect" parent="HouseExit" unique_id=177970902]
-z_index = 6
-offset_left = -45.0
-offset_top = -30.0
-offset_right = 45.0
-offset_bottom = 30.0
-color = Color(0.5803922, 0.101960786, 1, 1)
+[node name="Visual" type="Sprite2D" parent="HouseExit" unique_id=559099830]
+z_index = -5
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("5_juyes")
 
 [node name="PromptLabel" type="Label" parent="HouseExit" unique_id=1411913639]
 visible = false
@@ -174,5 +233,14 @@ text = "Exit
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HouseExit" unique_id=844992408]
 shape = SubResource("RectangleShape2D_w62e5")
 
+[node name="ObjectCollision" type="StaticBody2D" parent="HouseExit" unique_id=322661569]
+position = Vector2(-220, -340)
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseExit/ObjectCollision" unique_id=642084491]
+position = Vector2(0, 10)
+shape = SubResource("RectangleShape2D_tvinq")
+
 [node name="Bed" parent="." unique_id=1640131424 instance=ExtResource("2_20cke")]
-position = Vector2(-300, 140)
+position = Vector2(-265, 130)
