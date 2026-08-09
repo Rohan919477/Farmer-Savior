@@ -120,6 +120,8 @@ var broken_fences_in_repair_queue: int = 0
 var active_farm_map: Node = null
 
 var base_max_pesticide_turrets: int = 2
+var base_pesticide_turret_max_integrity: float = 100.0
+var base_pesticide_turret_max_durability: float = 100.0
 var base_damaged_pesticide_turret_repair_cost_scrap: int = 1
 var base_pesticide_turret_repair_rate_per_second: float = 20.0
 var base_starting_fences: int = 12
@@ -137,6 +139,8 @@ func _ready() -> void:
 	add_to_group("defense_manager")
 
 	base_max_pesticide_turrets = max_pesticide_turrets
+	base_pesticide_turret_max_integrity = pesticide_turret_max_integrity
+	base_pesticide_turret_max_durability = pesticide_turret_max_durability
 	base_damaged_pesticide_turret_repair_cost_scrap = (
 		damaged_pesticide_turret_repair_cost_scrap
 	)
@@ -1411,6 +1415,73 @@ func apply_fence_repair_rate_multiplier(multiplier: float) -> void:
 		"[Fence Upgrade] Fence repair rate is now ",
 		fence_repair_rate_per_second,
 		" HP per second."
+	)
+
+
+func apply_pesticide_turret_capacity_bonus(capacity_bonus: int) -> void:
+	if capacity_bonus <= 0:
+		return
+
+	max_pesticide_turrets += capacity_bonus
+	pesticide_turrets_available += capacity_bonus
+
+	inventory_changed.emit(pesticide_turrets_available)
+
+	print(
+		"[Turret Upgrade] Maximum Pesticide Turret capacity increased by ",
+		capacity_bonus,
+		". Available turrets: ",
+		pesticide_turrets_available
+	)
+
+func apply_pesticide_turret_integrity_and_durability_bonus(bonus: float) -> void:
+	if bonus <= 0.0:
+		return
+
+	pesticide_turret_max_integrity += bonus
+	pesticide_turret_max_durability += bonus
+
+	for turret_key_variant in placed_turrets.keys():
+		var turret_key: String = str(turret_key_variant)
+
+		if get_turret_state(turret_key) == PLACEABLE_STATE_BROKEN:
+			continue
+
+		var turret_data: Dictionary = placed_turrets[turret_key]
+		turret_data["current_integrity"] = clampf(
+			float(turret_data.get("current_integrity", 0.0)) + bonus,
+			0.0,
+			pesticide_turret_max_integrity
+		)
+		turret_data["current_durability"] = clampf(
+			float(turret_data.get("current_durability", 0.0)) + bonus,
+			0.0,
+			pesticide_turret_max_durability
+		)
+		placed_turrets[turret_key] = turret_data
+
+		turret_condition_changed.emit(
+			turret_key,
+			get_turret_state(turret_key)
+		)
+
+	print(
+		"[Turret Upgrade] Pesticide Turret integrity/durability max increased by ",
+		bonus,
+		". New max integrity: ",
+		pesticide_turret_max_integrity
+	)
+
+func apply_pesticide_turret_repair_rate_multiplier(multiplier: float) -> void:
+	if multiplier <= 0.0:
+		return
+
+	pesticide_turret_repair_rate_per_second *= multiplier
+
+	print(
+		"[Turret Upgrade] Pesticide Turret repair rate is now ",
+		pesticide_turret_repair_rate_per_second,
+		" per second."
 	)
 
 func get_placed_fence_keys() -> Array[String]:
@@ -2766,7 +2837,10 @@ func get_save_data() -> Dictionary:
 		})
 
 	return {
+		"max_pesticide_turrets": max_pesticide_turrets,
 		"pesticide_turrets_available": pesticide_turrets_available,
+		"pesticide_turret_max_integrity": pesticide_turret_max_integrity,
+		"pesticide_turret_max_durability": pesticide_turret_max_durability,
 		"broken_pesticide_turrets_in_repair_queue": (
 			broken_pesticide_turrets_in_repair_queue
 		),
@@ -2805,6 +2879,27 @@ func get_save_data() -> Dictionary:
 	}
 
 func load_save_data(data: Dictionary) -> void:
+	max_pesticide_turrets = int(
+		data.get(
+			"max_pesticide_turrets",
+			max_pesticide_turrets
+		)
+	)
+
+	pesticide_turret_max_integrity = float(
+		data.get(
+			"pesticide_turret_max_integrity",
+			pesticide_turret_max_integrity
+		)
+	)
+
+	pesticide_turret_max_durability = float(
+		data.get(
+			"pesticide_turret_max_durability",
+			pesticide_turret_max_durability
+		)
+	)
+
 	pesticide_turrets_available = int(
 		data.get(
 			"pesticide_turrets_available",
@@ -3037,6 +3132,9 @@ func load_save_data(data: Dictionary) -> void:
 	)
 
 func reset_for_new_game() -> void:
+	max_pesticide_turrets = base_max_pesticide_turrets
+	pesticide_turret_max_integrity = base_pesticide_turret_max_integrity
+	pesticide_turret_max_durability = base_pesticide_turret_max_durability
 	pesticide_turrets_available = base_max_pesticide_turrets
 	broken_pesticide_turrets_in_repair_queue = 0
 	placed_turrets.clear()

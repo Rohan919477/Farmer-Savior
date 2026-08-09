@@ -15,12 +15,12 @@ const TAB_GADGETS: String = "gadgets"
 
 const ACTIVE_TREE_TABS = [
 	TAB_PLAYER,
-	TAB_FENCE
+	TAB_FENCE,
+	TAB_TURRETS,
+	TAB_WEAPONS
 ]
 
 const LOCKED_TAB_IDS = [
-	TAB_TURRETS,
-	TAB_WEAPONS,
 	TAB_BACKPACK,
 	TAB_GADGETS
 ]
@@ -41,14 +41,18 @@ const TAB_CONTENT: Dictionary = {
 		)
 	},
 	TAB_TURRETS: {
-		"title": "TURRETS",
-		"subtitle": "Locked for this prototype iteration.",
-		"body": "This system is planned for a later iteration."
+		"title": "PESTICIDE TURRETS",
+		"subtitle": (
+			"Improve turret capacity, durability, and field repair so "
+			+ "the farm can survive heavier night pressure."
+		)
 	},
 	TAB_WEAPONS: {
-		"title": "WEAPONS",
-		"subtitle": "Locked for this prototype iteration.",
-		"body": "Weapon upgrade trees are planned for a later iteration."
+		"title": "PISTOL UPGRADES",
+		"subtitle": (
+			"Improve pistol handling, loaded-ammo capacity, reload speed, "
+			+ "and reserve ammunition."
+		)
 	},
 	TAB_BACKPACK: {
 		"title": "BACKPACK",
@@ -184,7 +188,9 @@ var current_subtab: String = ""
 
 var selected_upgrade_by_tree: Dictionary = {
 	TAB_PLAYER: UpgradeManager.UPGRADE_FIELD_CONDITIONING,
-	TAB_FENCE: UpgradeManager.UPGRADE_REINFORCED_TIMBER
+	TAB_FENCE: UpgradeManager.UPGRADE_REINFORCED_TIMBER,
+	TAB_TURRETS: UpgradeManager.UPGRADE_SPARE_SPRAYER,
+	TAB_WEAPONS: UpgradeManager.UPGRADE_STABLE_GRIP
 }
 
 var locked_tab_labels: Dictionary = {}
@@ -214,6 +220,8 @@ func _ready() -> void:
 
 	player_tab_button.pressed.connect(_on_player_tab_pressed)
 	fence_tab_button.pressed.connect(_on_fence_tab_pressed)
+	turrets_tab_button.pressed.connect(_on_turrets_tab_pressed)
+	weapons_tab_button.pressed.connect(_on_weapons_tab_pressed)
 
 	tree_board.upgrade_selected.connect(_on_tree_upgrade_selected)
 	purchase_button.pressed.connect(_on_purchase_upgrade_pressed)
@@ -1318,6 +1326,12 @@ func _get_default_upgrade_for_tree(tree_id: String) -> String:
 		TAB_FENCE:
 			return UpgradeManager.UPGRADE_REINFORCED_TIMBER
 
+		TAB_TURRETS:
+			return UpgradeManager.UPGRADE_SPARE_SPRAYER
+
+		TAB_WEAPONS:
+			return UpgradeManager.UPGRADE_STABLE_GRIP
+
 	return ""
 
 func _is_active_tree_tab(tab_id: String) -> bool:
@@ -1417,3 +1431,9 @@ func _on_player_tab_pressed() -> void:
 
 func _on_fence_tab_pressed() -> void:
 	select_tab(TAB_FENCE)
+
+func _on_turrets_tab_pressed() -> void:
+	select_tab(TAB_TURRETS)
+
+func _on_weapons_tab_pressed() -> void:
+	select_tab(TAB_WEAPONS)

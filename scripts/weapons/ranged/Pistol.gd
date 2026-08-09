@@ -22,6 +22,11 @@ signal reload_finished
 
 @onready var muzzle_point: Marker2D = $MuzzlePoint
 
+var base_fire_cooldown: float = 0.25
+var base_magazine_size: int = 6
+var base_reload_time: float = 1.5
+var base_starting_reserve_ammo: int = 200
+
 var can_fire: bool = true
 var current_ammo: int = 0
 var reserve_ammo: int = 0
@@ -30,6 +35,11 @@ var is_reloading: bool = false
 
 
 func _ready() -> void:
+	base_fire_cooldown = fire_cooldown
+	base_magazine_size = magazine_size
+	base_reload_time = reload_time
+	base_starting_reserve_ammo = starting_reserve_ammo
+
 	current_ammo = magazine_size
 	reserve_ammo = starting_reserve_ammo
 	pending_reload_ammo = 0
@@ -48,7 +58,7 @@ func fire(direction: Vector2) -> bool:
 		return false
 
 	if bullet_scene == null:
-		print("[Pistol] Bullet scene is not assigned.")
+		print("Pistol Bullet scene is not assigned.")
 		return false
 
 	if direction.length() <= 0.0:
@@ -154,6 +164,54 @@ func add_reserve_ammo(amount: int) -> void:
 	_emit_ammo_changed()
 
 
+func apply_magazine_size_bonus(amount: int) -> void:
+	if amount <= 0:
+		return
+
+	magazine_size += amount
+	current_ammo += amount
+	current_ammo = clampi(current_ammo, 0, magazine_size)
+
+	_emit_ammo_changed()
+
+	print(
+		"[Pistol Upgrade] Magazine size increased to ",
+		magazine_size
+	)
+
+
+func apply_reload_time_multiplier(multiplier: float) -> void:
+	if multiplier <= 0.0:
+		return
+
+	reload_time = clampf(
+		reload_time * multiplier,
+		0.35,
+		base_reload_time
+	)
+
+	print(
+		"[Pistol Upgrade] Reload time is now ",
+		reload_time
+	)
+
+
+func apply_fire_cooldown_multiplier(multiplier: float) -> void:
+	if multiplier <= 0.0:
+		return
+
+	fire_cooldown = clampf(
+		fire_cooldown * multiplier,
+		0.08,
+		base_fire_cooldown
+	)
+
+	print(
+		"[Pistol Upgrade] Fire cooldown is now ",
+		fire_cooldown
+	)
+
+
 func get_current_ammo() -> int:
 	return current_ammo
 
@@ -181,6 +239,11 @@ func get_total_magazines() -> int:
 
 
 func reset_weapon() -> void:
+	fire_cooldown = base_fire_cooldown
+	magazine_size = base_magazine_size
+	reload_time = base_reload_time
+	starting_reserve_ammo = base_starting_reserve_ammo
+
 	current_ammo = magazine_size
 	reserve_ammo = starting_reserve_ammo
 	pending_reload_ammo = 0
@@ -192,10 +255,42 @@ func reset_weapon() -> void:
 func get_save_data() -> Dictionary:
 	return {
 		"current_ammo": current_ammo,
-		"reserve_ammo": reserve_ammo
+		"reserve_ammo": reserve_ammo,
+		"magazine_size": magazine_size,
+		"reload_time": reload_time,
+		"fire_cooldown": fire_cooldown,
+		"starting_reserve_ammo": starting_reserve_ammo
 	}
 
 func load_save_data(save_data: Dictionary) -> void:
+	magazine_size = int(
+		save_data.get(
+			"magazine_size",
+			base_magazine_size
+		)
+	)
+
+	reload_time = float(
+		save_data.get(
+			"reload_time",
+			base_reload_time
+		)
+	)
+
+	fire_cooldown = float(
+		save_data.get(
+			"fire_cooldown",
+			base_fire_cooldown
+		)
+	)
+
+	starting_reserve_ammo = int(
+		save_data.get(
+			"starting_reserve_ammo",
+			base_starting_reserve_ammo
+		)
+	)
+
 	current_ammo = int(
 		save_data.get(
 			"current_ammo",
@@ -209,6 +304,10 @@ func load_save_data(save_data: Dictionary) -> void:
 			starting_reserve_ammo
 		)
 	)
+
+	magazine_size = maxi(1, magazine_size)
+	reload_time = maxf(0.35, reload_time)
+	fire_cooldown = maxf(0.08, fire_cooldown)
 
 	current_ammo = clampi(
 		current_ammo,
