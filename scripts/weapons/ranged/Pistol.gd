@@ -223,6 +223,8 @@ func get_magazine_size() -> int:
 func get_reload_time() -> float:
 	return reload_time
 
+func is_reload_in_progress() -> bool:
+	return is_reloading
 
 func get_reserve_ammo() -> int:
 	return reserve_ammo

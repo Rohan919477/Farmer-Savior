@@ -207,8 +207,21 @@ func _physics_process(_delta: float) -> void:
 	update_body_animation()
 	handle_combat_input()
 
+func is_pistol_reloading() -> bool:
+	if pistol == null:
+		return false
+
+	if pistol.has_method("is_reload_in_progress"):
+		return bool(pistol.call("is_reload_in_progress"))
+
+	return false
 
 func handle_movement() -> void:
+	if is_pistol_reloading():
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
 	var input_direction: Vector2 = Input.get_vector(
 		"move_left",
 		"move_right",
@@ -535,6 +548,8 @@ func reload_pistol() -> void:
 
 	if not reload_started_successfully:
 		return
+
+	velocity = Vector2.ZERO
 
 	var reload_animation_speed: float = (
 		get_reload_animation_speed()
