@@ -546,10 +546,38 @@ func _get_action_hint(action_name: String) -> String:
 	if events.is_empty():
 		return action_name
 
-	var event_text: String = events[0].as_text()
+	var event: InputEvent = events[0]
+
+	if event is InputEventKey:
+		var key_event: InputEventKey = event as InputEventKey
+		var keycode: int = key_event.keycode
+
+		if keycode == 0:
+			keycode = key_event.physical_keycode
+
+		var key_text: String = OS.get_keycode_string(keycode)
+
+		if not key_text.strip_edges().is_empty():
+			return key_text.strip_edges()
+
+	if event is InputEventMouseButton:
+		var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+
+		match mouse_event.button_index:
+			MOUSE_BUTTON_LEFT:
+				return "Left Click"
+			MOUSE_BUTTON_RIGHT:
+				return "Right Click"
+			MOUSE_BUTTON_MIDDLE:
+				return "Middle Click"
+
+	var event_text: String = event.as_text()
 
 	event_text = event_text.replace(" (Physical)", "")
+	event_text = event_text.replace(" - Physical", "")
+	event_text = event_text.replace("Physical - ", "")
 	event_text = event_text.replace("Pressed ", "")
+	event_text = event_text.strip_edges()
 
 	return event_text
 

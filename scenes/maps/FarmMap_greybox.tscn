@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://cdfa2raekmcl4" path="res://sprites/maps/farm/structures/FarmTruck_01.png" id="4_truck"]
 [ext_resource type="Texture2D" uid="uid://0hkaj5bacacm" path="res://sprites/maps/farm/structures/BarnWorkshop_01.png" id="5_barn"]
 [ext_resource type="Texture2D" uid="uid://dhnqhvjgier5q" path="res://sprites/maps/farm/structures/PlanningShelter_01.png" id="6_plan"]
-[ext_resource type="Texture2D" uid="uid://bb0lm66popgc0" path="res://sprites/maps/farm/structures/WaterPumpTrough_01.png" id="7_water"]
 [ext_resource type="Texture2D" uid="uid://dn11jvnb2cb7j" path="res://sprites/maps/farm/structures/FarmCropField_Aligned_01.png" id="8_cropfield"]
 
 [sub_resource type="RectangleShape2D" id="HouseInteractShape"]
@@ -67,11 +66,6 @@ texture = ExtResource("5_barn")
 position = Vector2(520, 385)
 scale = Vector2(0.38, 0.38)
 texture = ExtResource("6_plan")
-
-[node name="WaterPumpVisual" type="Sprite2D" parent="StructureRoot" unique_id=100000007]
-position = Vector2(675, 220)
-scale = Vector2(0.36, 0.36)
-texture = ExtResource("7_water")
 
 [node name="EnemyContainer" type="Node2D" parent="." unique_id=2130364705]
 z_index = 10
