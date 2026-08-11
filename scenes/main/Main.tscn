@@ -54,6 +54,8 @@ script = ExtResource("3_q24mn")
 
 [node name="SpawnManager" type="Node" parent="." unique_id=1974434156]
 script = ExtResource("4_gyg6b")
+rot_crop_unlock_day = 3
+blight_pig_unlock_day = 2
 crop_mite_scene = ExtResource("6_yub1f")
 blight_pig_scene = ExtResource("7_d8523")
 rot_crop_scene = ExtResource("8_roob6")

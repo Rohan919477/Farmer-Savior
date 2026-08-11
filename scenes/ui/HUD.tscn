@@ -45,7 +45,7 @@ offset_left = -260.0
 offset_top = 18.0
 offset_right = -24.0
 offset_bottom = 48.0
-text = "Enemies Left: 0"
+text = "Enemies Remaining = 0"
 horizontal_alignment = 2
 
 [node name="TutorialObjectiveLabel" type="Label" parent="." unique_id=1294497051]

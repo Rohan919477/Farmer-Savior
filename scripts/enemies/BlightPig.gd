@@ -40,12 +40,11 @@ func _ready() -> void:
 	contact_damage = 14
 	damage_type = "Blunt"
 
-	required_fence_gap_segments = 1
 	body_radius = 12.0
 	visual_scale_multiplier = 0.95
 
-	seed_drop_chance = 1.0
-	scrap_drop_chance = 1.0
+	seed_drop_chance = 0.3
+	scrap_drop_chance = 0.5
 
 	super._ready()
 

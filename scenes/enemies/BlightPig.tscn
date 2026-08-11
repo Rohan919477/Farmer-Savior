@@ -152,8 +152,8 @@ collision_mask = 4
 script = ExtResource("1_ngken")
 seed_drop_scene = ExtResource("2_5kba0")
 scrap_drop_scene = ExtResource("3_7b53v")
-seed_drop_chance = 1.0
-scrap_drop_chance = 1.0
+seed_drop_chance = 0.3
+scrap_drop_chance = 0.5
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1736126111]
 visible = false

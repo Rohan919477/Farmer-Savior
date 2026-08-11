@@ -982,7 +982,7 @@ func show_night_enemy_count(enemies_left: int) -> void:
 		return
 
 	enemy_count_label.visible = true
-	enemy_count_label.text = "Enemies Left: " + str(enemies_left)
+	enemy_count_label.text = "Enemies Remaining = " + str(enemies_left)
 
 	_layout_enemy_count()
 

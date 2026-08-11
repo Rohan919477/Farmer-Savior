@@ -414,6 +414,10 @@ func _reset_game_state_for_new_game() -> void:
 	sleep_transition_running = false
 	pending_manual_save_slot = -1
 
+	if tutorial_manager != null:
+		if tutorial_manager.has_method("reset_for_new_game"):
+			tutorial_manager.call("reset_for_new_game")
+
 	if time_manager != null:
 		if time_manager.has_method("reset_for_new_game"):
 			time_manager.call("reset_for_new_game")
@@ -530,6 +534,10 @@ func _apply_loaded_save_data(
 	sleep_transition_running = false
 	pending_manual_save_slot = -1
 
+	if tutorial_manager != null:
+		if tutorial_manager.has_method("prepare_for_load"):
+			tutorial_manager.call("prepare_for_load")
+
 	_load_time_from_save(save_data)
 	_load_map_from_save(save_data)
 	_load_inventory_from_save(save_data)
@@ -548,7 +556,11 @@ func _load_time_from_save(save_data: Dictionary) -> void:
 	if time_manager == null:
 		return
 
-	var time_data: Dictionary = save_data.get("time", {})
+	var world_data: Dictionary = save_data.get("world", {})
+	var time_data: Dictionary = world_data.get(
+		"time",
+		save_data.get("time", {})
+	)
 
 	if time_manager.has_method("load_save_data"):
 		time_manager.call("load_save_data", time_data)
@@ -558,7 +570,11 @@ func _load_map_from_save(save_data: Dictionary) -> void:
 	if map_manager == null:
 		return
 
-	var map_data: Dictionary = save_data.get("map", {})
+	var world_data: Dictionary = save_data.get("world", {})
+	var map_data: Dictionary = world_data.get(
+		"map",
+		save_data.get("map", {})
+	)
 
 	if map_manager.has_method("load_save_data"):
 		map_manager.call("load_save_data", map_data)
@@ -604,7 +620,11 @@ func _load_upgrade_from_save(save_data: Dictionary) -> void:
 	if upgrade_manager == null:
 		return
 
-	var upgrade_data: Dictionary = save_data.get("upgrades", {})
+	var progression_data: Dictionary = save_data.get("progression", {})
+	var upgrade_data: Dictionary = progression_data.get(
+		"upgrades",
+		save_data.get("upgrades", {})
+	)
 
 	if upgrade_manager.has_method("load_save_data"):
 		upgrade_manager.call("load_save_data", upgrade_data)
@@ -613,7 +633,10 @@ func _load_defense_from_save(save_data: Dictionary) -> void:
 	if defense_manager == null:
 		return
 
-	var defense_data: Dictionary = save_data.get("defense", {})
+	var defense_data: Dictionary = save_data.get(
+		"defenses",
+		save_data.get("defense", {})
+	)
 
 	if defense_manager.has_method("load_save_data"):
 		defense_manager.call("load_save_data", defense_data)
@@ -626,7 +649,10 @@ func _load_crop_from_save(save_data: Dictionary) -> void:
 	if crop_manager == null:
 		return
 
-	var crop_data: Dictionary = save_data.get("crops", {})
+	var crop_data: Dictionary = save_data.get(
+		"farming",
+		save_data.get("crops", {})
+	)
 
 	if crop_manager.has_method("load_save_data"):
 		crop_manager.call("load_save_data", crop_data)
@@ -635,7 +661,11 @@ func _load_tutorial_from_save(save_data: Dictionary) -> void:
 	if tutorial_manager == null:
 		return
 
-	var tutorial_data: Dictionary = save_data.get("tutorial", {})
+	var progression_data: Dictionary = save_data.get("progression", {})
+	var tutorial_data: Dictionary = progression_data.get(
+		"tutorial",
+		save_data.get("tutorial", {})
+	)
 
 	if tutorial_manager.has_method("load_save_data"):
 		tutorial_manager.call("load_save_data", tutorial_data)
@@ -653,6 +683,12 @@ func _load_tutorial_from_save(save_data: Dictionary) -> void:
 
 	if "tutorial_world_soft_paused" in tutorial_manager:
 		tutorial_manager.set("tutorial_world_soft_paused", false)
+
+	if "tutorial_clock_paused" in tutorial_manager:
+		tutorial_manager.set("tutorial_clock_paused", false)
+
+	if "tutorial_night_sequence_started" in tutorial_manager:
+		tutorial_manager.set("tutorial_night_sequence_started", false)
 
 	if tutorial_manager.has_method("_hide_objective"):
 		tutorial_manager.call("_hide_objective")
@@ -683,6 +719,11 @@ func is_using_week10_normal_night_loop() -> bool:
 		or normal_night_state == NIGHT_STATE_COMBAT
 		or normal_night_state == NIGHT_STATE_CLEARED
 	)
+
+func should_pause_clock_for_normal_night() -> bool:
+	# The clock only determines when a normal defense starts. From 18:00
+	# onward, completion is controlled entirely by the enemy quota.
+	return is_using_week10_normal_night_loop()
 
 func _on_midnight_reached() -> void:
 	if is_using_week10_normal_night_loop():
@@ -730,9 +771,6 @@ func start_dawn_transition() -> void:
 	normal_night_state = NIGHT_STATE_DAY
 	house_evacuation_timer = 0.0
 	house_entry_locked_until_clear = false
-
-	if time_manager.has_method("set_normal_night_time_locked"):
-		time_manager.call("set_normal_night_time_locked", false)
 
 	await get_tree().create_timer(0.10).timeout
 
@@ -1305,9 +1343,6 @@ func _run_sleep_transition_with_save(manual_slot_index: int) -> void:
 	if time_manager != null:
 		if time_manager.has_method("complete_night_and_start_new_day"):
 			time_manager.call("complete_night_and_start_new_day")
-
-		if time_manager.has_method("set_normal_night_time_locked"):
-			time_manager.call("set_normal_night_time_locked", false)
 
 	normal_night_state = NIGHT_STATE_DAY
 	house_evacuation_timer = 0.0

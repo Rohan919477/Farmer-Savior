@@ -150,6 +150,64 @@ func is_tutorial_active() -> bool:
 func is_tutorial_completed() -> bool:
 	return tutorial_completed
 
+
+func reset_for_new_game() -> void:
+	_clear_runtime_state()
+	tutorial_completed = false
+	_set_step(STEP_NONE)
+
+
+func prepare_for_load() -> void:
+	# Tutorial interaction state is runtime-only. Clear it before other
+	# systems apply loaded data so stale pause flags cannot affect TimeManager.
+	_clear_runtime_state()
+	_set_step(STEP_NONE)
+
+
+func get_save_data() -> Dictionary:
+	# Saves only occur during the sleep flow, after the tutorial is expected
+	# to be complete. Dynamic tutorial encounters/popups are intentionally
+	# not serialized.
+	return {
+		"tutorial_completed": tutorial_completed
+	}
+
+
+func load_save_data(data: Dictionary) -> void:
+	_clear_runtime_state()
+
+	# Older saves may not contain tutorial data. Treat those as already past
+	# the tutorial instead of accidentally trapping the player in tutorial flow.
+	tutorial_completed = bool(
+		data.get("tutorial_completed", true)
+	)
+
+	if tutorial_completed:
+		_set_step(STEP_COMPLETE)
+	else:
+		_set_step(STEP_NONE)
+
+
+func _clear_runtime_state() -> void:
+	tutorial_active = false
+	training_enemy = null
+	tutorial_boss = null
+	war_table_opened_for_tutorial = false
+
+	start_move_position = Vector2.ZERO
+	baseline_seed_count = 0
+	baseline_scrap_count = 0
+
+	tutorial_world_soft_paused = false
+	tutorial_clock_paused = false
+	tutorial_night_sequence_started = false
+
+	_disable_workshop_tutorial_focus()
+	_hide_objective()
+
+	if tutorial_popup_ui != null and tutorial_popup_ui.is_popup_open():
+		tutorial_popup_ui.hide_popup(false)
+
 func is_tutorial_popup_open() -> bool:
 	if tutorial_popup_ui == null:
 		return false

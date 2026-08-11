@@ -13,7 +13,6 @@ var day_number: int = 1
 var current_minutes: float = 0.0
 var phase: String = "day"
 var night_started_today: bool = false
-var normal_night_time_locked: bool = false
 
 func _ready() -> void:
 	add_to_group("time_manager")
@@ -21,12 +20,16 @@ func _ready() -> void:
 	current_minutes = float(start_hour * 60)
 	phase = "day"
 	night_started_today = false
-	normal_night_time_locked = false
 
 	emit_time_changed()
 
 func _process(delta: float) -> void:
 	if _is_tutorial_clock_paused():
+		return
+
+	# Normal defense nights are quota-based, not clock-based. Once the
+	# 18:00 handoff starts, the wave itself decides when the night is over.
+	if _should_pause_for_normal_night():
 		return
 
 	if phase == "night_cleanup":
@@ -73,7 +76,6 @@ func complete_night_and_start_new_day() -> void:
 	current_minutes = float(start_hour * 60)
 	phase = "day"
 	night_started_today = false
-	normal_night_time_locked = false
 
 	print("Day ", day_number, " started at 06:00.")
 	day_started.emit(day_number)
@@ -155,8 +157,18 @@ func _is_tutorial_clock_paused() -> bool:
 
 	return false
 
-func set_normal_night_time_locked(locked: bool) -> void:
-	normal_night_time_locked = locked
+func _should_pause_for_normal_night() -> bool:
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if main_node == null:
+		return false
+
+	if main_node.has_method("should_pause_clock_for_normal_night"):
+		return bool(
+			main_node.call("should_pause_clock_for_normal_night")
+		)
+
+	return false
 
 func get_save_data() -> Dictionary:
 	return {
@@ -165,12 +177,11 @@ func get_save_data() -> Dictionary:
 		"hour": get_hour(),
 		"minute": get_minute(),
 		"phase": phase,
-		"night_started_today": night_started_today,
-		"normal_night_time_locked": normal_night_time_locked
+		"night_started_today": night_started_today
 	}
 
 func load_save_data(data: Dictionary) -> void:
-	day_number = int(data.get("day_number", 1))
+	day_number = maxi(1, int(data.get("day_number", 1)))
 
 	current_minutes = float(
 		data.get(
@@ -197,7 +208,6 @@ func load_save_data(data: Dictionary) -> void:
 		)
 	)
 
-	normal_night_time_locked = false
 
 	emit_time_changed()
 
@@ -215,7 +225,6 @@ func reset_for_new_game() -> void:
 	current_minutes = float(start_hour * 60)
 	phase = "day"
 	night_started_today = false
-	normal_night_time_locked = false
 
 	emit_time_changed()
 

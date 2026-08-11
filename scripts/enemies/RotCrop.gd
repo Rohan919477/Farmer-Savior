@@ -43,12 +43,11 @@ func _ready() -> void:
 	fence_attack_range = 34.0
 	damage_type = "Rot"
 
-	required_fence_gap_segments = 1
 	body_radius = 11.0
 	visual_scale_multiplier = 1.05
 
-	seed_drop_chance = 1.0
-	scrap_drop_chance = 1.0
+	seed_drop_chance = 0.4
+	scrap_drop_chance = 0.4
 
 	super._ready()
 

@@ -74,7 +74,7 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 @export var broken_fence_repair_scrap_cost: int = 3
 @export var broken_nightlight_repair_scrap_cost: int = 2
 
-@export var minimum_broken_segments_for_passable_gap: int = 3
+@export var minimum_broken_segments_for_passable_gap: int = 2
 @export var debug_fence_logging: bool = true
 
 var pesticide_turrets_available: int = 2

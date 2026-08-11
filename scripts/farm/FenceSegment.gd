@@ -169,7 +169,7 @@ func _refresh_from_manager() -> void:
 
 	var is_passable_gap: bool = (
 		is_broken
-		and defense_manager.is_fence_gap_passable(fence_key, 1)
+		and defense_manager.is_fence_gap_passable(fence_key)
 	)
 
 	collision_shape.set_deferred("disabled", is_passable_gap)
@@ -337,44 +337,6 @@ func _repair_while_holding(delta: float) -> void:
 
 		repair_debug_session_active = false
 
-	if not defense_manager.is_fence_repair_cost_paid(fence_key):
-		var repair_cost: int = (
-			defense_manager.damaged_fence_repair_cost_scrap
-		)
-
-		if repair_cost > 0:
-			if player_in_repair_range == null:
-				return
-
-			if not player_in_repair_range.has_method("spend_resource"):
-				return
-
-			var spent_successfully: bool = bool(
-				player_in_repair_range.call(
-					"spend_resource",
-					"scrap",
-					repair_cost
-				)
-			)
-
-			if not spent_successfully:
-				repair_prompt.text = "Need %d Scrap" % repair_cost
-				return
-
-		defense_manager.mark_fence_repair_cost_paid(fence_key)
-		
-		print(
-			"[Fence Repair] ",
-			fence_key,
-			" repair cost paid. Beginning field repair."
-		)
-
-	repair_prompt.text = "Fixing..."
-
-	defense_manager.repair_fence(
-		fence_key,
-		defense_manager.fence_repair_rate_per_second * delta
-	)
 
 func _draw() -> void:
 	var fence_rect := Rect2(

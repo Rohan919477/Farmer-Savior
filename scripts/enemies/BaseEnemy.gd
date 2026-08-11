@@ -25,7 +25,7 @@ const FENCE_COLLISION_MASK: int = 4
 @export var damage_type: String = "Blunt"
 @export var debug_ai_logging: bool = true
 @export var breach_waypoint_reach_distance: float = 12.0
-@export var required_fence_gap_segments: int = 1
+@export var required_fence_gap_segments: int = 0
 @export var body_radius: float = 10.0
 @export var visual_scale_multiplier: float = 1.0
 
@@ -267,8 +267,10 @@ func execute_shared_target_strategy() -> void:
 		move_towards_position(target_position)
 
 func _apply_body_profile() -> void:
+	# 0 means this enemy inherits the farm-wide breach requirement from
+	# DefenseManager. Positive values are per-enemy overrides.
 	required_fence_gap_segments = maxi(
-		1,
+		0,
 		required_fence_gap_segments
 	)
 
@@ -355,7 +357,9 @@ func _apply_collision_radius(
 	collision_shape.shape = new_shape
 
 func get_required_fence_gap_segments() -> int:
-	return maxi(1, required_fence_gap_segments)
+	# A value of 0 is intentional: FenceSegment/DefenseManager interprets
+	# it as "use minimum_broken_segments_for_passable_gap".
+	return maxi(0, required_fence_gap_segments)
 	
 func get_fence_damage_amount() -> float:
 	return maxf(

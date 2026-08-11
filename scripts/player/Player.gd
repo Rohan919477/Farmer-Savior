@@ -1006,24 +1006,23 @@ func get_save_data() -> Dictionary:
 
 
 func load_save_data(data: Dictionary) -> void:
-	max_health = int(
-		data.get(
-			"max_health",
-			base_max_health
-		)
+	max_health = maxi(
+		1,
+		int(data.get("max_health", base_max_health))
 	)
 
-	move_speed = float(
-		data.get(
-			"move_speed",
-			base_move_speed
-		)
+	move_speed = maxf(
+		1.0,
+		float(data.get("move_speed", base_move_speed))
 	)
 
-	damage_taken_multiplier = float(
-		data.get(
-			"damage_taken_multiplier",
-			base_damage_taken_multiplier
+	damage_taken_multiplier = maxf(
+		0.0,
+		float(
+			data.get(
+				"damage_taken_multiplier",
+				base_damage_taken_multiplier
+			)
 		)
 	)
 
