@@ -21,6 +21,8 @@ var is_dead: bool = false
 # Prevents walking/idle animations from replacing a combat animation.
 var is_action_animation_playing: bool = false
 var hurt_feedback_serial: int = 0
+var melee_action_serial: int = 0
+var death_sequence_serial: int = 0
 var body_sprite_rest_position: Vector2 = Vector2.ZERO
 
 var base_move_speed: float = 220.0
@@ -412,7 +414,7 @@ func play_interaction_pose(
 
 	print("[Player Animation] Playing: interact_side")
 
-	await get_tree().create_timer(pose_duration).timeout
+	await get_tree().create_timer(pose_duration, false).timeout
 
 	if is_dead:
 		return
@@ -567,6 +569,9 @@ func use_hoe_swing() -> void:
 	if not can_melee_attack:
 		return
 
+	melee_action_serial += 1
+	var current_melee_serial: int = melee_action_serial
+
 	can_melee_attack = false
 
 	var animation_started: bool = (
@@ -576,30 +581,57 @@ func use_hoe_swing() -> void:
 	)
 
 	if not animation_started:
-		can_melee_attack = true
+		if current_melee_serial == melee_action_serial:
+			can_melee_attack = true
 		return
 
 	hoe_hitbox.position = facing_direction * 34.0
 	hoe_hitbox.rotation = facing_direction.angle()
 
 	# Frame 0: wind-up.
-	await get_tree().create_timer(0.08).timeout
+	await get_tree().create_timer(0.08, false).timeout
+
+	if current_melee_serial != melee_action_serial:
+		return
 
 	if is_dead:
-		can_melee_attack = true
 		return
 
 	# Frame 1: active damage frame.
 	hoe_collision.disabled = false
 
-	await get_tree().create_timer(0.12).timeout
+	await get_tree().create_timer(0.12, false).timeout
+
+	if current_melee_serial != melee_action_serial:
+		return
 
 	hoe_collision.disabled = true
 
 	# Frame 2: follow-through.
-	await get_tree().create_timer(0.10).timeout
+	await get_tree().create_timer(0.10, false).timeout
+
+	if current_melee_serial != melee_action_serial:
+		return
 
 	can_melee_attack = true
+
+
+func cancel_transient_actions_for_transition() -> void:
+	# Player persists while map scenes are swapped. Invalidate delayed melee work
+	# and stop reload/cooldown state so an action begun in one map cannot resume
+	# after the player has already arrived in another.
+	melee_action_serial += 1
+	can_melee_attack = true
+	is_action_animation_playing = false
+	velocity = Vector2.ZERO
+
+	if hoe_collision != null:
+		hoe_collision.disabled = true
+
+	if pistol != null and pistol.has_method("cancel_transient_actions"):
+		pistol.call("cancel_transient_actions")
+
+	update_body_animation()
 
 
 # ---------------------------------------------------------
@@ -686,7 +718,7 @@ func play_hurt_feedback() -> void:
 			+ shake_offset
 		)
 
-		await get_tree().create_timer(0.035).timeout
+		await get_tree().create_timer(0.035, false).timeout
 
 	if current_serial != hurt_feedback_serial:
 		return
@@ -829,12 +861,29 @@ func spend_resource(
 	return true
 
 
+func can_accept_resource(
+	resource_type: String,
+	amount: int
+) -> bool:
+	if amount <= 0:
+		return true
+
+	var inventory_manager: InventoryManager = (
+		get_inventory_manager()
+	)
+
+	if inventory_manager == null:
+		return false
+
+	return inventory_manager.can_add_item(resource_type, amount)
+
+
 func add_resource(
 	resource_type: String,
 	amount: int
-) -> void:
+) -> int:
 	if amount <= 0:
-		return
+		return 0
 
 	var inventory_manager: InventoryManager = (
 		get_inventory_manager()
@@ -842,7 +891,7 @@ func add_resource(
 
 	if inventory_manager == null:
 		print("[Resources] InventoryManager is missing.")
-		return
+		return amount
 
 	var remaining_amount: int = (
 		inventory_manager.add_item(
@@ -877,6 +926,8 @@ func add_resource(
 			resource_type
 		)
 
+	return remaining_amount
+
 
 # ---------------------------------------------------------
 # DEATH
@@ -891,9 +942,12 @@ func die() -> void:
 		return
 
 	is_dead = true
+	death_sequence_serial += 1
+	var current_death_serial: int = death_sequence_serial
 	velocity = Vector2.ZERO
 	is_action_animation_playing = false
 	can_melee_attack = false
+	melee_action_serial += 1
 	hurt_feedback_serial += 1
 	reset_hurt_feedback()
 
@@ -903,6 +957,16 @@ func die() -> void:
 	print("[Death Debug] Player died.")
 
 	await play_directional_death_animation()
+
+	# The Player node persists across Load/New Game. If either happens while
+	# this death animation is waiting, a later animation_finished signal must
+	# not allow the old death coroutine to open Game Over in the new state.
+	if current_death_serial != death_sequence_serial:
+		return
+
+	if not is_dead:
+		return
+
 	show_game_over_after_death()
 	
 func play_directional_death_animation() -> void:
@@ -1076,7 +1140,9 @@ func load_save_data(data: Dictionary) -> void:
 			facing_direction.normalized()
 		)
 
+	death_sequence_serial += 1
 	is_dead = false
+	melee_action_serial += 1
 	can_melee_attack = true
 	is_action_animation_playing = false
 	velocity = Vector2.ZERO
@@ -1111,6 +1177,8 @@ func reset_for_new_game() -> void:
 
 	current_health = max_health
 	facing_direction = Vector2.RIGHT
+	death_sequence_serial += 1
+	melee_action_serial += 1
 	can_melee_attack = true
 	is_dead = false
 	is_action_animation_playing = false

@@ -52,6 +52,9 @@ func _update_crop_input_enabled() -> void:
 	if crop_manager != null and crop_manager.has_method("is_daytime"):
 		should_enable_input = bool(crop_manager.call("is_daytime"))
 
+	if should_enable_input and _is_gameplay_input_blocked():
+		should_enable_input = false
+
 	if crop_input_enabled == should_enable_input:
 		return
 
@@ -68,6 +71,18 @@ func _update_crop_input_enabled() -> void:
 			hover_label.visible = false
 
 		queue_redraw()
+
+
+func _is_gameplay_input_blocked() -> bool:
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if main_node == null:
+		return false
+
+	if not main_node.has_method("is_gameplay_input_blocked"):
+		return false
+
+	return bool(main_node.call("is_gameplay_input_blocked"))
 
 func configure_slot(
 	new_crop_manager: CropManager,
@@ -259,6 +274,10 @@ func _on_plot_input_event(
 			# to shoot over the farm plot during night combat.
 			click_locked = false
 			return
+
+	if _is_gameplay_input_blocked():
+		click_locked = false
+		return
 
 	if debug_crop_slot_logging:
 		print("[Crop Slot] Left-clicked: ", grid_cell)

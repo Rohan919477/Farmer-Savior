@@ -373,6 +373,19 @@ func get_structure_damage_amount() -> int:
 		roundi(float(contact_damage) * structure_damage_multiplier)
 	)
 
+
+func is_alive_for_wave() -> bool:
+	# Reaching 0 HP means the enemy is no longer alive for quota/HUD/spawn-cap
+	# purposes even though its node may remain briefly to finish a death
+	# animation and create its drops/rewards.
+	return current_health > 0 and not is_queued_for_deletion()
+
+
+func can_be_targeted_by_defense() -> bool:
+	# Defenses use the same living-state definition as the night-wave system so
+	# they immediately stop wasting attacks/durability on defeated enemies.
+	return is_alive_for_wave()
+
 func _move_or_attack_fence(
 	fence: Node2D,
 	target_position: Vector2
@@ -418,15 +431,6 @@ func _refresh_primary_target() -> void:
 	if player == null:
 		current_primary_target = _get_nearest_attackable_placeable()
 		return
-
-	if defense_manager != null:
-		if defense_manager.is_world_position_inside_farm_perimeter(
-			global_position
-		):
-			# After an enemy breaches the perimeter, it should pressure
-			# the player instead of wandering after distant placeables.
-			current_primary_target = player
-			return
 
 	var nearest_placeable: Node2D = (
 		_get_nearest_attackable_placeable()
@@ -506,7 +510,13 @@ func attacks_through_fences() -> bool:
 	return false
 
 func has_clear_path_to(target_position: Vector2) -> bool:
-	return get_first_blocking_fence_to(target_position) == null
+	# Special movement such as the Blight Pig charge must treat both fences
+	# and solid placeable defenses as blockers. Otherwise a turret can be
+	# mistaken for open space and the enemy simply charges into its collider.
+	return (
+		get_first_blocking_fence_to(target_position) == null
+		and get_first_blocking_attackable_placeable_to(target_position) == null
+	)
 
 func move_towards_position(
 	target_position: Vector2,
@@ -533,9 +543,27 @@ func move_towards_position(
 			collision_index
 		)
 
-		var collided_fence: Node2D = get_fence_from_collider(
-			collision.get_collider()
+		var collider: Object = collision.get_collider()
+		var blocking_placeable: Node2D = (
+			get_attackable_placeable_from_collider(collider)
 		)
+
+		if blocking_placeable != null:
+			current_primary_target = blocking_placeable
+			current_fence_target = null
+			current_breach_target = null
+			current_breach_crossing = false
+			velocity = Vector2.ZERO
+
+			_log_ai_action(
+				"Physical collision detected; attacking blocking defense %s."
+				% _get_target_name(blocking_placeable)
+			)
+
+			try_attack_target(blocking_placeable)
+			return
+
+		var collided_fence: Node2D = get_fence_from_collider(collider)
 
 		if collided_fence == null:
 			continue
@@ -624,6 +652,55 @@ func get_body_blocking_fence_to(
 	return get_fence_from_collider(
 		collision.get_collider()
 	)
+
+func get_first_blocking_attackable_placeable_to(
+	target_position: Vector2
+) -> Node2D:
+	if global_position.distance_to(target_position) <= 2.0:
+		return null
+
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position,
+		target_position,
+		FENCE_COLLISION_MASK,
+		[get_rid()]
+	)
+
+	var ray_result: Dictionary = (
+		get_world_2d().direct_space_state.intersect_ray(query)
+	)
+
+	if ray_result.is_empty():
+		return null
+
+	return get_attackable_placeable_from_collider(
+		ray_result.get("collider", null)
+	)
+
+func get_attackable_placeable_from_collider(collider: Object) -> Node2D:
+	if collider == null or not (collider is Node):
+		return null
+
+	var current_node: Node = collider as Node
+
+	# Turrets use a child StaticBody2D named Blocker. Walk upward so the AI
+	# resolves that collider back to the actual placeable defense node.
+	while current_node != null:
+		if current_node.is_in_group("attackable_placeables"):
+			if current_node is Node2D:
+				var placeable: Node2D = current_node as Node2D
+
+				if placeable.has_method("can_be_targeted_by_enemy"):
+					if not bool(
+						placeable.call("can_be_targeted_by_enemy")
+					):
+						return null
+
+				return placeable
+
+		current_node = current_node.get_parent()
+
+	return null
 
 func get_fence_from_collider(collider: Object) -> Node2D:
 	if collider == null:
@@ -1159,7 +1236,7 @@ func try_attack_fence(fence: Node2D) -> void:
 func start_attack_cooldown() -> void:
 	can_attack_target = false
 
-	await get_tree().create_timer(damage_cooldown).timeout
+	await get_tree().create_timer(damage_cooldown, false).timeout
 
 	if is_instance_valid(self):
 		can_attack_target = true
@@ -1191,7 +1268,7 @@ func show_hit_feedback() -> void:
 	var original_color: Color = sprite.modulate
 	sprite.modulate = Color(1, 1, 1)
 
-	await get_tree().create_timer(0.08).timeout
+	await get_tree().create_timer(0.08, false).timeout
 
 	if is_instance_valid(sprite):
 		sprite.modulate = original_color

@@ -54,6 +54,35 @@ func is_slot_empty(slot_index: int) -> bool:
 func get_item_stack_limit(_item_id: String) -> int:
 	return default_stack_limit
 
+func get_addable_item_amount(item_id: String, amount: int) -> int:
+	if item_id.is_empty() or amount <= 0:
+		return 0
+
+	var remaining_capacity: int = 0
+	var stack_limit: int = maxi(get_item_stack_limit(item_id), 1)
+
+	for slot_data in slots:
+		var slot_item_id: String = str(slot_data.get("item_id", ""))
+
+		if slot_item_id == item_id:
+			remaining_capacity += maxi(
+				stack_limit - int(slot_data.get("amount", 0)),
+				0
+			)
+		elif slot_item_id.is_empty():
+			remaining_capacity += stack_limit
+
+		if remaining_capacity >= amount:
+			return amount
+
+	return mini(amount, remaining_capacity)
+
+func can_add_item(item_id: String, amount: int) -> bool:
+	if amount <= 0:
+		return true
+
+	return get_addable_item_amount(item_id, amount) >= amount
+
 func get_item_amount(item_id: String) -> int:
 	var total_amount: int = 0
 

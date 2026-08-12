@@ -42,6 +42,9 @@ var flicker_time: float = 0.0
 
 func _ready() -> void:
 	add_to_group("nightlight")
+	add_to_group("farm_defenses")
+	add_to_group("attackable_placeables")
+	add_to_group("field_repairable")
 	_build_runtime_nodes()
 	_build_health_bar_nodes()
 	_build_repair_nodes()
@@ -126,6 +129,53 @@ func set_light_enabled(enabled: bool) -> void:
 
 	if glow_sprite != null:
 		glow_sprite.visible = enabled
+
+
+func is_broken() -> bool:
+	if defense_manager == null or nightlight_key.is_empty():
+		return nightlight_state == "broken"
+
+	if defense_manager.has_method("get_nightlight_state"):
+		return str(
+			defense_manager.call(
+				"get_nightlight_state",
+				nightlight_key
+			)
+		) == "broken"
+
+	return nightlight_state == "broken"
+
+
+func can_be_targeted_by_enemy() -> bool:
+	return not is_broken()
+
+
+func get_target_position() -> Vector2:
+	return global_position
+
+
+func take_damage(damage_amount: float) -> void:
+	if damage_amount <= 0.0:
+		return
+
+	if defense_manager == null or nightlight_key.is_empty():
+		return
+
+	if is_broken():
+		return
+
+	if not defense_manager.has_method("damage_nightlight_integrity"):
+		return
+
+	defense_manager.call(
+		"damage_nightlight_integrity",
+		nightlight_key,
+		damage_amount
+	)
+
+	_refresh_condition_from_manager()
+	_apply_state_visuals()
+	_update_health_bar()
 
 func _refresh_condition_from_manager() -> void:
 	if defense_manager == null:
@@ -405,13 +455,33 @@ func _position_world_ui() -> void:
 		repair_prompt.global_position = global_position + REPAIR_PROMPT_OFFSET
 		repair_prompt.rotation = 0.0
 
-func _can_repair_now() -> bool:
+func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
 		nightlight_state == "damaged"
-		and player_in_repair_range != null
+		and player_in_repair_range == player_node
 		and _is_daytime()
 		and not _is_gameplay_input_blocked()
 	)
+
+func _can_repair_now() -> bool:
+	if player_in_repair_range == null:
+		return false
+
+	if not can_be_field_repair_candidate(player_in_repair_range):
+		return false
+
+	if defense_manager != null and defense_manager.has_method(
+		"is_primary_field_repair_target"
+	):
+		return bool(
+			defense_manager.call(
+				"is_primary_field_repair_target",
+				self,
+				player_in_repair_range
+			)
+		)
+
+	return true
 
 func _update_repair_prompt() -> void:
 	if repair_prompt == null:

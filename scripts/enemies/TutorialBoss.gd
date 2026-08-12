@@ -125,7 +125,8 @@ func perform_attack_on_target(target: Node2D) -> void:
 			_get_animation_hit_delay(
 				&"basic_attack",
 				basic_attack_hit_frame
-			)
+			),
+			false
 		).timeout
 
 	if is_death_animation_playing:
@@ -180,7 +181,8 @@ func try_attack_fence(fence: Node2D) -> void:
 			_get_animation_hit_delay(
 				&"basic_attack",
 				basic_attack_hit_frame
-			)
+			),
+			false
 		).timeout
 
 	if is_death_animation_playing:
@@ -244,7 +246,7 @@ func show_hit_feedback() -> void:
 			1.0
 		)
 
-		await get_tree().create_timer(0.08).timeout
+		await get_tree().create_timer(0.08, false).timeout
 
 		if (
 			is_instance_valid(body_sprite)
@@ -272,7 +274,8 @@ func show_hit_feedback() -> void:
 		)
 
 	await get_tree().create_timer(
-		maxf(hurt_pose_duration, 0.05)
+		maxf(hurt_pose_duration, 0.05),
+		false
 	).timeout
 
 	if (
@@ -323,7 +326,8 @@ func die() -> void:
 
 	# Hold the final death frame so the exposed Mutant Seed is readable.
 	await get_tree().create_timer(
-		maxf(mutant_seed_reveal_hold_time, 0.0)
+		maxf(mutant_seed_reveal_hold_time, 0.0),
+		false
 	).timeout
 
 	if not is_instance_valid(self):

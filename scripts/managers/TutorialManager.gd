@@ -572,11 +572,25 @@ func _begin_boss_fight() -> void:
 		) as Node2D
 
 func _begin_mutant_seed_received_step() -> void:
+	# Keep dawn available for as long as the player needs to complete the
+	# final planting objective. This is especially important when the normal
+	# clock is accelerated for testing: if time reached 18:00 again before the
+	# Mutant Seed was planted, crop interaction would become unavailable and
+	# the incomplete tutorial could become trapped in its night flow.
+	tutorial_clock_paused = true
+
 	_set_step(STEP_PLANT_MUTANT_SEED)
 
 	_show_objective(
 		"At dawn, plant the Mutant Seed in any empty crop plot."
 	)
+
+	# The ordinary night-cleanup signal is suppressed during tutorial control
+	# so it cannot advance to dawn before the boss spawns. Once the boss has
+	# been defeated and this popup is acknowledged, the tutorial deliberately
+	# hands progression back to Main for the dawn transition.
+	if main_node != null and main_node.has_method("start_dawn_transition"):
+		main_node.call("start_dawn_transition")
 
 func _on_mutant_crop_reward_unlocked(reward_name: String) -> void:
 	if current_step != STEP_PLANT_MUTANT_SEED:

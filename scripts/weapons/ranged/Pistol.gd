@@ -32,6 +32,8 @@ var current_ammo: int = 0
 var reserve_ammo: int = 0
 var pending_reload_ammo: int = 0
 var is_reloading: bool = false
+var fire_cooldown_serial: int = 0
+var reload_operation_serial: int = 0
 
 
 func _ready() -> void:
@@ -86,7 +88,13 @@ func fire(direction: Vector2) -> bool:
 
 
 func _begin_fire_cooldown() -> void:
-	await get_tree().create_timer(fire_cooldown).timeout
+	fire_cooldown_serial += 1
+	var current_serial: int = fire_cooldown_serial
+
+	await get_tree().create_timer(fire_cooldown, false).timeout
+
+	if current_serial != fire_cooldown_serial:
+		return
 
 	if not is_reloading:
 		can_fire = true
@@ -114,16 +122,27 @@ func start_reload() -> bool:
 
 	is_reloading = true
 	can_fire = false
+	reload_operation_serial += 1
+	var current_reload_serial: int = reload_operation_serial
 
 	_play_audio_sfx("reload")
 	reload_started.emit(reload_time)
-	_finish_reload_after_delay()
+	_finish_reload_after_delay(current_reload_serial)
 
 	return true
 
 
-func _finish_reload_after_delay() -> void:
-	await get_tree().create_timer(reload_time).timeout
+func _finish_reload_after_delay(reload_serial: int) -> void:
+	await get_tree().create_timer(reload_time, false).timeout
+
+	# Loads/new games can reset the same Pistol node while an older reload
+	# coroutine is still waiting. Ignore stale operations so they cannot
+	# consume the pending ammo belonging to a later reload.
+	if reload_serial != reload_operation_serial:
+		return
+
+	if not is_reloading:
+		return
 
 	current_ammo += pending_reload_ammo
 	reserve_ammo -= pending_reload_ammo
@@ -240,7 +259,18 @@ func get_total_magazines() -> int:
 	return reserve_ammo
 
 
+func cancel_transient_actions() -> void:
+	# Map/forced world transitions keep the weapon's persistent ammo and upgrade
+	# state, but an in-progress reload/cooldown must not leak into the destination.
+	_invalidate_pending_weapon_operations()
+	pending_reload_ammo = 0
+	is_reloading = false
+	can_fire = true
+
+
 func reset_weapon() -> void:
+	_invalidate_pending_weapon_operations()
+
 	fire_cooldown = base_fire_cooldown
 	magazine_size = base_magazine_size
 	reload_time = base_reload_time
@@ -265,6 +295,8 @@ func get_save_data() -> Dictionary:
 	}
 
 func load_save_data(save_data: Dictionary) -> void:
+	_invalidate_pending_weapon_operations()
+
 	magazine_size = int(
 		save_data.get(
 			"magazine_size",
@@ -327,6 +359,15 @@ func load_save_data(save_data: Dictionary) -> void:
 	can_fire = true
 
 	_emit_ammo_changed()
+
+
+
+
+func _invalidate_pending_weapon_operations() -> void:
+	# Incrementing the serials invalidates any async cooldown/reload callbacks
+	# that were started before a New Game or Load reset this same node.
+	fire_cooldown_serial += 1
+	reload_operation_serial += 1
 
 
 func _play_audio_sfx(sfx_name: String) -> void:

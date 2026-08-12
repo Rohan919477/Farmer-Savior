@@ -20,6 +20,7 @@
 [ext_resource type="Script" uid="uid://ci3g6spfw4qu7" path="res://scripts/managers/DefenseManager.gd" id="16_hjnkw"]
 [ext_resource type="PackedScene" uid="uid://b0cqov81uwfb1" path="res://scenes/farm/PesticideTurret.tscn" id="17_rikml"]
 [ext_resource type="Script" uid="uid://b3ji3er4c3v0y" path="res://scripts/managers/WorldLightingManager.gd" id="18_d8523"]
+[ext_resource type="Script" path="res://scripts/managers/WorldDropManager.gd" id="19_worlddrop"]
 [ext_resource type="PackedScene" uid="uid://d372r5psuyviy" path="res://scenes/ui/DefensePlacementUI.tscn" id="18_rikml"]
 [ext_resource type="PackedScene" uid="uid://bu1digdsg017o" path="res://scenes/farm/FenceSegment.tscn" id="18_roob6"]
 [ext_resource type="Script" uid="uid://fl0c4oklkgx8" path="res://scripts/managers/InventoryManager.gd" id="21_0cxqb"]
@@ -70,6 +71,9 @@ nearby_field_scene = ExtResource("12_2tpxt")
 map_container_path = NodePath("../MapContainer")
 player_path = NodePath("../Player")
 map_menu_path = NodePath("../MapMenu")
+
+[node name="WorldDropManager" type="Node" parent="."]
+script = ExtResource("19_worlddrop")
 
 [node name="DefenseManager" type="Node" parent="." unique_id=2040749341]
 script = ExtResource("16_hjnkw")

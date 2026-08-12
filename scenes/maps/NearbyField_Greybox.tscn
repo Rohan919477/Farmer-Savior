@@ -18,6 +18,8 @@ color = Color(0, 0.7577947, 0.6476949, 1)
 collision_layer = 32768
 script = ExtResource("1_epjd6")
 interaction_name = "Truck"
+interaction_type = "travel"
+target_location_id = "farm"
 
 [node name="HighlightVisual" type="ColorRect" parent="TruckExit" unique_id=1328548612]
 visible = false

@@ -84,7 +84,7 @@ func _process(delta: float) -> void:
 	if spawn_cooldown > 0.0:
 		return
 
-	if get_active_enemy_count() >= get_max_active_enemies():
+	if get_living_enemy_count() >= get_max_active_enemies():
 		spawn_cooldown = 0.5
 		return
 
@@ -116,6 +116,27 @@ func has_active_enemies() -> bool:
 	return get_active_enemy_count() > 0
 
 func get_active_enemy_count() -> int:
+	# Keep this as the number of tracked enemy nodes, including defeated enemies
+	# that are still finishing their death animation/drop sequence. Cleanup and
+	# final wave completion must wait for those nodes to finish so rewards cannot
+	# be lost by unloading the farm too early.
+	_cleanup_invalid_enemy_references()
+	return active_enemies.size()
+
+
+func get_living_enemy_count() -> int:
+	_cleanup_invalid_enemy_references()
+
+	var living_count: int = 0
+
+	for enemy in active_enemies:
+		if _is_enemy_alive_for_wave(enemy):
+			living_count += 1
+
+	return living_count
+
+
+func _cleanup_invalid_enemy_references() -> void:
 	var valid_enemies: Array[Node2D] = []
 
 	for enemy in active_enemies:
@@ -124,7 +145,17 @@ func get_active_enemy_count() -> int:
 
 	active_enemies = valid_enemies
 
-	return active_enemies.size()
+
+func _is_enemy_alive_for_wave(enemy: Node2D) -> bool:
+	if enemy == null or not is_instance_valid(enemy):
+		return false
+
+	if enemy.has_method("is_alive_for_wave"):
+		return bool(enemy.call("is_alive_for_wave"))
+
+	# Compatibility fallback for any temporary/non-BaseEnemy scene. Such a node
+	# is considered alive until it leaves the tree.
+	return not enemy.is_queued_for_deletion()
 
 func get_max_active_enemies() -> int:
 	var day_number: int = 1
@@ -548,7 +579,7 @@ func stop_normal_night_combat() -> void:
 
 func get_normal_night_enemies_left() -> int:
 	return (
-		get_active_enemy_count()
+		get_living_enemy_count()
 		+ normal_night_spawns_remaining
 	)
 
@@ -565,7 +596,7 @@ func _process_normal_night(delta: float) -> void:
 
 	normal_night_spawn_timer -= delta
 
-	var active_enemy_count: int = get_active_enemy_count()
+	var active_enemy_count: int = get_living_enemy_count()
 
 	if (
 		normal_night_spawns_remaining > 0
@@ -594,7 +625,7 @@ func _process_normal_night(delta: float) -> void:
 			normal_night_finished.emit()
 
 func _emit_normal_night_enemy_count() -> void:
-	var active_count: int = get_active_enemy_count()
+	var active_count: int = get_living_enemy_count()
 	var enemies_left: int = (
 		active_count
 		+ normal_night_spawns_remaining
@@ -603,7 +634,7 @@ func _emit_normal_night_enemy_count() -> void:
 	last_reported_normal_night_enemies_left = enemies_left
 
 	print(
-		"[Night Count] Active: ",
+		"[Night Count] Living: ",
 		active_count,
 		" | Queued: ",
 		normal_night_spawns_remaining,

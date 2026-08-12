@@ -56,6 +56,7 @@ var repair_debug_session_active: bool = false
 func _ready() -> void:
 	add_to_group("farm_defenses")
 	add_to_group("attackable_placeables")
+	add_to_group("field_repairable")
 
 	base_modulate = turret_sprite.modulate
 
@@ -231,13 +232,33 @@ func _position_world_ui() -> void:
 		repair_prompt.rotation = 0.0
 
 
-func _can_repair_now() -> bool:
+func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
 		turret_state == DefenseManager.PLACEABLE_STATE_DAMAGED
-		and player_in_repair_range != null
+		and player_in_repair_range == player_node
 		and _is_daytime()
 		and not _is_gameplay_input_blocked()
 	)
+
+func _can_repair_now() -> bool:
+	if player_in_repair_range == null:
+		return false
+
+	if not can_be_field_repair_candidate(player_in_repair_range):
+		return false
+
+	if defense_manager != null and defense_manager.has_method(
+		"is_primary_field_repair_target"
+	):
+		return bool(
+			defense_manager.call(
+				"is_primary_field_repair_target",
+				self,
+				player_in_repair_range
+			)
+		)
+
+	return true
 
 
 func _update_repair_prompt() -> void:
@@ -501,6 +522,12 @@ func _refresh_from_manager(force_visual_update: bool = false) -> void:
 
 	range_area.set_deferred("monitoring", not is_currently_broken)
 
+	# A broken turret is no longer a valid enemy target. Its physical blocker
+	# must also be disabled, otherwise the broken turret becomes an
+	# indestructible wall for the remainder of the defense wave.
+	if blocker_shape != null:
+		blocker_shape.set_deferred("disabled", is_currently_broken)
+
 	if is_currently_broken:
 		enemies_in_range.clear()
 
@@ -697,6 +724,10 @@ func get_nearest_enemy() -> Node2D:
 		if not enemy.is_in_group("enemies"):
 			continue
 
+		if enemy.has_method("can_be_targeted_by_defense"):
+			if not bool(enemy.call("can_be_targeted_by_defense")):
+				continue
+
 		var distance_squared: float = global_position.distance_squared_to(
 			enemy.global_position
 		)
@@ -730,7 +761,7 @@ func show_spray_feedback() -> void:
 		fire_frame_time * 3.0
 	)
 
-	await get_tree().create_timer(fire_duration).timeout
+	await get_tree().create_timer(fire_duration, false).timeout
 
 	if current_token == visual_token and is_instance_valid(turret_sprite):
 		_apply_condition_visual()
@@ -742,7 +773,7 @@ func _show_old_spray_flash() -> void:
 
 	turret_sprite.modulate = Color(0.55, 1.0, 0.55, 1.0)
 
-	await get_tree().create_timer(0.12).timeout
+	await get_tree().create_timer(0.12, false).timeout
 
 	if current_token == visual_token and is_instance_valid(turret_sprite):
 		_apply_condition_visual()

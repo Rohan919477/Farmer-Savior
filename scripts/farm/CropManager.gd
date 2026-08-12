@@ -342,6 +342,13 @@ func confirm_plant_basic_crop() -> bool:
 		return false
 
 	if not plant_basic_crop(grid_cell):
+		if player_node.has_method("add_resource"):
+			player_node.call(
+				"add_resource",
+				"seeds",
+				basic_crop_seed_cost
+			)
+
 		planting_result.emit(false, "Crop could not be planted.")
 		return false
 
@@ -543,7 +550,10 @@ func plant_basic_crop(grid_cell: Vector2i) -> bool:
 	return true
 
 func harvest_ready_crop(grid_cell: Vector2i) -> void:
-	var crop_data: Dictionary = harvest_crop(grid_cell)
+	if get_crop_state(grid_cell) != CROP_STATE_READY:
+		return
+
+	var crop_data: Dictionary = get_crop_data(grid_cell)
 
 	if crop_data.is_empty():
 		return
@@ -565,12 +575,69 @@ func harvest_ready_crop(grid_cell: Vector2i) -> void:
 
 	var player_node: Node = get_tree().get_first_node_in_group("player")
 
-	if player_node != null and player_node.has_method("add_resource"):
-		player_node.call(
-			"add_resource",
-			resource_type,
-			harvest_amount
+	if player_node == null or not player_node.has_method("add_resource"):
+		print("[Crop] Player resource data is unavailable. Harvest kept in plot.")
+		return
+
+	if player_node.has_method("can_accept_resource"):
+		var can_accept_full_harvest: bool = bool(
+			player_node.call(
+				"can_accept_resource",
+				resource_type,
+				harvest_amount
+			)
 		)
+
+		if not can_accept_full_harvest:
+			print(
+				"[Crop] Inventory full. Harvest remains ready at ",
+				grid_cell,
+				"."
+			)
+			return
+
+	var add_result: Variant = player_node.call(
+		"add_resource",
+		resource_type,
+		harvest_amount
+	)
+
+	if typeof(add_result) == TYPE_INT and int(add_result) > 0:
+		var remaining_harvest: int = int(add_result)
+		var amount_added: int = maxi(
+			harvest_amount - remaining_harvest,
+			0
+		)
+
+		# Keep harvesting transactional: if the full reward did not fit, undo
+		# any partial transfer and leave the crop untouched for a later retry.
+		if amount_added > 0 and player_node.has_method("spend_resource"):
+			player_node.call(
+				"spend_resource",
+				resource_type,
+				amount_added
+			)
+
+		print(
+			"[Crop] Harvest could not fully fit in inventory. ",
+			"Crop remains ready at ",
+			grid_cell,
+			"."
+		)
+		return
+
+	var harvested_crop_data: Dictionary = harvest_crop(grid_cell)
+
+	if harvested_crop_data.is_empty():
+		# This should not normally happen after the state checks above. If it
+		# does, restore the reward so the player never loses resources.
+		if player_node.has_method("spend_resource"):
+			player_node.call(
+				"spend_resource",
+				resource_type,
+				harvest_amount
+			)
+		return
 
 	print(
 		"[Crop] Harvested ",

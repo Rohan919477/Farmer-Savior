@@ -1,6 +1,8 @@
 extends Node
 class_name DefenseManager
 
+const DefenseGridGeometry = preload("res://scripts/managers/DefenseGridGeometry.gd")
+
 signal inventory_changed(pesticide_turrets_available: int)
 signal turret_placed(grid_cell: Vector2i)
 signal placement_failed(reason: String)
@@ -256,41 +258,19 @@ func get_grid_rows() -> int:
 	return grid_rows
 
 func is_inside_grid(grid_cell: Vector2i) -> bool:
-	return (
-		grid_cell.x >= 0
-		and grid_cell.x < grid_columns
-		and grid_cell.y >= 0
-		and grid_cell.y < grid_rows
+	return DefenseGridGeometry.is_inside_grid(
+		grid_cell, grid_columns, grid_rows
 	)
 
 func is_boundary_cell(grid_cell: Vector2i) -> bool:
-	return (
-		grid_cell.x == 0
-		or grid_cell.x == grid_columns - 1
-		or grid_cell.y == 0
-		or grid_cell.y == grid_rows - 1
+	return DefenseGridGeometry.is_boundary_cell(
+		grid_cell, grid_columns, grid_rows
 	)
 
 func get_cell_type(grid_cell: Vector2i) -> String:
-	if not is_inside_grid(grid_cell):
-		return "outside"
-
-	if is_boundary_cell(grid_cell):
-		return "boundary"
-
-	# Farmhouse zone. Keep it unavailable for defence placement.
-	if is_cell_in_range(grid_cell, 5, 15, 4, 12):
-		return "house"
-
-	# Truck zone. Keep it unavailable for defence placement.
-	if is_cell_in_range(grid_cell, 42, 50, 4, 9):
-		return "truck"
-
-	# Larger crop/farmland zone near the lower centre of the farm.
-	if is_cell_in_range(grid_cell, 18, 37, 28, 36):
-		return "farmland"
-
-	return "open"
+	return DefenseGridGeometry.get_cell_type(
+		grid_cell, grid_columns, grid_rows
+	)
 
 func is_cell_in_range(
 	grid_cell: Vector2i,
@@ -299,12 +279,68 @@ func is_cell_in_range(
 	minimum_y: int,
 	maximum_y: int
 ) -> bool:
-	return (
-		grid_cell.x >= minimum_x
-		and grid_cell.x <= maximum_x
-		and grid_cell.y >= minimum_y
-		and grid_cell.y <= maximum_y
+	return DefenseGridGeometry.is_cell_in_range(
+		grid_cell,
+		minimum_x, maximum_x,
+		minimum_y, maximum_y
 	)
+
+func is_primary_field_repair_target(
+	candidate: Node2D,
+	player_node: Node
+) -> bool:
+	if candidate == null or not is_instance_valid(candidate):
+		return false
+
+	if not (player_node is Node2D):
+		return false
+
+	var player_2d: Node2D = player_node as Node2D
+	var best_target: Node2D = null
+	var best_distance_squared: float = INF
+	var best_instance_id: int = 0
+
+	for target_node in get_tree().get_nodes_in_group("field_repairable"):
+		if not (target_node is Node2D):
+			continue
+
+		var target_2d: Node2D = target_node as Node2D
+
+		if not is_instance_valid(target_2d):
+			continue
+
+		if not target_2d.has_method("can_be_field_repair_candidate"):
+			continue
+
+		if not bool(
+			target_2d.call(
+				"can_be_field_repair_candidate",
+				player_node
+			)
+		):
+			continue
+
+		var distance_squared: float = (
+			player_2d.global_position.distance_squared_to(
+				target_2d.global_position
+			)
+		)
+
+		var target_instance_id: int = target_2d.get_instance_id()
+
+		if (
+			best_target == null
+			or distance_squared < best_distance_squared - 0.001
+			or (
+				is_equal_approx(distance_squared, best_distance_squared)
+				and target_instance_id < best_instance_id
+			)
+		):
+			best_target = target_2d
+			best_distance_squared = distance_squared
+			best_instance_id = target_instance_id
+
+	return best_target == candidate
 
 # -------------------------------------------------------------------
 # Pesticide Turrets
@@ -583,15 +619,9 @@ func place_pesticide_turret(grid_cell: Vector2i) -> bool:
 	return true
 
 func get_turret_position(grid_cell: Vector2i) -> Vector2:
-	var offset_x: float = (
-		(float(grid_cell.x) + 0.5) * farm_grid_cell_size.x
+	return DefenseGridGeometry.get_cell_center_world_position(
+		grid_cell, farm_grid_origin, farm_grid_cell_size
 	)
-
-	var offset_y: float = (
-		(float(grid_cell.y) + 0.5) * farm_grid_cell_size.y
-	)
-
-	return farm_grid_origin + Vector2(offset_x, offset_y)
 
 func has_placed_turrets() -> bool:
 	return not placed_turrets.is_empty()
@@ -1325,6 +1355,26 @@ func _process_nightlight_wear(delta: float) -> void:
 			rebuild_farm_nightlights()
 
 func _is_nighttime_for_nightlight_wear() -> bool:
+	# Normal post-tutorial nights are quota-based. Their TimeManager phase stays
+	# at "night" from the 18:00 handoff until the player sleeps, even after the
+	# wave has been cleared. NightLight wear should follow the active defense
+	# wave, not that frozen clock phase, otherwise lights keep degrading while
+	# the player is simply returning to bed.
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if (
+		main_node != null
+		and main_node.has_method("is_using_week10_normal_night_loop")
+		and bool(main_node.call("is_using_week10_normal_night_loop"))
+	):
+		if main_node.has_method("is_normal_night_combat_active"):
+			return bool(main_node.call("is_normal_night_combat_active"))
+
+		return false
+
+	# The Day 1 tutorial still uses its separate clock/midnight flow, so retain
+	# the original TimeManager-based check whenever the normal quota loop is not
+	# controlling the night.
 	var current_time_manager: Node = get_tree().get_first_node_in_group(
 		"time_manager"
 	)
@@ -1493,72 +1543,35 @@ func get_placed_fence_keys() -> Array[String]:
 	return fence_keys
 
 func is_valid_fence_orientation(orientation: String) -> bool:
-	return (
-		orientation == FENCE_ORIENTATION_HORIZONTAL
-		or orientation == FENCE_ORIENTATION_VERTICAL
+	return DefenseGridGeometry.is_valid_fence_orientation(
+		orientation,
+		FENCE_ORIENTATION_HORIZONTAL,
+		FENCE_ORIENTATION_VERTICAL
 	)
 
 func is_valid_fence_edge(
 	orientation: String,
 	grid_edge: Vector2i
 ) -> bool:
-	if orientation == FENCE_ORIENTATION_HORIZONTAL:
-		return (
-			grid_edge.x >= 0
-			and grid_edge.x < grid_columns
-			and grid_edge.y >= 0
-			and grid_edge.y <= grid_rows
-		)
-
-	if orientation == FENCE_ORIENTATION_VERTICAL:
-		return (
-			grid_edge.x >= 0
-			and grid_edge.x <= grid_columns
-			and grid_edge.y >= 0
-			and grid_edge.y < grid_rows
-		)
-
-	return false
+	return DefenseGridGeometry.is_valid_fence_edge(
+		orientation, grid_edge, grid_columns, grid_rows,
+		FENCE_ORIENTATION_HORIZONTAL, FENCE_ORIENTATION_VERTICAL
+	)
 
 func get_fence_key(
 	orientation: String,
 	grid_edge: Vector2i
 ) -> String:
-	return "%s:%d:%d" % [
-		orientation,
-		grid_edge.x,
-		grid_edge.y
-	]
+	return DefenseGridGeometry.get_fence_key(orientation, grid_edge)
 
 func get_cells_touching_fence_edge(
 	orientation: String,
 	grid_edge: Vector2i
 ) -> Array[Vector2i]:
-	var touching_cells: Array[Vector2i] = []
-
-	if orientation == FENCE_ORIENTATION_HORIZONTAL:
-		if grid_edge.y > 0:
-			touching_cells.append(
-				Vector2i(grid_edge.x, grid_edge.y - 1)
-			)
-
-		if grid_edge.y < grid_rows:
-			touching_cells.append(
-				Vector2i(grid_edge.x, grid_edge.y)
-			)
-
-	elif orientation == FENCE_ORIENTATION_VERTICAL:
-		if grid_edge.x > 0:
-			touching_cells.append(
-				Vector2i(grid_edge.x - 1, grid_edge.y)
-			)
-
-		if grid_edge.x < grid_columns:
-			touching_cells.append(
-				Vector2i(grid_edge.x, grid_edge.y)
-			)
-
-	return touching_cells
+	return DefenseGridGeometry.get_cells_touching_fence_edge(
+		orientation, grid_edge, grid_columns, grid_rows,
+		FENCE_ORIENTATION_HORIZONTAL, FENCE_ORIENTATION_VERTICAL
+	)
 
 func is_fence_edge_inside_static_object(
 	orientation: String,
@@ -2209,66 +2222,17 @@ func get_perimeter_side_for_fence(fence_key: String) -> String:
 func get_exterior_side_for_world_position(
 	world_position: Vector2
 ) -> String:
-	var farm_left: float = farm_grid_origin.x
-	var farm_top: float = farm_grid_origin.y
-
-	var farm_right: float = (
-		farm_left + float(grid_columns) * farm_grid_cell_size.x
+	return DefenseGridGeometry.get_exterior_side_for_world_position(
+		world_position, farm_grid_origin, farm_grid_cell_size,
+		grid_columns, grid_rows
 	)
-
-	var farm_bottom: float = (
-		farm_top + float(grid_rows) * farm_grid_cell_size.y
-	)
-
-	var best_side: String = ""
-	var greatest_outside_distance: float = 0.0
-
-	var top_distance: float = farm_top - world_position.y
-
-	if top_distance > greatest_outside_distance:
-		greatest_outside_distance = top_distance
-		best_side = "top"
-
-	var bottom_distance: float = world_position.y - farm_bottom
-
-	if bottom_distance > greatest_outside_distance:
-		greatest_outside_distance = bottom_distance
-		best_side = "bottom"
-
-	var left_distance: float = farm_left - world_position.x
-
-	if left_distance > greatest_outside_distance:
-		greatest_outside_distance = left_distance
-		best_side = "left"
-
-	var right_distance: float = world_position.x - farm_right
-
-	if right_distance > greatest_outside_distance:
-		best_side = "right"
-
-	return best_side
 	
 func is_world_position_inside_farm_perimeter(
 	world_position: Vector2
 ) -> bool:
-	var farm_left: float = farm_grid_origin.x
-	var farm_top: float = farm_grid_origin.y
-
-	var farm_right: float = (
-		farm_left
-		+ float(grid_columns) * farm_grid_cell_size.x
-	)
-
-	var farm_bottom: float = (
-		farm_top
-		+ float(grid_rows) * farm_grid_cell_size.y
-	)
-
-	return (
-		world_position.x > farm_left
-		and world_position.x < farm_right
-		and world_position.y > farm_top
-		and world_position.y < farm_bottom
+	return DefenseGridGeometry.is_world_position_inside_farm_perimeter(
+		world_position, farm_grid_origin, farm_grid_cell_size,
+		grid_columns, grid_rows
 	)
 
 func get_perimeter_breach_route(
@@ -2535,22 +2499,15 @@ func get_fence_world_position(
 	orientation: String,
 	grid_edge: Vector2i
 ) -> Vector2:
-	if orientation == FENCE_ORIENTATION_HORIZONTAL:
-		return farm_grid_origin + Vector2(
-			(float(grid_edge.x) + 0.5) * farm_grid_cell_size.x,
-			float(grid_edge.y) * farm_grid_cell_size.y
-		)
-
-	return farm_grid_origin + Vector2(
-		float(grid_edge.x) * farm_grid_cell_size.x,
-		(float(grid_edge.y) + 0.5) * farm_grid_cell_size.y
+	return DefenseGridGeometry.get_fence_world_position(
+		orientation, grid_edge, farm_grid_origin, farm_grid_cell_size,
+		FENCE_ORIENTATION_HORIZONTAL
 	)
 
 func get_fence_world_rotation(orientation: String) -> float:
-	if orientation == FENCE_ORIENTATION_VERTICAL:
-		return PI / 2.0
-
-	return 0.0
+	return DefenseGridGeometry.get_fence_world_rotation(
+		orientation, FENCE_ORIENTATION_VERTICAL
+	)
 
 # -------------------------------------------------------------------
 # Farm-map reconstruction

@@ -125,7 +125,8 @@ func _try_begin_pulse() -> bool:
 
 func _reset_pulse_decision_after_delay() -> void:
 	await get_tree().create_timer(
-		maxf(pulse_decision_interval, 0.05)
+		maxf(pulse_decision_interval, 0.05),
+		false
 	).timeout
 
 	if is_instance_valid(self):
@@ -155,7 +156,8 @@ func start_pulse_attack() -> void:
 			_get_animation_hit_delay(
 				&"special_attack",
 				pulse_damage_frame
-			)
+			),
+			false
 		).timeout
 
 	if (
@@ -187,7 +189,8 @@ func start_pulse_attack() -> void:
 
 func _begin_pulse_cooldown() -> void:
 	await get_tree().create_timer(
-		maxf(pulse_cooldown, 0.05)
+		maxf(pulse_cooldown, 0.05),
+		false
 	).timeout
 
 	if is_instance_valid(self):
@@ -296,7 +299,8 @@ func perform_attack_on_target(target: Node2D) -> void:
 			_get_animation_hit_delay(
 				&"basic_attack",
 				basic_attack_hit_frame
-			)
+			),
+			false
 		).timeout
 
 	if is_death_animation_playing:
@@ -354,7 +358,8 @@ func try_attack_fence(fence: Node2D) -> void:
 			_get_animation_hit_delay(
 				&"basic_attack",
 				basic_attack_hit_frame
-			)
+			),
+			false
 		).timeout
 
 	if is_death_animation_playing:
@@ -419,7 +424,7 @@ func show_hit_feedback() -> void:
 			1.0
 		)
 
-		await get_tree().create_timer(0.08).timeout
+		await get_tree().create_timer(0.08, false).timeout
 
 		if (
 			is_instance_valid(body_sprite)
@@ -437,7 +442,8 @@ func show_hit_feedback() -> void:
 
 	if hurt_started:
 		await get_tree().create_timer(
-			maxf(hurt_pose_duration, 0.05)
+			maxf(hurt_pose_duration, 0.05),
+			false
 		).timeout
 	else:
 		body_sprite.self_modulate = Color(
@@ -447,7 +453,7 @@ func show_hit_feedback() -> void:
 			1.0
 		)
 
-		await get_tree().create_timer(0.08).timeout
+		await get_tree().create_timer(0.08, false).timeout
 
 	if (
 		current_serial != hurt_feedback_serial

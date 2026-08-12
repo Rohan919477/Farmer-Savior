@@ -26,6 +26,7 @@ const HOUSE_LIGHT_Z_INDEX: int = 30
 @onready var defense_manager: DefenseManager = $DefenseManager
 @onready var defense_placement_ui: DefensePlacementUI = $DefensePlacementUI
 @onready var spawn_manager: Node = $SpawnManager
+@onready var world_drop_manager: Node = $WorldDropManager
 
 @onready var title_screen_ui: TitleScreenUI = $TitleScreenUI
 @onready var tutorial_popup_ui: TutorialPopupUI = $TutorialPopupUI
@@ -396,6 +397,8 @@ func _start_new_game_with_slot(slot_index: int) -> void:
 func _reset_game_state_for_new_game() -> void:
 	close_workshop()
 	close_defense_placement()
+	close_crop_planting_menu()
+	close_player_inventory()
 
 	if map_manager != null and map_manager.has_method("close_map_menu"):
 		map_manager.call("close_map_menu")
@@ -455,6 +458,10 @@ func _reset_game_state_for_new_game() -> void:
 		if crop_manager.has_method("reset_for_new_game"):
 			crop_manager.call("reset_for_new_game")
 
+	if world_drop_manager != null:
+		if world_drop_manager.has_method("reset_for_new_game"):
+			world_drop_manager.call("reset_for_new_game")
+
 	if map_manager != null:
 		if map_manager.has_method("reset_for_new_game"):
 			map_manager.call("reset_for_new_game")
@@ -467,17 +474,22 @@ func _reset_game_state_for_new_game() -> void:
 	print("[Main] New game state reset complete.")
 
 func _on_load_slot_selected(slot_index: int) -> void:
-	save_slot_menu_context = SAVE_SLOT_CONTEXT_NONE
-	_load_game_from_slot(slot_index)
+	var previous_context: String = save_slot_menu_context
 
-func _load_game_from_slot(slot_index: int) -> void:
+	if _load_game_from_slot(slot_index):
+		save_slot_menu_context = SAVE_SLOT_CONTEXT_NONE
+		return
+
+	_restore_load_ui_after_failure(previous_context)
+
+func _load_game_from_slot(slot_index: int) -> bool:
 	if save_manager == null:
 		print("[Load] SaveManager missing.")
-		return
+		return false
 
 	if not save_manager.has_method("load_slot_data"):
 		print("[Load] SaveManager.load_slot_data() missing.")
-		return
+		return false
 
 	var save_data: Dictionary = save_manager.call(
 		"load_slot_data",
@@ -486,7 +498,7 @@ func _load_game_from_slot(slot_index: int) -> void:
 
 	if save_data.is_empty():
 		print("[Load] Could not load slot: ", slot_index)
-		return
+		return false
 
 	if pause_menu != null:
 		if pause_menu.has_method("close_pause_menu"):
@@ -504,6 +516,28 @@ func _load_game_from_slot(slot_index: int) -> void:
 	})
 
 	print("[Load] Game applied from slot: ", slot_index)
+	return true
+
+func _restore_load_ui_after_failure(previous_context: String) -> void:
+	save_slot_menu_context = previous_context
+	get_tree().paused = true
+
+	# SaveSlotUI closes itself before emitting load_slot_selected. If loading
+	# fails, reopen the load menu so a paused game is never left with no
+	# visible interface and the player can choose/delete another save.
+	if save_slot_ui != null and save_slot_ui.has_method("open_load_game_menu"):
+		save_slot_ui.call("open_load_game_menu")
+		return
+
+	match previous_context:
+		SAVE_SLOT_CONTEXT_TITLE_LOAD:
+			if title_screen_ui != null:
+				title_screen_ui.show_title_screen()
+
+		SAVE_SLOT_CONTEXT_PAUSE_LOAD:
+			if pause_menu != null:
+				if pause_menu.has_method("open_pause_menu"):
+					pause_menu.call("open_pause_menu")
 
 func _apply_loaded_save_data(
 	save_data: Dictionary,
@@ -516,6 +550,8 @@ func _apply_loaded_save_data(
 
 	close_workshop()
 	close_defense_placement()
+	close_crop_planting_menu()
+	close_player_inventory()
 
 	if map_manager != null and map_manager.has_method("close_map_menu"):
 		map_manager.call("close_map_menu")
@@ -545,6 +581,7 @@ func _apply_loaded_save_data(
 	_load_upgrade_from_save(save_data)
 	_load_defense_from_save(save_data)
 	_load_crop_from_save(save_data)
+	_load_world_drops_from_save(save_data)
 	_load_tutorial_from_save(save_data)
 
 	if hud != null and hud.has_method("show_time_display"):
@@ -657,6 +694,16 @@ func _load_crop_from_save(save_data: Dictionary) -> void:
 	if crop_manager.has_method("load_save_data"):
 		crop_manager.call("load_save_data", crop_data)
 
+func _load_world_drops_from_save(save_data: Dictionary) -> void:
+	if world_drop_manager == null:
+		return
+
+	var maps_data: Dictionary = save_data.get("maps", {})
+
+	if world_drop_manager.has_method("load_save_data"):
+		world_drop_manager.call("load_save_data", maps_data)
+
+
 func _load_tutorial_from_save(save_data: Dictionary) -> void:
 	if tutorial_manager == null:
 		return
@@ -702,6 +749,8 @@ func handle_player_death() -> void:
 
 	close_workshop()
 	close_defense_placement()
+	close_crop_planting_menu()
+	close_player_inventory()
 
 	if map_manager != null and map_manager.has_method("close_map_menu"):
 		map_manager.call("close_map_menu")
@@ -749,6 +798,13 @@ func _on_midnight_reached() -> void:
 
 func _on_night_cleanup_cleared() -> void:
 	if is_using_week10_normal_night_loop():
+		return
+
+	# During the Day 1 tutorial, midnight intentionally clears the ordinary
+	# enemies before the tutorial boss is spawned. SpawnManager can therefore
+	# report an empty cleanup immediately. The tutorial owns dawn progression
+	# until the boss-defeated popup is acknowledged.
+	if _should_use_tutorial_night_flow():
 		return
 
 	start_dawn_transition()
@@ -847,13 +903,13 @@ func travel_to_location(location_id: String) -> void:
 	_perform_location_travel(location_id)
 
 func _perform_location_travel(location_id: String) -> void:
-	if location_id == "farm":
-		if map_manager != null and map_manager.has_method(
-			"force_return_to_farm"
-		):
-			map_manager.call("force_return_to_farm")
-			return
+	# Map-local modal/action state must never carry into the destination scene.
+	close_crop_planting_menu()
+	close_player_inventory()
+	cancel_player_transient_actions()
 
+	# Ordinary player-initiated travel should use the destination's normal
+	# spawn point. NightReturnSpawn is reserved for forced nightfall returns.
 	if map_manager != null and map_manager.has_method(
 		"travel_to_location"
 	):
@@ -938,10 +994,45 @@ func close_workshop() -> void:
 	if workshop_ui.has_method("close_workshop"):
 		workshop_ui.call("close_workshop")
 
+func close_crop_planting_menu() -> void:
+	var crop_manager: Node = get_tree().get_first_node_in_group(
+		"crop_manager"
+	)
+
+	if crop_manager == null:
+		return
+
+	if crop_manager.has_method("cancel_planting_menu"):
+		crop_manager.call("cancel_planting_menu")
+
+func close_player_inventory() -> void:
+	var inventory_ui: Node = get_node_or_null("PlayerInventoryUI")
+
+	if inventory_ui == null:
+		inventory_ui = get_tree().get_first_node_in_group(
+			"player_inventory_ui"
+		)
+
+	if inventory_ui == null:
+		return
+
+	if inventory_ui.has_method("close_inventory"):
+		inventory_ui.call("close_inventory")
+
+func cancel_player_transient_actions() -> void:
+	if player == null:
+		return
+
+	if player.has_method("cancel_transient_actions_for_transition"):
+		player.call("cancel_transient_actions_for_transition")
+
+
 func _on_night_started() -> void:
 	map_manager.close_map_menu()
 	close_defense_placement()
 	close_workshop()
+	close_crop_planting_menu()
+	close_player_inventory()
 	
 	_log_telemetry("night_started", {
 		"location_id": _get_current_location_id()
@@ -989,6 +1080,14 @@ func is_gameplay_input_blocked() -> bool:
 
 	if inventory_ui != null and inventory_ui.has_method("is_inventory_open"):
 		if bool(inventory_ui.call("is_inventory_open")):
+			return true
+
+	var crop_manager: Node = get_tree().get_first_node_in_group(
+		"crop_manager"
+	)
+
+	if crop_manager != null and crop_manager.has_method("is_planting_menu_open"):
+		if bool(crop_manager.call("is_planting_menu_open")):
 			return true
 
 	if save_slot_ui != null:
@@ -1162,6 +1261,8 @@ func _force_player_out_of_house_for_night() -> void:
 	_enter_normal_night_combat()
 
 func _force_player_to_farm_for_night() -> void:
+	cancel_player_transient_actions()
+
 	if map_manager != null and map_manager.has_method("force_return_to_farm"):
 		map_manager.call("force_return_to_farm")
 		return
@@ -1322,6 +1423,8 @@ func _run_sleep_transition_with_save(manual_slot_index: int) -> void:
 
 	close_workshop()
 	close_defense_placement()
+	close_crop_planting_menu()
+	close_player_inventory()
 
 	if map_manager != null and map_manager.has_method("close_map_menu"):
 		map_manager.close_map_menu()
@@ -1378,16 +1481,33 @@ func _perform_sleep_saves(manual_slot_index: int) -> void:
 	if not save_manager.has_method("save_to_slot"):
 		return
 
+	# Every completed sleep updates the dedicated autosave slot. A manual slot
+	# is written only when the player explicitly selected one in the sleep
+	# menu. Do not fall back to active_manual_save_slot here: the UI promises
+	# that "SLEEP WITH AUTOSAVE ONLY" preserves existing manual checkpoints.
 	save_manager.call("save_to_slot", 0)
 
-	var slot_to_save: int = manual_slot_index
+	if manual_slot_index >= 1:
+		save_manager.call("save_to_slot", manual_slot_index)
+		active_manual_save_slot = manual_slot_index
+		return
 
-	if slot_to_save < 1:
-		slot_to_save = active_manual_save_slot
+	# A New Game asks the player to reserve an empty manual slot. Honor that
+	# choice on the first completed sleep, but only while the slot is still
+	# empty. Once it contains a save, choosing "Autosave Only" must preserve
+	# that manual checkpoint and update Slot 0 only.
+	if active_manual_save_slot < 1:
+		return
 
-	if slot_to_save >= 1:
-		save_manager.call("save_to_slot", slot_to_save)
-		active_manual_save_slot = slot_to_save
+	if not save_manager.has_method("has_slot_save"):
+		return
+
+	var reserved_slot_is_occupied: bool = bool(
+		save_manager.call("has_slot_save", active_manual_save_slot)
+	)
+
+	if not reserved_slot_is_occupied:
+		save_manager.call("save_to_slot", active_manual_save_slot)
 
 func _wake_player_at_bed() -> void:
 	if player == null:

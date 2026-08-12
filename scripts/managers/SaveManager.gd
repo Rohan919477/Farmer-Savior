@@ -516,8 +516,8 @@ func _collect_save_data(slot_index: int) -> Dictionary:
 		},
 		"defenses": _get_defense_save_data(),
 		"farming": _get_crop_save_data(),
-		# Reserved for future per-map persistent state keyed by stable map ID.
-		"maps": {}
+		# Persistent per-map state. Resource drops are the first V2 map-owned data.
+		"maps": _get_world_drop_save_data()
 	}
 
 func _get_current_datetime_text() -> String:
@@ -551,6 +551,9 @@ func _get_defense_save_data() -> Dictionary:
 
 func _get_crop_save_data() -> Dictionary:
 	return _get_group_save_data("crop_manager")
+
+func _get_world_drop_save_data() -> Dictionary:
+	return _get_group_save_data("world_drop_manager")
 
 func _get_group_save_data(group_name: String) -> Dictionary:
 	var owner: Node = get_tree().get_first_node_in_group(group_name)

@@ -34,6 +34,7 @@ var repair_debug_session_active: bool = false
 
 func _ready() -> void:
 	add_to_group("fences")
+	add_to_group("field_repairable")
 
 	_setup_collision()
 	_setup_repair_area()
@@ -206,13 +207,33 @@ func _position_world_ui() -> void:
 
 	repair_prompt.rotation = -global_rotation
 
-func _can_repair_now() -> bool:
+func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
 		fence_state == DefenseManager.FENCE_STATE_DAMAGED
-		and player_in_repair_range != null
+		and player_in_repair_range == player_node
 		and _is_daytime()
 		and not _is_gameplay_input_blocked()
 	)
+
+func _can_repair_now() -> bool:
+	if player_in_repair_range == null:
+		return false
+
+	if not can_be_field_repair_candidate(player_in_repair_range):
+		return false
+
+	if defense_manager != null and defense_manager.has_method(
+		"is_primary_field_repair_target"
+	):
+		return bool(
+			defense_manager.call(
+				"is_primary_field_repair_target",
+				self,
+				player_in_repair_range
+			)
+		)
+
+	return true
 
 func _is_daytime() -> bool:
 	var time_manager: Node = get_tree().get_first_node_in_group(
