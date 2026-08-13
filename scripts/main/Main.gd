@@ -63,6 +63,7 @@ var dawn_transition_running: bool = false
 var sleep_transition_running: bool = false
 var pending_manual_save_slot: int = -1
 var active_manual_save_slot: int = -1
+var reserved_new_game_manual_slot: int = -1
 var save_slot_menu_context: String = SAVE_SLOT_CONTEXT_NONE
 var house_light_texture: Texture2D = null
 
@@ -291,10 +292,8 @@ func _process(delta: float) -> void:
 	_process_normal_night_state(delta)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_fullscreen"):
-		_toggle_fullscreen()
-		return
-
+	# Fullscreen input is owned globally by the FullscreenManager autoload.
+	# Handling it here as well would toggle twice for the same key press.
 	if not event.is_action_pressed("ui_cancel"):
 		return
 
@@ -310,14 +309,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if pause_menu.has_method("open_pause_menu"):
 		pause_menu.call("open_pause_menu")
-
-func _toggle_fullscreen() -> void:
-	var window: Window = get_window()
-
-	if window.mode == Window.MODE_EXCLUSIVE_FULLSCREEN:
-		window.mode = Window.MODE_WINDOWED
-	else:
-		window.mode = Window.MODE_EXCLUSIVE_FULLSCREEN
 
 func _should_ignore_pause_input() -> bool:
 	if title_screen_ui != null and title_screen_ui.is_title_screen_open():
@@ -378,6 +369,7 @@ func _start_new_game_with_slot(slot_index: int) -> void:
 	pending_manual_save_slot = -1
 
 	_reset_game_state_for_new_game()
+	reserved_new_game_manual_slot = slot_index if slot_index >= 1 else -1
 
 	if title_screen_ui != null:
 		title_screen_ui.hide_title_screen()
@@ -416,6 +408,7 @@ func _reset_game_state_for_new_game() -> void:
 	dawn_transition_running = false
 	sleep_transition_running = false
 	pending_manual_save_slot = -1
+	reserved_new_game_manual_slot = -1
 
 	if tutorial_manager != null:
 		if tutorial_manager.has_method("reset_for_new_game"):
@@ -569,6 +562,7 @@ func _apply_loaded_save_data(
 	dawn_transition_running = false
 	sleep_transition_running = false
 	pending_manual_save_slot = -1
+	reserved_new_game_manual_slot = -1
 
 	if tutorial_manager != null:
 		if tutorial_manager.has_method("prepare_for_load"):
@@ -1490,24 +1484,41 @@ func _perform_sleep_saves(manual_slot_index: int) -> void:
 	if manual_slot_index >= 1:
 		save_manager.call("save_to_slot", manual_slot_index)
 		active_manual_save_slot = manual_slot_index
+		# An explicit bedtime slot choice supersedes the one-time reservation
+		# made when this New Game was created.
+		reserved_new_game_manual_slot = -1
 		return
 
-	# A New Game asks the player to reserve an empty manual slot. Honor that
-	# choice on the first completed sleep, but only while the slot is still
-	# empty. Once it contains a save, choosing "Autosave Only" must preserve
-	# that manual checkpoint and update Slot 0 only.
-	if active_manual_save_slot < 1:
+	# A New Game may reserve an empty manual slot for a one-time first-sleep
+	# save. Keep that reservation separate from active_manual_save_slot. A
+	# loaded manual save can later be deliberately deleted by the player, and
+	# "Autosave Only" must not silently recreate that deleted checkpoint.
+	if reserved_new_game_manual_slot < 1:
 		return
 
 	if not save_manager.has_method("has_slot_save"):
 		return
 
 	var reserved_slot_is_occupied: bool = bool(
-		save_manager.call("has_slot_save", active_manual_save_slot)
+		save_manager.call(
+			"has_slot_save",
+			reserved_new_game_manual_slot
+		)
 	)
 
-	if not reserved_slot_is_occupied:
-		save_manager.call("save_to_slot", active_manual_save_slot)
+	if reserved_slot_is_occupied:
+		reserved_new_game_manual_slot = -1
+		return
+
+	var created_reserved_save: bool = bool(
+		save_manager.call(
+			"save_to_slot",
+			reserved_new_game_manual_slot
+		)
+	)
+
+	if created_reserved_save:
+		reserved_new_game_manual_slot = -1
 
 func _wake_player_at_bed() -> void:
 	if player == null:

@@ -457,7 +457,7 @@ func _position_world_ui() -> void:
 
 func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
-		nightlight_state == "damaged"
+		nightlight_state != "perfect"
 		and player_in_repair_range == player_node
 		and _is_daytime()
 		and not _is_gameplay_input_blocked()
@@ -508,10 +508,18 @@ func _update_repair_prompt() -> void:
 			repair_prompt.text = "Fix NightLight (Hold F)"
 			return
 
-	repair_prompt.text = (
-		"Fix NightLight (Hold F)\nScrap: %d"
-		% _get_damaged_repair_cost()
-	)
+	var repair_cost: int = _get_repair_cost()
+
+	if nightlight_state == "broken":
+		repair_prompt.text = (
+			"Rebuild NightLight (Hold F)\nScrap: %d"
+			% repair_cost
+		)
+	else:
+		repair_prompt.text = (
+			"Fix NightLight (Hold F)\nScrap: %d"
+			% repair_cost
+		)
 
 func _repair_while_holding(delta: float) -> void:
 	if defense_manager == null:
@@ -534,7 +542,7 @@ func _repair_while_holding(delta: float) -> void:
 		)
 
 	if not repair_cost_was_paid:
-		var repair_cost: int = _get_damaged_repair_cost()
+		var repair_cost: int = _get_repair_cost()
 
 		if repair_cost > 0:
 			if player_in_repair_range == null:
@@ -592,9 +600,27 @@ func _repair_while_holding(delta: float) -> void:
 		)
 		repair_debug_session_active = false
 
-func _get_damaged_repair_cost() -> int:
+func _get_repair_cost() -> int:
 	if defense_manager == null:
 		return 1
+
+	if defense_manager.has_method("get_nightlight_repair_cost_scrap"):
+		return int(
+			defense_manager.call(
+				"get_nightlight_repair_cost_scrap",
+				nightlight_key
+			)
+		)
+
+	if nightlight_state == "broken":
+		if defense_manager.has_method(
+			"get_broken_nightlight_repair_scrap_cost"
+		):
+			return int(
+				defense_manager.call(
+					"get_broken_nightlight_repair_scrap_cost"
+				)
+			)
 
 	if defense_manager.has_method("get_damaged_nightlight_repair_cost_scrap"):
 		return int(
@@ -602,9 +628,6 @@ func _get_damaged_repair_cost() -> int:
 				"get_damaged_nightlight_repair_cost_scrap"
 			)
 		)
-
-	if "damaged_nightlight_repair_cost_scrap" in defense_manager:
-		return int(defense_manager.get("damaged_nightlight_repair_cost_scrap"))
 
 	return 1
 

@@ -23,6 +23,7 @@ const ITEM_NIGHTLIGHT: String = "nightlight"
 
 var defense_manager: Node = null
 var selected_item_id: String = ""
+var reposition_data: Dictionary = {}
 
 var hover_cell: Vector2i = Vector2i(-1, -1)
 var hover_local_position: Vector2 = Vector2(-9999.0, -9999.0)
@@ -33,10 +34,12 @@ func _ready() -> void:
 
 func configure(
 	new_defense_manager: Node,
-	new_selected_item_id: String
+	new_selected_item_id: String,
+	new_reposition_data: Dictionary = {}
 ) -> void:
 	defense_manager = new_defense_manager
 	selected_item_id = new_selected_item_id
+	reposition_data = new_reposition_data.duplicate(true)
 
 	if defense_manager != null:
 		if defense_manager.has_method("get_grid_columns"):
@@ -83,27 +86,34 @@ func _draw() -> void:
 				1.0
 			)
 
-			if is_turret_occupied(grid_cell):
+			if (
+				is_turret_occupied(grid_cell)
+				and not _is_reposition_source_cell(ITEM_PESTICIDE_TURRET, grid_cell)
+			):
 				_draw_turret_marker(cell_rect)
 
-			if is_nightlight_occupied(grid_cell):
+			if (
+				is_nightlight_occupied(grid_cell)
+				and not _is_reposition_source_cell(ITEM_NIGHTLIGHT, grid_cell)
+			):
 				_draw_nightlight_marker(cell_rect)
 
 	_draw_placed_fences()
 	_draw_fence_hover_preview()
+	_draw_reposition_cell_preview()
 
 func _get_hover_cell_color(
 	grid_cell: Vector2i,
 	default_color: Color
 ) -> Color:
 	if selected_item_id == ITEM_PESTICIDE_TURRET:
-		if can_place_turret(grid_cell):
+		if _can_use_turret_cell(grid_cell):
 			return Color(0.20, 0.45, 0.90, 0.85)
 
 		return Color(0.80, 0.15, 0.15, 0.85)
 
 	if selected_item_id == ITEM_NIGHTLIGHT:
-		if can_place_nightlight(grid_cell):
+		if _can_use_nightlight_cell(grid_cell):
 			return Color(0.95, 0.72, 0.22, 0.88)
 
 		return Color(0.80, 0.15, 0.15, 0.85)
@@ -112,6 +122,97 @@ func _get_hover_cell_color(
 		return Color(0.90, 0.42, 0.12, 0.90)
 
 	return default_color
+
+func _is_repositioning() -> bool:
+	return not reposition_data.is_empty()
+
+func _get_reposition_item_id() -> String:
+	return str(reposition_data.get("item_id", ""))
+
+func _is_reposition_source_cell(item_id: String, grid_cell: Vector2i) -> bool:
+	if not _is_repositioning():
+		return false
+
+	if _get_reposition_item_id() != item_id:
+		return false
+
+	return reposition_data.get("source_cell", Vector2i(-1, -1)) == grid_cell
+
+func _is_reposition_source_fence(fence_key: String) -> bool:
+	return (
+		_is_repositioning()
+		and _get_reposition_item_id() == ITEM_FENCE
+		and str(reposition_data.get("source_fence_key", "")) == fence_key
+	)
+
+func _can_use_turret_cell(grid_cell: Vector2i) -> bool:
+	if (
+		_is_repositioning()
+		and _get_reposition_item_id() == ITEM_PESTICIDE_TURRET
+		and defense_manager != null
+		and defense_manager.has_method("can_reposition_pesticide_turret")
+	):
+		return bool(
+			defense_manager.call(
+				"can_reposition_pesticide_turret",
+				reposition_data.get("source_cell", Vector2i(-1, -1)),
+				grid_cell
+			)
+		)
+
+	return can_place_turret(grid_cell)
+
+func _can_use_nightlight_cell(grid_cell: Vector2i) -> bool:
+	if (
+		_is_repositioning()
+		and _get_reposition_item_id() == ITEM_NIGHTLIGHT
+		and defense_manager != null
+		and defense_manager.has_method("can_reposition_nightlight")
+	):
+		return bool(
+			defense_manager.call(
+				"can_reposition_nightlight",
+				reposition_data.get("source_cell", Vector2i(-1, -1)),
+				grid_cell
+			)
+		)
+
+	return can_place_nightlight(grid_cell)
+
+func _can_use_fence_edge(orientation: String, grid_edge: Vector2i) -> bool:
+	if (
+		_is_repositioning()
+		and _get_reposition_item_id() == ITEM_FENCE
+		and defense_manager != null
+		and defense_manager.has_method("can_reposition_fence")
+	):
+		return bool(
+			defense_manager.call(
+				"can_reposition_fence",
+				str(reposition_data.get("source_fence_key", "")),
+				orientation,
+				grid_edge
+			)
+		)
+
+	return can_place_fence(orientation, grid_edge)
+
+func _draw_reposition_cell_preview() -> void:
+	if not _is_repositioning() or not is_hovering_grid():
+		return
+
+	var item_id: String = _get_reposition_item_id()
+
+	if item_id == ITEM_FENCE:
+		return
+
+	var grid_cell: Vector2i = get_cell_from_position(hover_local_position)
+	var cell_rect: Rect2 = get_cell_rect(grid_cell)
+
+	if item_id == ITEM_PESTICIDE_TURRET:
+		_draw_turret_marker(cell_rect)
+	elif item_id == ITEM_NIGHTLIGHT:
+		_draw_nightlight_marker(cell_rect)
 
 func _draw_turret_marker(cell_rect: Rect2) -> void:
 	var center: Vector2 = cell_rect.get_center()
@@ -165,6 +266,9 @@ func _draw_placed_fences() -> void:
 	for fence_key_variant in fence_keys:
 		var fence_key: String = str(fence_key_variant)
 
+		if _is_reposition_source_fence(fence_key):
+			continue
+
 		if not defense_manager.has_method("get_fence_data"):
 			continue
 
@@ -216,7 +320,7 @@ func _draw_fence_hover_preview() -> void:
 
 	var preview_color: Color = Color(0.20, 0.90, 0.35, 0.90)
 
-	if not can_place_fence(orientation, grid_edge):
+	if not _can_use_fence_edge(orientation, grid_edge):
 		preview_color = Color(0.90, 0.18, 0.18, 0.90)
 
 	_draw_fence_line(
@@ -526,6 +630,91 @@ func get_cell_color(cell_type: String) -> Color:
 		_:
 			return Color(0.10, 0.10, 0.10)
 
+func get_hovered_placed_object_ref() -> Dictionary:
+	if defense_manager == null or not is_hovering_grid():
+		return {}
+
+	var fence_ref: Dictionary = _get_hovered_fence_ref()
+
+	if not fence_ref.is_empty():
+		return fence_ref
+
+	var grid_cell: Vector2i = get_cell_from_position(hover_local_position)
+
+	if is_turret_occupied(grid_cell):
+		return {
+			"item_id": ITEM_PESTICIDE_TURRET,
+			"grid_cell": grid_cell
+		}
+
+	if is_nightlight_occupied(grid_cell):
+		return {
+			"item_id": ITEM_NIGHTLIGHT,
+			"grid_cell": grid_cell
+		}
+
+	return {}
+
+func _get_hovered_fence_ref() -> Dictionary:
+	if defense_manager == null:
+		return {}
+
+	if not defense_manager.has_method("get_fence_key"):
+		return {}
+
+	if not defense_manager.has_method("has_fence"):
+		return {}
+
+	var edge_data: Dictionary = get_nearest_fence_edge(hover_local_position)
+	var orientation: String = str(edge_data.get("orientation", ""))
+	var grid_edge: Vector2i = edge_data.get("grid_edge", Vector2i.ZERO)
+	var fence_key: String = str(
+		defense_manager.call("get_fence_key", orientation, grid_edge)
+	)
+
+	if fence_key.is_empty():
+		return {}
+
+	if not bool(defense_manager.call("has_fence", fence_key)):
+		return {}
+
+	var line_start: Vector2 = get_fence_line_start(orientation, grid_edge)
+	var line_end: Vector2 = get_fence_line_end(orientation, grid_edge)
+	var distance_to_line: float = _distance_to_segment(
+		hover_local_position,
+		line_start,
+		line_end
+	)
+
+	if distance_to_line > 7.0:
+		return {}
+
+	return {
+		"item_id": ITEM_FENCE,
+		"fence_key": fence_key,
+		"orientation": orientation,
+		"grid_edge": grid_edge
+	}
+
+func _distance_to_segment(
+	point: Vector2,
+	segment_start: Vector2,
+	segment_end: Vector2
+) -> float:
+	var segment: Vector2 = segment_end - segment_start
+	var segment_length_squared: float = segment.length_squared()
+
+	if segment_length_squared <= 0.0001:
+		return point.distance_to(segment_start)
+
+	var t: float = clampf(
+		(point - segment_start).dot(segment) / segment_length_squared,
+		0.0,
+		1.0
+	)
+
+	return point.distance_to(segment_start + segment * t)
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var motion_event: InputEventMouseMotion = event
@@ -566,7 +755,15 @@ func _gui_input(event: InputEvent) -> void:
 	)
 
 	if mouse_event.button_index == MOUSE_BUTTON_LEFT:
-		if selected_item_id == ITEM_FENCE:
+		var hovered_fence_ref: Dictionary = _get_hovered_fence_ref()
+
+		if (
+			selected_item_id == ITEM_FENCE
+			or (
+				selected_item_id.is_empty()
+				and not hovered_fence_ref.is_empty()
+			)
+		):
 			fence_edge_clicked.emit(orientation, grid_edge)
 		else:
 			grid_cell_clicked.emit(clicked_cell)
@@ -574,34 +771,10 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 	elif mouse_event.button_index == MOUSE_BUTTON_RIGHT:
-		var fence_key: String = ""
+		var hovered_fence_ref: Dictionary = _get_hovered_fence_ref()
 
-		if defense_manager != null and defense_manager.has_method(
-			"get_fence_key"
-		):
-			fence_key = str(
-				defense_manager.call(
-					"get_fence_key",
-					orientation,
-					grid_edge
-				)
-			)
-
-		if (
-			not fence_key.is_empty()
-			and defense_manager != null
-			and defense_manager.has_method("has_fence")
-			and bool(
-				defense_manager.call(
-					"has_fence",
-					fence_key
-				)
-			)
-		):
-			fence_edge_right_clicked.emit(
-				orientation,
-				grid_edge
-			)
+		if not hovered_fence_ref.is_empty():
+			fence_edge_right_clicked.emit(orientation, grid_edge)
 		else:
 			grid_cell_right_clicked.emit(clicked_cell)
 

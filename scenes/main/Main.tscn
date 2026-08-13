@@ -20,9 +20,9 @@
 [ext_resource type="Script" uid="uid://ci3g6spfw4qu7" path="res://scripts/managers/DefenseManager.gd" id="16_hjnkw"]
 [ext_resource type="PackedScene" uid="uid://b0cqov81uwfb1" path="res://scenes/farm/PesticideTurret.tscn" id="17_rikml"]
 [ext_resource type="Script" uid="uid://b3ji3er4c3v0y" path="res://scripts/managers/WorldLightingManager.gd" id="18_d8523"]
-[ext_resource type="Script" path="res://scripts/managers/WorldDropManager.gd" id="19_worlddrop"]
 [ext_resource type="PackedScene" uid="uid://d372r5psuyviy" path="res://scenes/ui/DefensePlacementUI.tscn" id="18_rikml"]
 [ext_resource type="PackedScene" uid="uid://bu1digdsg017o" path="res://scenes/farm/FenceSegment.tscn" id="18_roob6"]
+[ext_resource type="Script" uid="uid://cbfy6m7nerbaw" path="res://scripts/managers/WorldDropManager.gd" id="19_worlddrop"]
 [ext_resource type="Script" uid="uid://fl0c4oklkgx8" path="res://scripts/managers/InventoryManager.gd" id="21_0cxqb"]
 [ext_resource type="Script" uid="uid://baafybc56dwl2" path="res://scripts/managers/TutorialManager.gd" id="22_ew7m7"]
 [ext_resource type="Script" uid="uid://cvufsvcho4xu1" path="res://scripts/farm/CropManager.gd" id="24_j0f7u"]
@@ -72,7 +72,7 @@ map_container_path = NodePath("../MapContainer")
 player_path = NodePath("../Player")
 map_menu_path = NodePath("../MapMenu")
 
-[node name="WorldDropManager" type="Node" parent="."]
+[node name="WorldDropManager" type="Node" parent="." unique_id=1359257871]
 script = ExtResource("19_worlddrop")
 
 [node name="DefenseManager" type="Node" parent="." unique_id=2040749341]
@@ -80,7 +80,32 @@ script = ExtResource("16_hjnkw")
 pesticide_turret_scene = ExtResource("17_rikml")
 fence_segment_scene = ExtResource("18_roob6")
 nightlight_scene = ExtResource("38_vennj")
-minimum_broken_segments_for_passable_gap = 2
+grid_columns = null
+grid_rows = null
+farm_grid_origin = null
+farm_grid_cell_size = null
+max_pesticide_turrets = null
+pesticide_turret_max_integrity = null
+pesticide_turret_max_durability = null
+damaged_pesticide_turret_repair_cost_scrap = null
+pesticide_turret_repair_rate_per_second = null
+starting_fences = null
+starting_nightlights = null
+nightlight_max_integrity = null
+nightlight_wear_per_second = null
+damaged_nightlight_repair_cost_scrap = null
+nightlight_repair_rate_per_second = null
+fence_max_health = null
+create_starting_perimeter_fence = null
+damaged_fence_repair_cost_scrap = null
+fence_repair_rate_per_second = null
+fence_damage_multiplier = null
+fence_craft_scrap_cost = null
+fence_craft_seed_cost = null
+broken_fence_repair_scrap_cost = null
+broken_nightlight_repair_scrap_cost = null
+minimum_broken_segments_for_passable_gap = null
+debug_fence_logging = null
 
 [node name="CropManager" type="Node" parent="." unique_id=61324828]
 script = ExtResource("24_j0f7u")

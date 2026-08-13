@@ -215,6 +215,24 @@ func execute_shared_target_strategy() -> void:
 		)
 		return
 
+	# A wider enemy can require a larger breach than the farm-wide physical
+	# collision threshold. Once the normal gap becomes physically open, that
+	# enemy must still keep widening the same-side breach instead of treating
+	# the missing colliders as an unobstructed route into the farm.
+	var incomplete_breach_target: Node2D = (
+		_find_incomplete_breach_expansion_target(target_position)
+	)
+
+	if incomplete_breach_target != null:
+		current_fence_target = incomplete_breach_target
+
+		_move_or_attack_fence(
+			current_fence_target,
+			target_position
+		)
+
+		return
+
 	var blocking_fence: Node2D = get_first_blocking_fence_to(
 		target_position
 	)
@@ -830,6 +848,89 @@ func get_usable_breach_data(fence: Node2D) -> Dictionary:
 			fence.global_position
 		)
 	}
+
+func _find_incomplete_breach_expansion_target(
+	target_position: Vector2
+) -> Node2D:
+	var exterior_side: String = _get_current_exterior_side()
+
+	if exterior_side.is_empty():
+		return null
+
+	var required_gap_segments: int = (
+		get_required_fence_gap_segments()
+	)
+
+	var best_fence: Node2D = null
+	var best_score: float = INF
+
+	for candidate_node in get_tree().get_nodes_in_group("fences"):
+		if not is_instance_valid(candidate_node):
+			continue
+
+		if not (candidate_node is Node2D):
+			continue
+
+		var broken_fence: Node2D = candidate_node as Node2D
+
+		if not _is_broken_fence(broken_fence):
+			continue
+
+		if _get_fence_perimeter_side(broken_fence) != exterior_side:
+			continue
+
+		if not broken_fence.has_method(
+			"is_passable_gap_for_navigation"
+		):
+			continue
+
+		# required_segment_count = 0 intentionally asks for the farm-wide
+		# physical passability threshold (normally two segments).
+		var physically_open_for_normal_enemy: bool = bool(
+			broken_fence.call(
+				"is_passable_gap_for_navigation",
+				0
+			)
+		)
+
+		if not physically_open_for_normal_enemy:
+			continue
+
+		var wide_enough_for_this_enemy: bool = bool(
+			broken_fence.call(
+				"is_passable_gap_for_navigation",
+				required_gap_segments
+			)
+		)
+
+		if wide_enough_for_this_enemy:
+			continue
+
+		var expansion_fence: Node2D = (
+			_get_adjacent_intact_fence_to_expand_breach(
+				broken_fence,
+				target_position
+			)
+		)
+
+		if expansion_fence == null:
+			continue
+
+		var score: float = (
+			global_position.distance_to(
+				expansion_fence.global_position
+			)
+			+ expansion_fence.global_position.distance_to(
+				target_position
+			) * 0.15
+		)
+
+		if score < best_score:
+			best_score = score
+			best_fence = expansion_fence
+
+	return best_fence
+
 
 func _choose_fence_to_break(
 	blocking_fence: Node2D,

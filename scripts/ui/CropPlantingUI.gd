@@ -344,6 +344,15 @@ func _on_planting_menu_closed() -> void:
 	if seed_tooltip_panel != null:
 		seed_tooltip_panel.visible = false
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+
+	if event.is_action_pressed("ui_cancel"):
+		_on_cancel_pressed()
+		get_viewport().set_input_as_handled()
+
+
 func _on_basic_crop_pressed() -> void:
 	if crop_manager == null:
 		return

@@ -23,6 +23,15 @@ func _ready() -> void:
 
 	visible = false
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+
+	if event.is_action_pressed("ui_cancel"):
+		close_menu()
+		get_viewport().set_input_as_handled()
+
+
 func open_menu(new_current_location_id: String, unlocked_locations: Dictionary) -> void:
 	current_location_id = new_current_location_id
 	visible = true

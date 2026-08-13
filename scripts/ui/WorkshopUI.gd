@@ -153,24 +153,6 @@ const TAB_CONTENT: Dictionary = {
 	$RootControl/WorkshopPanel/ContentPanel/UpgradeInfoPanel/FenceServiceStatusLabel
 )
 
-@onready var repair_strip: Panel = (
-	$RootControl/WorkshopPanel/ContentPanel/RepairStrip
-)
-
-@onready var repair_label: Label = (
-	$RootControl/WorkshopPanel/ContentPanel/RepairStrip/RepairLabel
-)
-
-@onready var repair_quantity_option: OptionButton = (
-	$RootControl/WorkshopPanel/ContentPanel/RepairStrip/RepairQuantityOption
-)
-
-@onready var repair_button: Button = (
-	$RootControl/WorkshopPanel/ContentPanel/RepairStrip/RepairButton
-)
-
-var repair_nightlight_button: Button = null
-
 @onready var close_button: Button = (
 	$RootControl/WorkshopPanel/CloseButton
 )
@@ -207,7 +189,6 @@ func _ready() -> void:
 	workshop_panel.visible = false
 	upgrade_info_panel.clip_contents = true
 
-	_create_nightlight_repair_button()
 	_create_locked_tab_labels()
 
 	sidebar_panel.mouse_entered.connect(_on_sidebar_mouse_entered)
@@ -227,19 +208,6 @@ func _ready() -> void:
 	purchase_button.pressed.connect(_on_purchase_upgrade_pressed)
 
 	craft_fence_button.pressed.connect(_on_craft_fence_pressed)
-	repair_button.pressed.connect(_on_repair_fences_pressed)
-
-	repair_quantity_option.item_selected.connect(
-		_on_repair_quantity_selected
-	)
-
-	repair_quantity_option.clear()
-	repair_quantity_option.add_item("1x")
-	repair_quantity_option.add_item("2x")
-	repair_quantity_option.add_item("5x")
-	repair_quantity_option.add_item("ALL")
-	repair_quantity_option.select(0)
-
 	call_deferred("_find_upgrade_manager")
 	call_deferred("_find_defense_manager")
 	call_deferred("_refresh_layout_and_content")
@@ -393,18 +361,6 @@ func _find_defense_manager() -> void:
 			inventory_callback
 		)
 
-	var repair_queue_callback := Callable(
-		self,
-		"_on_fence_repair_queue_changed"
-	)
-
-	if not defense_manager.fence_repair_queue_changed.is_connected(
-		repair_queue_callback
-	):
-		defense_manager.fence_repair_queue_changed.connect(
-			repair_queue_callback
-		)
-
 	if defense_manager.has_signal("nightlight_inventory_changed"):
 		var nightlight_inventory_callback := Callable(
 			self,
@@ -418,18 +374,6 @@ func _find_defense_manager() -> void:
 				nightlight_inventory_callback
 			)
 
-	if defense_manager.has_signal("nightlight_repair_queue_changed"):
-		var nightlight_repair_queue_callback := Callable(
-			self,
-			"_on_nightlight_repair_queue_changed"
-		)
-
-		if not defense_manager.nightlight_repair_queue_changed.is_connected(
-			nightlight_repair_queue_callback
-		):
-			defense_manager.nightlight_repair_queue_changed.connect(
-				nightlight_repair_queue_callback
-			)
 
 func _refresh_layout_and_content() -> void:
 	_apply_sidebar_layout()
@@ -546,22 +490,6 @@ func _apply_sidebar_layout() -> void:
 
 	_layout_upgrade_info_panel()
 
-	repair_strip.position = Vector2(
-		content_panel.size.x - 292.0,
-		18.0
-	)
-
-	repair_strip.size = Vector2(268.0, 88.0)
-
-	repair_label.position = Vector2(10.0, 8.0)
-	repair_label.size = Vector2(248.0, 22.0)
-
-	repair_quantity_option.position = Vector2(12.0, 42.0)
-	repair_quantity_option.size = Vector2(78.0, 30.0)
-
-	repair_button.position = Vector2(100.0, 42.0)
-	repair_button.size = Vector2(156.0, 30.0)
-
 	_refresh_sidebar_buttons()
 
 func _layout_upgrade_info_panel() -> void:
@@ -642,22 +570,10 @@ func _layout_upgrade_info_panel() -> void:
 		button_height
 	)
 
-	if repair_nightlight_button != null:
-		repair_nightlight_button.size = Vector2(
-			content_width,
-			button_height
-		)
-
 	if is_fence_tab:
-		var nightlight_button_y: float = (
+		var fence_craft_button_y: float = (
 			panel_height
 			- bottom_padding
-			- button_height
-		)
-
-		var fence_craft_button_y: float = (
-			nightlight_button_y
-			- 8.0
 			- button_height
 		)
 
@@ -677,11 +593,6 @@ func _layout_upgrade_info_panel() -> void:
 			fence_craft_button_y
 		)
 
-		if repair_nightlight_button != null:
-			repair_nightlight_button.position = Vector2(
-				horizontal_padding,
-				nightlight_button_y
-			)
 	else:
 		purchase_button.position = Vector2(
 			horizontal_padding,
@@ -693,11 +604,6 @@ func _layout_upgrade_info_panel() -> void:
 			craft_button_y
 		)
 
-		if repair_nightlight_button != null:
-			repair_nightlight_button.position = Vector2(
-				horizontal_padding,
-				craft_button_y
-			)
 
 func _layout_tab_button(
 	tab_button: Button,
@@ -877,12 +783,9 @@ func _refresh_content() -> void:
 	if not showing_tree:
 		content_body_label.text = str(tab_data.get("body", ""))
 
-		repair_strip.visible = false
 		craft_fence_button.visible = false
 		fence_service_status_label.visible = false
 
-		if repair_nightlight_button != null:
-			repair_nightlight_button.visible = false
 
 		return
 
@@ -907,12 +810,9 @@ func _refresh_content() -> void:
 
 	var is_fence_tab: bool = current_tab == TAB_FENCE
 
-	repair_strip.visible = is_fence_tab
 	craft_fence_button.visible = is_fence_tab
 	fence_service_status_label.visible = is_fence_tab
 
-	if repair_nightlight_button != null:
-		repair_nightlight_button.visible = is_fence_tab
 
 	if is_fence_tab:
 		_refresh_fence_service_controls()
@@ -1002,52 +902,26 @@ func _refresh_fence_service_controls() -> void:
 	_find_defense_manager()
 
 	if defense_manager == null:
-		repair_label.text = "FENCE REPAIR"
-		repair_quantity_option.disabled = true
-		repair_button.disabled = true
-		repair_button.text = "SYSTEM UNAVAILABLE"
-
 		craft_fence_button.disabled = true
 		craft_fence_button.text = "SYSTEM UNAVAILABLE"
-
 		fence_service_status_label.text = (
-			"Fence service data is unavailable."
+			"Defense inventory data is unavailable."
 		)
-
 		return
 
 	var stored_fences: int = defense_manager.get_fences_available()
-
-	var repair_queue_count: int = (
-		defense_manager.get_broken_fences_in_repair_queue()
-	)
-
 	var stored_nightlights: int = 0
-	var nightlight_queue_count: int = 0
 
 	if defense_manager.has_method("get_nightlights_available"):
 		stored_nightlights = int(
 			defense_manager.call("get_nightlights_available")
 		)
 
-	if defense_manager.has_method("get_broken_nightlights_in_repair_queue"):
-		nightlight_queue_count = int(
-			defense_manager.call(
-				"get_broken_nightlights_in_repair_queue"
-			)
-		)
-
 	fence_service_status_label.text = (
-		"Fences: %d stored / %d broken\n"
-		+ "NightLights: %d stored / %d broken"
-	) % [
-		stored_fences,
-		repair_queue_count,
-		stored_nightlights,
-		nightlight_queue_count
-	]
-
-	_refresh_nightlight_repair_button(nightlight_queue_count)
+		"Fences: %d stored\n"
+		+ "NightLights: %d stored\n\n"
+		+ "Damaged and broken defenses are repaired only in the field."
+	) % [stored_fences, stored_nightlights]
 
 	var craft_scrap_cost: int = (
 		defense_manager.get_fence_craft_scrap_cost()
@@ -1076,222 +950,11 @@ func _refresh_fence_service_controls() -> void:
 	else:
 		craft_fence_button.tooltip_text = craft_failure_reason
 
-	repair_label.text = (
-		"FENCE REPAIR — %d IN QUEUE"
-		% repair_queue_count
-	)
-
-	if repair_queue_count <= 0:
-		repair_quantity_option.disabled = true
-
-		repair_button.disabled = true
-		repair_button.text = "NO BROKEN FENCES"
-		repair_button.tooltip_text = (
-			"No broken fences are waiting for repair."
-		)
-
-		return
-
-	repair_quantity_option.disabled = false
-
-	var requested_amount: int = _get_requested_repair_quantity()
-
-	var repair_count: int = (
-		defense_manager.get_repairable_broken_fence_count(
-			requested_amount
-		)
-	)
-
-	var repair_scrap_cost: int = (
-		defense_manager.get_broken_fence_repair_total_cost(
-			repair_count
-		)
-	)
-
-	var repair_failure_reason: String = (
-		defense_manager.get_broken_fence_repair_failure_reason(
-			requested_amount
-		)
-	)
-
-	var selected_quantity_text: String = (
-		repair_quantity_option.get_item_text(
-			repair_quantity_option.selected
-		)
-	)
-
-	var repair_quantity_text: String = selected_quantity_text
-
-	if selected_quantity_text != "ALL":
-		repair_quantity_text = "%dx" % repair_count
-
-	if repair_failure_reason.is_empty():
-		repair_button.disabled = false
-
-		repair_button.text = (
-			"REPAIR %s — %d SCRAP"
-			% [repair_quantity_text, repair_scrap_cost]
-		)
-
-		repair_button.tooltip_text = (
-			"Repair %d broken fence(s) for %d Scrap."
-			% [repair_count, repair_scrap_cost]
-		)
-	else:
-		repair_button.disabled = true
-
-		if repair_failure_reason.begins_with("Need"):
-			repair_button.text = "NOT ENOUGH MATERIALS"
-		else:
-			repair_button.text = "NO BROKEN FENCES"
-
-		repair_button.tooltip_text = repair_failure_reason
-
-func _create_nightlight_repair_button() -> void:
-	repair_nightlight_button = (
-		upgrade_info_panel.get_node_or_null(
-			"RepairNightLightButton"
-		) as Button
-	)
-
-	if repair_nightlight_button == null:
-		repair_nightlight_button = Button.new()
-		repair_nightlight_button.name = "RepairNightLightButton"
-		upgrade_info_panel.add_child(repair_nightlight_button)
-
-	repair_nightlight_button.focus_mode = Control.FOCUS_NONE
-	repair_nightlight_button.visible = false
-	repair_nightlight_button.pressed.connect(
-		_on_repair_nightlight_pressed
-	)
-
-func _refresh_nightlight_repair_button(
-	nightlight_queue_count: int
-) -> void:
-	if repair_nightlight_button == null:
-		return
-
-	if defense_manager == null:
-		repair_nightlight_button.disabled = true
-		repair_nightlight_button.text = "SYSTEM UNAVAILABLE"
-		repair_nightlight_button.tooltip_text = (
-			"NightLight repair data is unavailable."
-		)
-		return
-
-	if not defense_manager.has_method(
-		"get_broken_nightlight_repair_failure_reason"
-	):
-		repair_nightlight_button.disabled = true
-		repair_nightlight_button.text = "NIGHTLIGHT REPAIR UNAVAILABLE"
-		repair_nightlight_button.tooltip_text = (
-			"DefenseManager does not support NightLight repairs yet."
-		)
-		return
-
-	if nightlight_queue_count <= 0:
-		repair_nightlight_button.disabled = true
-		repair_nightlight_button.text = "NO BROKEN NIGHTLIGHTS"
-		repair_nightlight_button.tooltip_text = (
-			"No broken NightLights are waiting for repair."
-		)
-		return
-
-	var failure_reason: String = str(
-		defense_manager.call(
-			"get_broken_nightlight_repair_failure_reason",
-			1
-		)
-	)
-
-	var repair_cost: int = 0
-
-	if defense_manager.has_method(
-		"get_broken_nightlight_repair_total_cost"
-	):
-		repair_cost = int(
-			defense_manager.call(
-				"get_broken_nightlight_repair_total_cost",
-				1
-			)
-		)
-
-	if failure_reason.is_empty():
-		repair_nightlight_button.disabled = false
-		repair_nightlight_button.text = (
-			"REPAIR NIGHTLIGHT — %d SCRAP"
-			% repair_cost
-		)
-		repair_nightlight_button.tooltip_text = (
-			"Repair 1 broken NightLight for %d Scrap."
-			% repair_cost
-		)
-	else:
-		repair_nightlight_button.disabled = true
-
-		if failure_reason.begins_with("Need"):
-			repair_nightlight_button.text = "NOT ENOUGH SCRAP"
-		else:
-			repair_nightlight_button.text = "NO BROKEN NIGHTLIGHTS"
-
-		repair_nightlight_button.tooltip_text = failure_reason
-
-func _get_requested_repair_quantity() -> int:
-	if defense_manager == null:
-		return 0
-
-	match repair_quantity_option.selected:
-		0:
-			return 1
-
-		1:
-			return 2
-
-		2:
-			return 5
-
-		3:
-			return defense_manager.get_broken_fences_in_repair_queue()
-
-	return 1
-
 func _on_craft_fence_pressed() -> void:
 	if defense_manager == null:
 		return
 
 	defense_manager.craft_fence_in_workshop()
-
-	_refresh_fence_service_controls()
-
-func _on_repair_fences_pressed() -> void:
-	if defense_manager == null:
-		return
-
-	var requested_amount: int = _get_requested_repair_quantity()
-
-	defense_manager.repair_broken_fences_with_materials(
-		requested_amount
-	)
-
-	_refresh_fence_service_controls()
-
-func _on_repair_nightlight_pressed() -> void:
-	if defense_manager == null:
-		return
-
-	if not defense_manager.has_method(
-		"repair_broken_nightlights_with_materials"
-	):
-		return
-
-	defense_manager.call(
-		"repair_broken_nightlights_with_materials",
-		1
-	)
-
-	_refresh_fence_service_controls()
-
-func _on_repair_quantity_selected(_selected_index: int) -> void:
 	_refresh_fence_service_controls()
 
 func _on_fence_inventory_changed(
@@ -1300,20 +963,8 @@ func _on_fence_inventory_changed(
 	if workshop_open and current_tab == TAB_FENCE:
 		_refresh_fence_service_controls()
 
-func _on_fence_repair_queue_changed(
-	_broken_fences_in_queue: int
-) -> void:
-	if workshop_open and current_tab == TAB_FENCE:
-		_refresh_fence_service_controls()
-
 func _on_nightlight_inventory_changed(
 	_nightlights_available: int
-) -> void:
-	if workshop_open and current_tab == TAB_FENCE:
-		_refresh_fence_service_controls()
-
-func _on_nightlight_repair_queue_changed(
-	_broken_nightlights_in_queue: int
 ) -> void:
 	if workshop_open and current_tab == TAB_FENCE:
 		_refresh_fence_service_controls()

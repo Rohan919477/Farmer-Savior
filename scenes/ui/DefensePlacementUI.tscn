@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dwt72x5xckxa5" path="res://scripts/ui/DefenseGridBoard.gd" id="1_b6mrq"]
 [ext_resource type="Script" uid="uid://eqa6c6yw6m3v" path="res://scripts/ui/DefensePlacementUI.gd" id="1_lvgt1"]
+[ext_resource type="Script" path="res://scripts/ui/DefenseDetailsPreview.gd" id="3_preview"]
 
 [node name="DefensePlacementUi" type="CanvasLayer" unique_id=1217122726]
 visible = false
@@ -92,7 +93,7 @@ offset_left = 25.0
 offset_top = 42.0
 offset_right = 1035.0
 offset_bottom = 65.0
-text = "Left-click an item to select it. Left-click a valid grid cell to place it. Right-click a placed item to return it to inventory."
+text = "Left-click inventory items to place them. Hover placed defenses for live stats. Left-click a full-health placed defense to move it. Right-click while moving to cancel."
 horizontal_alignment = 1
 
 [node name="DetailsPanel" type="Panel" parent="RootControl/MainPanel" unique_id=1644084255]
@@ -102,12 +103,21 @@ offset_top = 75.0
 offset_right = 210.0
 offset_bottom = 467.0
 
-[node name="DetailsLabel" type="Label" parent="RootControl/MainPanel/DetailsPanel" unique_id=547843687]
+[node name="ObjectPreview" type="Control" parent="RootControl/MainPanel/DetailsPanel"]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 178.0
-offset_bottom = 462.0
+offset_bottom = 112.0
+mouse_filter = 2
+script = ExtResource("3_preview")
+
+[node name="DetailsLabel" type="Label" parent="RootControl/MainPanel/DetailsPanel" unique_id=547843687]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 120.0
+offset_right = 178.0
+offset_bottom = 382.0
 autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="RootControl/MainPanel" unique_id=1016844089]

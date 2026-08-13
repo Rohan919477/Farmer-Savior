@@ -31,6 +31,7 @@ var health_ratio: float = 1.0
 var player_in_repair_range: Node = null
 
 var repair_debug_session_active: bool = false
+var collision_enable_pending_until_player_clear: bool = false
 
 func _ready() -> void:
 	add_to_group("fences")
@@ -75,6 +76,7 @@ func configure_fence(
 	_refresh_from_manager()
 
 func _physics_process(delta: float) -> void:
+	_update_pending_collision_enable()
 	_position_world_ui()
 	_update_repair_prompt()
 
@@ -173,16 +175,66 @@ func _refresh_from_manager() -> void:
 		and defense_manager.is_fence_gap_passable(fence_key)
 	)
 
-	collision_shape.set_deferred("disabled", is_passable_gap)
+	if is_passable_gap:
+		collision_enable_pending_until_player_clear = false
+		collision_shape.set_deferred("disabled", true)
+	elif _is_player_overlapping_blocker():
+		# A player can stand inside a wide broken breach while rebuilding it. Do
+		# not reactivate this segment's collision around them; wait until they
+		# step clear of the segment footprint.
+		collision_enable_pending_until_player_clear = true
+		collision_shape.set_deferred("disabled", true)
+	else:
+		collision_enable_pending_until_player_clear = false
+		collision_shape.set_deferred("disabled", false)
 
 	health_bar.visible = (
-		fence_state == DefenseManager.FENCE_STATE_DAMAGED
+		fence_state != DefenseManager.FENCE_STATE_PERFECT
 	)
 
 	_update_health_fill()
 	_update_repair_prompt()
 
 	queue_redraw()
+
+func _update_pending_collision_enable() -> void:
+	if not collision_enable_pending_until_player_clear:
+		return
+
+	if collision_shape == null:
+		collision_enable_pending_until_player_clear = false
+		return
+
+	if _is_player_overlapping_blocker():
+		return
+
+	collision_enable_pending_until_player_clear = false
+	collision_shape.set_deferred("disabled", false)
+
+
+func _is_player_overlapping_blocker() -> bool:
+	if collision_shape == null or collision_shape.shape == null:
+		return false
+
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = collision_shape.shape
+	query.transform = collision_shape.global_transform
+	query.collision_mask = 1
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+
+	var results: Array[Dictionary] = (
+		get_world_2d().direct_space_state.intersect_shape(query, 8)
+	)
+
+	for result in results:
+		var collider: Object = result.get("collider", null)
+
+		if collider is Node and (collider as Node).is_in_group("player"):
+			return true
+
+	return false
+
 
 func _update_health_fill() -> void:
 	var fill_width: float = HEALTH_BAR_WIDTH * health_ratio
@@ -209,7 +261,7 @@ func _position_world_ui() -> void:
 
 func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
-		fence_state == DefenseManager.FENCE_STATE_DAMAGED
+		fence_state != DefenseManager.FENCE_STATE_PERFECT
 		and player_in_repair_range == player_node
 		and _is_daytime()
 		and not _is_gameplay_input_blocked()
@@ -260,12 +312,9 @@ func _is_gameplay_input_blocked() -> bool:
 	return false
 
 func _update_repair_prompt() -> void:
-	var should_show_prompt: bool = (
-		fence_state == DefenseManager.FENCE_STATE_DAMAGED
-		and player_in_repair_range != null
-		and _is_daytime()
-		and not _is_gameplay_input_blocked()
-	)
+	# Match the actual repair action: only the nearest eligible damaged
+	# defense should display a repair prompt when repair ranges overlap.
+	var should_show_prompt: bool = _can_repair_now()
 
 	repair_prompt.visible = should_show_prompt
 
@@ -280,10 +329,40 @@ func _update_repair_prompt() -> void:
 	):
 		repair_prompt.text = "Fix (Hold F)"
 	else:
-		repair_prompt.text = (
-			"Fix (Hold F)\nScrap: %d"
-			% defense_manager.damaged_fence_repair_cost_scrap
+		var repair_cost: int = _get_repair_cost()
+
+		if fence_state == DefenseManager.FENCE_STATE_BROKEN:
+			repair_prompt.text = (
+				"Rebuild Fence (Hold F)\nScrap: %d"
+				% repair_cost
+			)
+		else:
+			repair_prompt.text = (
+				"Fix (Hold F)\nScrap: %d"
+				% repair_cost
+			)
+
+func _get_repair_cost() -> int:
+	if defense_manager == null:
+		return 1
+
+	if defense_manager.has_method("get_fence_repair_cost_scrap"):
+		return int(
+			defense_manager.call(
+				"get_fence_repair_cost_scrap",
+				fence_key
+			)
 		)
+
+	if fence_state == DefenseManager.FENCE_STATE_BROKEN:
+		if defense_manager.has_method("get_broken_fence_repair_scrap_cost"):
+			return int(
+				defense_manager.call(
+					"get_broken_fence_repair_scrap_cost"
+				)
+			)
+
+	return maxi(0, int(defense_manager.damaged_fence_repair_cost_scrap))
 
 func _repair_while_holding(delta: float) -> void:
 	if defense_manager == null:
@@ -294,9 +373,7 @@ func _repair_while_holding(delta: float) -> void:
 	)
 
 	if not repair_cost_was_paid:
-		var repair_cost: int = (
-			defense_manager.damaged_fence_repair_cost_scrap
-		)
+		var repair_cost: int = _get_repair_cost()
 
 		if repair_cost > 0:
 			if player_in_repair_range == null:

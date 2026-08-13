@@ -51,6 +51,7 @@ var base_modulate: Color = Color.WHITE
 var visual_token: int = 0
 var player_in_repair_range: Node = null
 var repair_debug_session_active: bool = false
+var blocker_enable_pending_until_player_clear: bool = false
 
 
 func _ready() -> void:
@@ -95,6 +96,7 @@ func configure_turret(
 
 
 func _process(delta: float) -> void:
+	_update_pending_blocker_enable()
 	_position_world_ui()
 	_update_repair_prompt()
 
@@ -234,7 +236,7 @@ func _position_world_ui() -> void:
 
 func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
-		turret_state == DefenseManager.PLACEABLE_STATE_DAMAGED
+		turret_state != DefenseManager.PLACEABLE_STATE_PERFECT
 		and player_in_repair_range == player_node
 		and _is_daytime()
 		and not _is_gameplay_input_blocked()
@@ -286,10 +288,18 @@ func _update_repair_prompt() -> void:
 			repair_prompt.text = "Fix Turret (Hold F)"
 			return
 
-	repair_prompt.text = (
-		"Fix Turret (Hold F)\nScrap: %d"
-		% _get_damaged_repair_cost()
-	)
+	var repair_cost: int = _get_repair_cost()
+
+	if turret_state == DefenseManager.PLACEABLE_STATE_BROKEN:
+		repair_prompt.text = (
+			"Rebuild Turret (Hold F)\nScrap: %d"
+			% repair_cost
+		)
+	else:
+		repair_prompt.text = (
+			"Fix Turret (Hold F)\nScrap: %d"
+			% repair_cost
+		)
 
 
 func _repair_while_holding(delta: float) -> void:
@@ -313,7 +323,7 @@ func _repair_while_holding(delta: float) -> void:
 		)
 
 	if not repair_cost_was_paid:
-		var repair_cost: int = _get_damaged_repair_cost()
+		var repair_cost: int = _get_repair_cost()
 
 		if repair_cost > 0:
 			if player_in_repair_range == null:
@@ -369,9 +379,29 @@ func _repair_while_holding(delta: float) -> void:
 		repair_debug_session_active = false
 
 
-func _get_damaged_repair_cost() -> int:
+func _get_repair_cost() -> int:
 	if defense_manager == null:
 		return 1
+
+	if defense_manager.has_method(
+		"get_pesticide_turret_repair_cost_scrap"
+	):
+		return int(
+			defense_manager.call(
+				"get_pesticide_turret_repair_cost_scrap",
+				turret_key
+			)
+		)
+
+	if turret_state == DefenseManager.PLACEABLE_STATE_BROKEN:
+		if defense_manager.has_method(
+			"get_broken_pesticide_turret_repair_cost_scrap"
+		):
+			return int(
+				defense_manager.call(
+					"get_broken_pesticide_turret_repair_cost_scrap"
+				)
+			)
 
 	if defense_manager.has_method(
 		"get_damaged_pesticide_turret_repair_cost_scrap"
@@ -382,15 +412,7 @@ func _get_damaged_repair_cost() -> int:
 			)
 		)
 
-	if "damaged_pesticide_turret_repair_cost_scrap" in defense_manager:
-		return int(
-			defense_manager.get(
-				"damaged_pesticide_turret_repair_cost_scrap"
-			)
-		)
-
 	return 1
-
 
 func _get_repair_rate() -> float:
 	if defense_manager == null:
@@ -524,9 +546,20 @@ func _refresh_from_manager(force_visual_update: bool = false) -> void:
 
 	# A broken turret is no longer a valid enemy target. Its physical blocker
 	# must also be disabled, otherwise the broken turret becomes an
-	# indestructible wall for the remainder of the defense wave.
+	# indestructible wall for the remainder of the defense wave. When a broken
+	# turret is rebuilt while the player is standing inside its footprint, keep
+	# collision disabled until the player steps clear so the rebuild cannot trap
+	# the player inside a newly re-enabled StaticBody2D.
 	if blocker_shape != null:
-		blocker_shape.set_deferred("disabled", is_currently_broken)
+		if is_currently_broken:
+			blocker_enable_pending_until_player_clear = false
+			blocker_shape.set_deferred("disabled", true)
+		elif _is_player_overlapping_blocker():
+			blocker_enable_pending_until_player_clear = true
+			blocker_shape.set_deferred("disabled", true)
+		else:
+			blocker_enable_pending_until_player_clear = false
+			blocker_shape.set_deferred("disabled", false)
 
 	if is_currently_broken:
 		enemies_in_range.clear()
@@ -538,6 +571,49 @@ func _refresh_from_manager(force_visual_update: bool = false) -> void:
 	if force_visual_update or state_changed or is_currently_broken:
 		visual_token += 1
 		_apply_condition_visual()
+
+
+func _update_pending_blocker_enable() -> void:
+	if not blocker_enable_pending_until_player_clear:
+		return
+
+	if blocker_shape == null:
+		blocker_enable_pending_until_player_clear = false
+		return
+
+	if is_broken():
+		blocker_enable_pending_until_player_clear = false
+		return
+
+	if _is_player_overlapping_blocker():
+		return
+
+	blocker_enable_pending_until_player_clear = false
+	blocker_shape.set_deferred("disabled", false)
+
+
+func _is_player_overlapping_blocker() -> bool:
+	if blocker_shape == null or blocker_shape.shape == null:
+		return false
+
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = blocker_shape.shape
+	query.transform = blocker_shape.global_transform
+	query.collision_mask = 1
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+
+	var results: Array[Dictionary] = (
+		get_world_2d().direct_space_state.intersect_shape(query, 8)
+	)
+
+	for result in results:
+		var collider: Object = result.get("collider", null)
+
+		if collider is Node and (collider as Node).is_in_group("player"):
+			return true
+
+	return false
 
 
 func _apply_condition_visual() -> void:

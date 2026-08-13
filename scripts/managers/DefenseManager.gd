@@ -53,6 +53,7 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 @export var pesticide_turret_max_integrity: float = 100.0
 @export var pesticide_turret_max_durability: float = 100.0
 @export var damaged_pesticide_turret_repair_cost_scrap: int = 1
+@export var broken_pesticide_turret_repair_cost_scrap: int = 5
 @export var pesticide_turret_repair_rate_per_second: float = 20.0
 
 # War Table starting inventory.
@@ -65,16 +66,17 @@ const PLACEABLE_STATE_BROKEN: String = "broken"
 @export var fence_max_health: float = 100.0
 @export var create_starting_perimeter_fence: bool = true
 
-# Workshop-upgrade values later.
+# Field repair values. Damaged repairs are cheap; rebuilding a fully broken
+# defense costs substantially more, even if a damaged object has only 1 HP.
 @export var damaged_fence_repair_cost_scrap: int = 1
 @export var fence_repair_rate_per_second: float = 25.0
 @export var fence_damage_multiplier: float = 1.0
 
-# Used by the Fence Workshop crafting section later this week.
+# Workshop crafting remains available, but Workshop repair has been removed.
 @export var fence_craft_scrap_cost: int = 3
 @export var fence_craft_seed_cost: int = 2
-@export var broken_fence_repair_scrap_cost: int = 3
-@export var broken_nightlight_repair_scrap_cost: int = 2
+@export var broken_fence_repair_scrap_cost: int = 5
+@export var broken_nightlight_repair_scrap_cost: int = 5
 
 @export var minimum_broken_segments_for_passable_gap: int = 2
 @export var debug_fence_logging: bool = true
@@ -125,6 +127,7 @@ var base_max_pesticide_turrets: int = 2
 var base_pesticide_turret_max_integrity: float = 100.0
 var base_pesticide_turret_max_durability: float = 100.0
 var base_damaged_pesticide_turret_repair_cost_scrap: int = 1
+var base_broken_pesticide_turret_repair_cost_scrap: int = 5
 var base_pesticide_turret_repair_rate_per_second: float = 20.0
 var base_starting_fences: int = 12
 var base_starting_nightlights: int = 8
@@ -132,7 +135,9 @@ var base_nightlight_max_integrity: float = 100.0
 var base_nightlight_wear_per_second: float = 0.20
 var base_damaged_nightlight_repair_cost_scrap: int = 1
 var base_nightlight_repair_rate_per_second: float = 20.0
-var base_broken_nightlight_repair_scrap_cost: int = 2
+var base_broken_nightlight_repair_scrap_cost: int = 5
+var base_damaged_fence_repair_cost_scrap: int = 1
+var base_broken_fence_repair_scrap_cost: int = 5
 var base_fence_max_health: float = 100.0
 var base_fence_repair_rate_per_second: float = 25.0
 var base_fence_damage_multiplier: float = 1.0
@@ -146,6 +151,9 @@ func _ready() -> void:
 	base_damaged_pesticide_turret_repair_cost_scrap = (
 		damaged_pesticide_turret_repair_cost_scrap
 	)
+	base_broken_pesticide_turret_repair_cost_scrap = (
+		broken_pesticide_turret_repair_cost_scrap
+	)
 	base_pesticide_turret_repair_rate_per_second = (
 		pesticide_turret_repair_rate_per_second
 	)
@@ -156,6 +164,8 @@ func _ready() -> void:
 	base_damaged_nightlight_repair_cost_scrap = damaged_nightlight_repair_cost_scrap
 	base_nightlight_repair_rate_per_second = nightlight_repair_rate_per_second
 	base_broken_nightlight_repair_scrap_cost = broken_nightlight_repair_scrap_cost
+	base_damaged_fence_repair_cost_scrap = damaged_fence_repair_cost_scrap
+	base_broken_fence_repair_scrap_cost = broken_fence_repair_scrap_cost
 	base_fence_max_health = fence_max_health
 	base_fence_repair_rate_per_second = fence_repair_rate_per_second
 	base_fence_damage_multiplier = fence_damage_multiplier
@@ -427,6 +437,14 @@ func get_pesticide_turret_durability_percent(turret_key: String) -> float:
 func get_damaged_pesticide_turret_repair_cost_scrap() -> int:
 	return maxi(0, damaged_pesticide_turret_repair_cost_scrap)
 
+func get_broken_pesticide_turret_repair_cost_scrap() -> int:
+	return maxi(0, broken_pesticide_turret_repair_cost_scrap)
+
+func get_pesticide_turret_repair_cost_scrap(turret_key: String) -> int:
+	if get_turret_state(turret_key) == PLACEABLE_STATE_BROKEN:
+		return get_broken_pesticide_turret_repair_cost_scrap()
+
+	return get_damaged_pesticide_turret_repair_cost_scrap()
 
 func get_pesticide_turret_repair_rate_per_second() -> float:
 	return maxf(0.0, pesticide_turret_repair_rate_per_second)
@@ -458,9 +476,6 @@ func repair_pesticide_turret(
 		return
 
 	if not placed_turrets.has(turret_key):
-		return
-
-	if get_turret_state(turret_key) == PLACEABLE_STATE_BROKEN:
 		return
 
 	var old_state: String = get_turret_state(turret_key)
@@ -631,12 +646,7 @@ func can_remove_turret(grid_cell: Vector2i) -> bool:
 		return false
 
 	var turret_key: String = get_turret_key(grid_cell)
-	var turret_state: String = get_turret_state(turret_key)
-
-	return (
-		turret_state == PLACEABLE_STATE_PERFECT
-		or turret_state == PLACEABLE_STATE_BROKEN
-	)
+	return get_turret_state(turret_key) == PLACEABLE_STATE_PERFECT
 
 func remove_pesticide_turret(grid_cell: Vector2i) -> bool:
 	if not has_turret(grid_cell):
@@ -646,24 +656,15 @@ func remove_pesticide_turret(grid_cell: Vector2i) -> bool:
 	var turret_key: String = get_turret_key(grid_cell)
 	var turret_state: String = get_turret_state(turret_key)
 
-	if turret_state == PLACEABLE_STATE_DAMAGED:
+	if turret_state != PLACEABLE_STATE_PERFECT:
 		placement_failed.emit(
-			"Damaged Pesticide Turrets must be repaired before removal."
+			"Damaged or broken Pesticide Turrets must be repaired to full health before removal."
 		)
 		return false
 
 	placed_turrets.erase(turret_key)
-
-	if turret_state == PLACEABLE_STATE_PERFECT:
-		pesticide_turrets_available += 1
-		inventory_changed.emit(pesticide_turrets_available)
-
-	elif turret_state == PLACEABLE_STATE_BROKEN:
-		broken_pesticide_turrets_in_repair_queue += 1
-
-		turret_repair_queue_changed.emit(
-			broken_pesticide_turrets_in_repair_queue
-		)
+	pesticide_turrets_available += 1
+	inventory_changed.emit(pesticide_turrets_available)
 
 	turret_removed.emit(grid_cell)
 
@@ -671,10 +672,104 @@ func remove_pesticide_turret(grid_cell: Vector2i) -> bool:
 		"grid_x": grid_cell.x,
 		"grid_y": grid_cell.y,
 		"turret_state": turret_state,
-		"turrets_available": pesticide_turrets_available,
-		"broken_turrets_in_repair_queue": (
-			broken_pesticide_turrets_in_repair_queue
+		"turrets_available": pesticide_turrets_available
+	})
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_turrets()
+
+	return true
+
+func can_reposition_pesticide_turret(
+	from_cell: Vector2i,
+	to_cell: Vector2i
+) -> bool:
+	if from_cell == to_cell:
+		return false
+
+	if not has_turret(from_cell):
+		return false
+
+	var source_key: String = get_turret_key(from_cell)
+
+	if get_turret_state(source_key) != PLACEABLE_STATE_PERFECT:
+		return false
+
+	if get_cell_type(to_cell) != "open":
+		return false
+
+	if is_cell_occupied(to_cell):
+		return false
+
+	return true
+
+func get_pesticide_turret_reposition_failure_reason(
+	from_cell: Vector2i,
+	to_cell: Vector2i
+) -> String:
+	if not has_turret(from_cell):
+		return "The selected Pesticide Turret is no longer placed."
+
+	var source_key: String = get_turret_key(from_cell)
+
+	if get_turret_state(source_key) != PLACEABLE_STATE_PERFECT:
+		return "Repair the Pesticide Turret to full condition before moving it."
+
+	if from_cell == to_cell:
+		return "Choose a different grid cell, or right-click to cancel."
+
+	var cell_type: String = get_cell_type(to_cell)
+
+	if cell_type == "outside":
+		return "Choose a cell within the farm boundary."
+
+	if cell_type == "boundary":
+		return "Turrets cannot be placed on the outer boundary."
+
+	if cell_type == "house":
+		return "Turrets cannot be placed on the house."
+
+	if cell_type == "truck":
+		return "Turrets cannot be placed on the truck."
+
+	if cell_type == "farmland":
+		return "Turrets cannot be placed on farmland."
+
+	if is_cell_occupied(to_cell):
+		return "Another defense item is already placed there."
+
+	return "This location cannot be used."
+
+func reposition_pesticide_turret(
+	from_cell: Vector2i,
+	to_cell: Vector2i
+) -> bool:
+	if not can_reposition_pesticide_turret(from_cell, to_cell):
+		placement_failed.emit(
+			get_pesticide_turret_reposition_failure_reason(
+				from_cell,
+				to_cell
+			)
 		)
+		return false
+
+	var source_key: String = get_turret_key(from_cell)
+	var destination_key: String = get_turret_key(to_cell)
+	var turret_data: Dictionary = placed_turrets[source_key].duplicate(true)
+
+	placed_turrets.erase(source_key)
+	turret_data["grid_cell"] = to_cell
+	turret_data["repair_cost_paid"] = false
+	placed_turrets[destination_key] = turret_data
+
+	turret_removed.emit(from_cell)
+	turret_placed.emit(to_cell)
+
+	_log_telemetry("turret_repositioned", {
+		"from_x": from_cell.x,
+		"from_y": from_cell.y,
+		"to_x": to_cell.x,
+		"to_y": to_cell.y
 	})
 
 	if active_farm_map != null and is_instance_valid(active_farm_map):
@@ -750,7 +845,7 @@ func consume_pesticide_turret_durability(
 		get_turret_state(turret_key)
 	)
 
-# This will be used by the Workshop later.
+# Legacy compatibility only. Workshop repair is no longer exposed.
 func repair_broken_pesticide_turrets_in_workshop(amount: int) -> int:
 	if amount <= 0:
 		return 0
@@ -859,6 +954,12 @@ func get_broken_nightlight_repair_scrap_cost() -> int:
 
 func get_damaged_nightlight_repair_cost_scrap() -> int:
 	return maxi(0, damaged_nightlight_repair_cost_scrap)
+
+func get_nightlight_repair_cost_scrap(nightlight_key: String) -> int:
+	if get_nightlight_state(nightlight_key) == PLACEABLE_STATE_BROKEN:
+		return get_broken_nightlight_repair_scrap_cost()
+
+	return get_damaged_nightlight_repair_cost_scrap()
 
 func get_nightlight_repair_rate_per_second() -> float:
 	return maxf(0.0, nightlight_repair_rate_per_second)
@@ -1007,12 +1108,7 @@ func can_remove_nightlight(grid_cell: Vector2i) -> bool:
 		return false
 
 	var nightlight_key: String = get_nightlight_key(grid_cell)
-	var nightlight_state: String = get_nightlight_state(nightlight_key)
-
-	return (
-		nightlight_state == PLACEABLE_STATE_PERFECT
-		or nightlight_state == PLACEABLE_STATE_BROKEN
-	)
+	return get_nightlight_state(nightlight_key) == PLACEABLE_STATE_PERFECT
 
 func remove_nightlight(grid_cell: Vector2i) -> bool:
 	if not has_nightlight(grid_cell):
@@ -1023,23 +1119,15 @@ func remove_nightlight(grid_cell: Vector2i) -> bool:
 	var nightlight_state: String = get_nightlight_state(nightlight_key)
 	var nightlight_data: Dictionary = get_nightlight_data(nightlight_key)
 
-	if nightlight_state == PLACEABLE_STATE_DAMAGED:
+	if nightlight_state != PLACEABLE_STATE_PERFECT:
 		placement_failed.emit(
-			"Damaged Nightlights must be repaired before removal."
+			"Damaged or broken NightLights must be repaired to full health before removal."
 		)
 		return false
 
 	placed_nightlights.erase(nightlight_key)
-
-	if nightlight_state == PLACEABLE_STATE_PERFECT:
-		nightlights_available += 1
-		nightlight_inventory_changed.emit(nightlights_available)
-
-	elif nightlight_state == PLACEABLE_STATE_BROKEN:
-		broken_nightlights_in_repair_queue += 1
-		nightlight_repair_queue_changed.emit(
-			broken_nightlights_in_repair_queue
-		)
+	nightlights_available += 1
+	nightlight_inventory_changed.emit(nightlights_available)
 
 	nightlight_removed.emit(grid_cell)
 
@@ -1050,10 +1138,101 @@ func remove_nightlight(grid_cell: Vector2i) -> bool:
 		"current_integrity": float(
 			nightlight_data.get("current_integrity", 0.0)
 		),
-		"nightlights_available": nightlights_available,
-		"broken_nightlights_in_repair_queue": (
-			broken_nightlights_in_repair_queue
+		"nightlights_available": nightlights_available
+	})
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_nightlights()
+
+	return true
+
+func can_reposition_nightlight(
+	from_cell: Vector2i,
+	to_cell: Vector2i
+) -> bool:
+	if from_cell == to_cell:
+		return false
+
+	if not has_nightlight(from_cell):
+		return false
+
+	var source_key: String = get_nightlight_key(from_cell)
+
+	if get_nightlight_state(source_key) != PLACEABLE_STATE_PERFECT:
+		return false
+
+	if get_cell_type(to_cell) != "open":
+		return false
+
+	if is_cell_occupied(to_cell):
+		return false
+
+	return true
+
+func get_nightlight_reposition_failure_reason(
+	from_cell: Vector2i,
+	to_cell: Vector2i
+) -> String:
+	if not has_nightlight(from_cell):
+		return "The selected NightLight is no longer placed."
+
+	var source_key: String = get_nightlight_key(from_cell)
+
+	if get_nightlight_state(source_key) != PLACEABLE_STATE_PERFECT:
+		return "Repair the NightLight to full condition before moving it."
+
+	if from_cell == to_cell:
+		return "Choose a different grid cell, or right-click to cancel."
+
+	var cell_type: String = get_cell_type(to_cell)
+
+	if cell_type == "outside":
+		return "Choose a cell within the farm boundary."
+
+	if cell_type == "boundary":
+		return "NightLights cannot be placed on the outer boundary."
+
+	if cell_type == "house":
+		return "NightLights cannot be placed on the house."
+
+	if cell_type == "truck":
+		return "NightLights cannot be placed on the truck."
+
+	if cell_type == "farmland":
+		return "NightLights cannot be placed on farmland."
+
+	if is_cell_occupied(to_cell):
+		return "Another defense item is already placed there."
+
+	return "This location cannot be used."
+
+func reposition_nightlight(
+	from_cell: Vector2i,
+	to_cell: Vector2i
+) -> bool:
+	if not can_reposition_nightlight(from_cell, to_cell):
+		placement_failed.emit(
+			get_nightlight_reposition_failure_reason(from_cell, to_cell)
 		)
+		return false
+
+	var source_key: String = get_nightlight_key(from_cell)
+	var destination_key: String = get_nightlight_key(to_cell)
+	var nightlight_data: Dictionary = placed_nightlights[source_key].duplicate(true)
+
+	placed_nightlights.erase(source_key)
+	nightlight_data["grid_cell"] = to_cell
+	nightlight_data["repair_cost_paid"] = false
+	placed_nightlights[destination_key] = nightlight_data
+
+	nightlight_removed.emit(from_cell)
+	nightlight_placed.emit(to_cell)
+
+	_log_telemetry("nightlight_repositioned", {
+		"from_x": from_cell.x,
+		"from_y": from_cell.y,
+		"to_x": to_cell.x,
+		"to_y": to_cell.y
 	})
 
 	if active_farm_map != null and is_instance_valid(active_farm_map):
@@ -1133,9 +1312,6 @@ func repair_nightlight(
 	if not placed_nightlights.has(nightlight_key):
 		return
 
-	if get_nightlight_state(nightlight_key) == PLACEABLE_STATE_BROKEN:
-		return
-
 	var old_state: String = get_nightlight_state(nightlight_key)
 	var nightlight_data: Dictionary = placed_nightlights[nightlight_key]
 
@@ -1176,6 +1352,7 @@ func repair_nightlight(
 		})
 
 
+# Legacy compatibility only. Workshop repair is no longer exposed.
 func repair_broken_nightlights_in_workshop(amount: int) -> int:
 	if amount <= 0:
 		return 0
@@ -1669,7 +1846,10 @@ func place_fence(
 		"grid_edge": grid_edge,
 		"current_health": fence_max_health,
 		"repair_cost_paid": false,
-		"is_perimeter_fence": false
+		"is_perimeter_fence": is_perimeter_fence_edge(
+			orientation,
+			grid_edge
+		)
 	}
 
 	fences_available -= 1
@@ -1836,6 +2016,12 @@ func get_fence_craft_seed_cost() -> int:
 
 func get_broken_fence_repair_scrap_cost() -> int:
 	return maxi(0, broken_fence_repair_scrap_cost)
+
+func get_fence_repair_cost_scrap(fence_key: String) -> int:
+	if get_fence_state(fence_key) == FENCE_STATE_BROKEN:
+		return get_broken_fence_repair_scrap_cost()
+
+	return maxi(0, damaged_fence_repair_cost_scrap)
 
 func get_repairable_broken_fence_count(
 	requested_amount: int
@@ -2349,6 +2535,14 @@ func damage_fence(
 
 	var old_state: String = get_fence_state(fence_key)
 	var current_health: float = get_fence_current_health(fence_key)
+	var fence_data: Dictionary = placed_fences[fence_key]
+
+	# New damage starts a new repair event. This is especially important when
+	# a partially repaired fence is later destroyed: the broken rebuild must
+	# charge the higher broken-state Scrap cost rather than inheriting a paid
+	# damaged-repair session.
+	fence_data["repair_cost_paid"] = false
+	placed_fences[fence_key] = fence_data
 
 	set_fence_current_health(
 		fence_key,
@@ -2384,9 +2578,6 @@ func repair_fence(
 	if repair_amount <= 0.0:
 		return
 
-	if get_fence_state(fence_key) == FENCE_STATE_BROKEN:
-		return
-
 	var old_state: String = get_fence_state(fence_key)
 	var current_health: float = get_fence_current_health(fence_key)
 
@@ -2410,12 +2601,14 @@ func repair_fence(
 		})
 
 func can_remove_fence(fence_key: String) -> bool:
-	var fence_state: String = get_fence_state(fence_key)
+	if not has_fence(fence_key):
+		return false
 
-	return (
-		fence_state == FENCE_STATE_PERFECT
-		or fence_state == FENCE_STATE_BROKEN
-	)
+	if get_fence_state(fence_key) != FENCE_STATE_PERFECT:
+		return false
+
+	var fence_data: Dictionary = get_fence_data(fence_key)
+	return not bool(fence_data.get("is_perimeter_fence", false))
 
 func remove_fence(fence_key: String) -> bool:
 	if not has_fence(fence_key):
@@ -2424,13 +2617,19 @@ func remove_fence(fence_key: String) -> bool:
 
 	var fence_state: String = get_fence_state(fence_key)
 
-	if fence_state == FENCE_STATE_DAMAGED:
+	if fence_state != FENCE_STATE_PERFECT:
 		placement_failed.emit(
-			"Damaged fences must be repaired in the field before removal."
+			"Damaged or broken fences must be repaired to full HP in the field before removal."
 		)
 		return false
 
 	var fence_data: Dictionary = get_fence_data(fence_key)
+
+	if bool(fence_data.get("is_perimeter_fence", false)):
+		placement_failed.emit(
+			"Perimeter fences are fixed to the farm boundary and cannot be removed."
+		)
+		return false
 
 	var orientation: String = str(
 		fence_data.get("orientation", "")
@@ -2442,17 +2641,8 @@ func remove_fence(fence_key: String) -> bool:
 	)
 
 	placed_fences.erase(fence_key)
-
-	if fence_state == FENCE_STATE_PERFECT:
-		fences_available += 1
-		fence_inventory_changed.emit(fences_available)
-
-	elif fence_state == FENCE_STATE_BROKEN:
-		broken_fences_in_repair_queue += 1
-
-		fence_repair_queue_changed.emit(
-			broken_fences_in_repair_queue
-		)
+	fences_available += 1
+	fence_inventory_changed.emit(fences_available)
 
 	fence_removed.emit(fence_key)
 	fence_navigation_changed.emit()
@@ -2463,8 +2653,7 @@ func remove_fence(fence_key: String) -> bool:
 		"grid_x": grid_edge.x,
 		"grid_y": grid_edge.y,
 		"fence_state": fence_state,
-		"fences_available": fences_available,
-		"broken_fences_in_repair_queue": broken_fences_in_repair_queue
+		"fences_available": fences_available
 	})
 
 	if active_farm_map != null and is_instance_valid(active_farm_map):
@@ -2472,6 +2661,137 @@ func remove_fence(fence_key: String) -> bool:
 
 	return true
 
+func can_reposition_fence(
+	fence_key: String,
+	new_orientation: String,
+	new_grid_edge: Vector2i
+) -> bool:
+	if not has_fence(fence_key):
+		return false
+
+	if get_fence_state(fence_key) != FENCE_STATE_PERFECT:
+		return false
+
+	var fence_data: Dictionary = get_fence_data(fence_key)
+
+	if bool(fence_data.get("is_perimeter_fence", false)):
+		return false
+
+	if not is_valid_fence_orientation(new_orientation):
+		return false
+
+	if not is_valid_fence_edge(new_orientation, new_grid_edge):
+		return false
+
+	var destination_key: String = get_fence_key(
+		new_orientation,
+		new_grid_edge
+	)
+
+	if destination_key == fence_key:
+		return false
+
+	if placed_fences.has(destination_key):
+		return false
+
+	if is_fence_edge_inside_static_object(new_orientation, new_grid_edge):
+		return false
+
+	return true
+
+func get_fence_reposition_failure_reason(
+	fence_key: String,
+	new_orientation: String,
+	new_grid_edge: Vector2i
+) -> String:
+	if not has_fence(fence_key):
+		return "The selected fence is no longer placed."
+
+	if get_fence_state(fence_key) != FENCE_STATE_PERFECT:
+		return "Repair the fence to full HP before moving it."
+
+	var fence_data: Dictionary = get_fence_data(fence_key)
+
+	if bool(fence_data.get("is_perimeter_fence", false)):
+		return "Perimeter fences are fixed to the farm boundary."
+
+	if not is_valid_fence_orientation(new_orientation):
+		return "Choose a valid fence orientation."
+
+	if not is_valid_fence_edge(new_orientation, new_grid_edge):
+		return "Choose a valid fence edge."
+
+	var destination_key: String = get_fence_key(
+		new_orientation,
+		new_grid_edge
+	)
+
+	if destination_key == fence_key:
+		return "Choose a different fence edge, or right-click to cancel."
+
+	if placed_fences.has(destination_key):
+		return "A fence is already placed on this edge."
+
+	if is_fence_edge_inside_static_object(new_orientation, new_grid_edge):
+		return "Fences cannot be placed on farmland or through the house or truck."
+
+	return "This fence location cannot be used."
+
+func reposition_fence(
+	fence_key: String,
+	new_orientation: String,
+	new_grid_edge: Vector2i
+) -> bool:
+	if not can_reposition_fence(fence_key, new_orientation, new_grid_edge):
+		placement_failed.emit(
+			get_fence_reposition_failure_reason(
+				fence_key,
+				new_orientation,
+				new_grid_edge
+			)
+		)
+		return false
+
+	var old_data: Dictionary = placed_fences[fence_key].duplicate(true)
+	var old_orientation: String = str(old_data.get("orientation", ""))
+	var old_grid_edge: Vector2i = old_data.get("grid_edge", Vector2i.ZERO)
+	var destination_key: String = get_fence_key(
+		new_orientation,
+		new_grid_edge
+	)
+
+	placed_fences.erase(fence_key)
+
+	old_data["orientation"] = new_orientation
+	old_data["grid_edge"] = new_grid_edge
+	old_data["repair_cost_paid"] = false
+	old_data["is_perimeter_fence"] = is_perimeter_fence_edge(
+		new_orientation,
+		new_grid_edge
+	)
+	placed_fences[destination_key] = old_data
+
+	fence_removed.emit(fence_key)
+	fence_placed.emit(destination_key)
+	fence_navigation_changed.emit()
+
+	_log_telemetry("fence_repositioned", {
+		"old_fence_key": fence_key,
+		"old_orientation": old_orientation,
+		"old_grid_x": old_grid_edge.x,
+		"old_grid_y": old_grid_edge.y,
+		"new_fence_key": destination_key,
+		"new_orientation": new_orientation,
+		"new_grid_x": new_grid_edge.x,
+		"new_grid_y": new_grid_edge.y
+	})
+
+	if active_farm_map != null and is_instance_valid(active_farm_map):
+		rebuild_farm_fences()
+
+	return true
+
+# Legacy compatibility only. Workshop repair is no longer exposed.
 func repair_broken_fences_in_workshop(amount: int) -> int:
 	if amount <= 0:
 		return 0
@@ -2769,6 +3089,9 @@ func get_save_data() -> Dictionary:
 	for fence_key_variant in placed_fences.keys():
 		var fence_key: String = str(fence_key_variant)
 		var fence_data: Dictionary = get_fence_data(fence_key)
+		var orientation: String = str(
+			fence_data.get("orientation", "")
+		)
 
 		var grid_edge: Vector2i = fence_data.get(
 			"grid_edge",
@@ -2788,8 +3111,9 @@ func get_save_data() -> Dictionary:
 			"repair_cost_paid": bool(
 				fence_data.get("repair_cost_paid", false)
 			),
-			"is_perimeter_fence": bool(
-				fence_data.get("is_perimeter_fence", false)
+			"is_perimeter_fence": (
+				bool(fence_data.get("is_perimeter_fence", false))
+				or is_perimeter_fence_edge(orientation, grid_edge)
 			)
 		})
 
@@ -2798,21 +3122,18 @@ func get_save_data() -> Dictionary:
 		"pesticide_turrets_available": pesticide_turrets_available,
 		"pesticide_turret_max_integrity": pesticide_turret_max_integrity,
 		"pesticide_turret_max_durability": pesticide_turret_max_durability,
-		"broken_pesticide_turrets_in_repair_queue": (
-			broken_pesticide_turrets_in_repair_queue
-		),
 		"placed_turrets": saved_turrets,
 		"damaged_pesticide_turret_repair_cost_scrap": (
 			damaged_pesticide_turret_repair_cost_scrap
+		),
+		"broken_pesticide_turret_repair_cost_scrap": (
+			broken_pesticide_turret_repair_cost_scrap
 		),
 		"pesticide_turret_repair_rate_per_second": (
 			pesticide_turret_repair_rate_per_second
 		),
 
 		"nightlights_available": nightlights_available,
-		"broken_nightlights_in_repair_queue": (
-			broken_nightlights_in_repair_queue
-		),
 		"placed_nightlights": saved_nightlights,
 		"nightlight_max_integrity": nightlight_max_integrity,
 		"nightlight_wear_per_second": nightlight_wear_per_second,
@@ -2827,10 +3148,11 @@ func get_save_data() -> Dictionary:
 		),
 
 		"fences_available": fences_available,
-		"broken_fences_in_repair_queue": broken_fences_in_repair_queue,
 		"placed_fences": saved_fences,
 
 		"fence_max_health": fence_max_health,
+		"damaged_fence_repair_cost_scrap": damaged_fence_repair_cost_scrap,
+		"broken_fence_repair_scrap_cost": broken_fence_repair_scrap_cost,
 		"fence_repair_rate_per_second": fence_repair_rate_per_second,
 		"fence_damage_multiplier": fence_damage_multiplier
 	}
@@ -2864,17 +3186,27 @@ func load_save_data(data: Dictionary) -> void:
 		)
 	)
 
-	broken_pesticide_turrets_in_repair_queue = int(
-		data.get(
-			"broken_pesticide_turrets_in_repair_queue",
-			0
-		)
+	# Legacy V2 saves could contain broken items that had already been removed
+	# from the field into Workshop queues. Their field positions were never
+	# saved, so safely return those old queued units to healthy inventory.
+	var legacy_broken_turret_queue: int = maxi(
+		0,
+		int(data.get("broken_pesticide_turrets_in_repair_queue", 0))
 	)
+	pesticide_turrets_available += legacy_broken_turret_queue
+	broken_pesticide_turrets_in_repair_queue = 0
 
 	damaged_pesticide_turret_repair_cost_scrap = int(
 		data.get(
 			"damaged_pesticide_turret_repair_cost_scrap",
 			damaged_pesticide_turret_repair_cost_scrap
+		)
+	)
+
+	broken_pesticide_turret_repair_cost_scrap = int(
+		data.get(
+			"broken_pesticide_turret_repair_cost_scrap",
+			broken_pesticide_turret_repair_cost_scrap
 		)
 	)
 
@@ -2889,9 +3221,12 @@ func load_save_data(data: Dictionary) -> void:
 		data.get("nightlights_available", starting_nightlights)
 	)
 
-	broken_nightlights_in_repair_queue = int(
-		data.get("broken_nightlights_in_repair_queue", 0)
+	var legacy_broken_nightlight_queue: int = maxi(
+		0,
+		int(data.get("broken_nightlights_in_repair_queue", 0))
 	)
+	nightlights_available += legacy_broken_nightlight_queue
+	broken_nightlights_in_repair_queue = 0
 
 	nightlight_max_integrity = float(
 		data.get("nightlight_max_integrity", nightlight_max_integrity)
@@ -2926,12 +3261,29 @@ func load_save_data(data: Dictionary) -> void:
 		data.get("fences_available", starting_fences)
 	)
 
-	broken_fences_in_repair_queue = int(
-		data.get("broken_fences_in_repair_queue", 0)
+	var legacy_broken_fence_queue: int = maxi(
+		0,
+		int(data.get("broken_fences_in_repair_queue", 0))
 	)
+	fences_available += legacy_broken_fence_queue
+	broken_fences_in_repair_queue = 0
 
 	fence_max_health = float(
 		data.get("fence_max_health", fence_max_health)
+	)
+
+	damaged_fence_repair_cost_scrap = int(
+		data.get(
+			"damaged_fence_repair_cost_scrap",
+			damaged_fence_repair_cost_scrap
+		)
+	)
+
+	broken_fence_repair_scrap_cost = int(
+		data.get(
+			"broken_fence_repair_scrap_cost",
+			broken_fence_repair_scrap_cost
+		)
 	)
 
 	fence_repair_rate_per_second = float(
@@ -3044,14 +3396,20 @@ func load_save_data(data: Dictionary) -> void:
 		placed_fences[fence_key] = {
 			"orientation": orientation,
 			"grid_edge": grid_edge,
-			"current_health": float(
-				fence_data.get("current_health", fence_max_health)
+			"current_health": clampf(
+				float(fence_data.get("current_health", fence_max_health)),
+				0.0,
+				fence_max_health
 			),
 			"repair_cost_paid": bool(
 				fence_data.get("repair_cost_paid", false)
 			),
-			"is_perimeter_fence": bool(
-				fence_data.get("is_perimeter_fence", false)
+			# Derive perimeter identity from geometry as well as the saved flag.
+			# This repairs older saves where a replacement boundary fence was
+			# incorrectly serialized as an ordinary movable fence.
+			"is_perimeter_fence": (
+				bool(fence_data.get("is_perimeter_fence", false))
+				or is_perimeter_fence_edge(orientation, grid_edge)
 			)
 		}
 
@@ -3099,6 +3457,9 @@ func reset_for_new_game() -> void:
 	damaged_pesticide_turret_repair_cost_scrap = (
 		base_damaged_pesticide_turret_repair_cost_scrap
 	)
+	broken_pesticide_turret_repair_cost_scrap = (
+		base_broken_pesticide_turret_repair_cost_scrap
+	)
 
 	pesticide_turret_repair_rate_per_second = (
 		base_pesticide_turret_repair_rate_per_second
@@ -3122,6 +3483,8 @@ func reset_for_new_game() -> void:
 	broken_nightlight_repair_scrap_cost = (
 		base_broken_nightlight_repair_scrap_cost
 	)
+	damaged_fence_repair_cost_scrap = base_damaged_fence_repair_cost_scrap
+	broken_fence_repair_scrap_cost = base_broken_fence_repair_scrap_cost
 	fence_max_health = base_fence_max_health
 	fence_repair_rate_per_second = base_fence_repair_rate_per_second
 	fence_damage_multiplier = base_fence_damage_multiplier
