@@ -834,7 +834,11 @@ func open_map_menu() -> void:
 		_show_blocked_house_object_message()
 		return
 
-	if time_manager.has_method("is_daytime") and not time_manager.is_daytime():
+	if (
+		time_manager.has_method("is_daytime")
+		and not time_manager.is_daytime()
+		and not is_normal_night_combat_active()
+	):
 		print("Cannot use the map table at night.")
 
 		if hud.has_method("show_warning_message"):
@@ -860,17 +864,16 @@ func travel_to_location(location_id: String) -> void:
 		return
 
 	if normal_night_state == NIGHT_STATE_COMBAT:
-		if _is_current_location_house() and location_id == "farm":
+		# During an active normal defense wave the player may move freely
+		# between the Farm and House. Other map travel remains blocked until
+		# the later persistent-world/multi-scene redesign is in place.
+		if location_id == "farm" or location_id == "house":
 			close_workshop()
 			close_defense_placement()
 			_perform_location_travel(location_id)
 			return
 
-		if location_id == "house":
-			_show_roleplay_message("They are still out there.")
-			return
-
-		_show_roleplay_message("They are still out there.")
+		_show_roleplay_message("I should stay close to the farm tonight.")
 		return
 
 	if normal_night_state == NIGHT_STATE_CLEARED:
@@ -921,7 +924,11 @@ func open_defense_placement() -> void:
 		_show_blocked_house_object_message()
 		return
 
-	if time_manager.has_method("is_daytime") and not time_manager.is_daytime():
+	if (
+		time_manager.has_method("is_daytime")
+		and not time_manager.is_daytime()
+		and not is_normal_night_combat_active()
+	):
 		if hud.has_method("show_warning_message"):
 			hud.show_warning_message(
 				"There is no time to plan defenses now."
@@ -955,7 +962,11 @@ func open_workshop() -> void:
 		_show_blocked_house_object_message()
 		return
 
-	if time_manager.has_method("is_daytime") and not time_manager.is_daytime():
+	if (
+		time_manager.has_method("is_daytime")
+		and not time_manager.is_daytime()
+		and not is_normal_night_combat_active()
+	):
 		if hud.has_method("show_warning_message"):
 			hud.show_warning_message(
 				"The Workshop can only be used during daytime."
@@ -1147,26 +1158,12 @@ func _should_use_normal_night_loop() -> bool:
 	return not _should_use_tutorial_night_flow()
 
 func _start_normal_night_loop() -> void:
-	house_entry_locked_until_clear = true
+	# The House is now a valid location during a normal defense wave. The
+	# player is only forced back to the Farm when night begins on another map.
+	house_entry_locked_until_clear = false
+	house_evacuation_timer = 0.0
 
-	if _is_current_location_house():
-		normal_night_state = NIGHT_STATE_HOUSE_EVACUATION
-		house_evacuation_timer = HOUSE_EVACUATION_DURATION
-
-		_show_roleplay_message(
-			"The walls are breathing. I have to get outside."
-		)
-
-		if hud != null and hud.has_method("show_house_evacuation_warning"):
-			hud.call(
-				"show_house_evacuation_warning",
-				int(HOUSE_EVACUATION_DURATION)
-			)
-
-		print("[Night] House evacuation started.")
-		return
-
-	if not _is_current_location_farm():
+	if not _is_current_location_farm() and not _is_current_location_house():
 		_force_player_to_farm_for_night()
 
 	_enter_normal_night_combat()
@@ -1177,7 +1174,7 @@ func _enter_normal_night_combat() -> void:
 
 	normal_night_state = NIGHT_STATE_COMBAT
 	house_evacuation_timer = 0.0
-	house_entry_locked_until_clear = true
+	house_entry_locked_until_clear = false
 
 	var current_day: int = 1
 
@@ -1244,7 +1241,12 @@ func is_normal_night_cleared() -> bool:
 	return normal_night_state == NIGHT_STATE_CLEARED
 
 func is_house_entry_locked_by_night() -> bool:
-	return house_entry_locked_until_clear
+	# Normal combat no longer locks the farmhouse. Keep this method for
+	# MapManager compatibility while the old transition code is phased out.
+	return (
+		house_entry_locked_until_clear
+		and normal_night_state != NIGHT_STATE_COMBAT
+	)
 
 func _force_player_out_of_house_for_night() -> void:
 	_show_roleplay_message(
@@ -1301,10 +1303,9 @@ func _is_house_object_blocked_by_night(
 		return interaction_name != "House Exit"
 
 	if normal_night_state == NIGHT_STATE_COMBAT:
-		if _is_current_location_house():
-			return interaction_name != "House Exit"
-
-		return false
+		# House systems remain usable during the defense wave. Sleeping is
+		# handled separately by sleep_at_bed(), which rejects combat nights.
+		return interaction_name == "Bed"
 
 	if normal_night_state == NIGHT_STATE_CLEARED:
 		return interaction_name != "Bed"

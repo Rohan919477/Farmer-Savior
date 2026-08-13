@@ -156,12 +156,6 @@ offset_bottom = 8.0
 focus_mode = 0
 text = "CRAFT FENCE"
 
-[node name="FenceServiceStatusLabel" type="Label" parent="RootControl/WorkshopPanel/ContentPanel/UpgradeInfoPanel" unique_id=914995679]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-autowrap_mode = 3
-
 [node name="CloseButton" type="Button" parent="RootControl/WorkshopPanel" unique_id=1491205339]
 layout_mode = 0
 offset_right = 8.0

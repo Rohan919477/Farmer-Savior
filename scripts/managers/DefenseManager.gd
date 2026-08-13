@@ -8,13 +8,11 @@ signal turret_placed(grid_cell: Vector2i)
 signal placement_failed(reason: String)
 signal turret_removed(grid_cell: Vector2i)
 signal turret_condition_changed(turret_key: String, turret_state: String)
-signal turret_repair_queue_changed(broken_turrets_in_queue: int)
 
 signal fence_inventory_changed(fences_available: int)
 signal fence_placed(fence_key: String)
 signal fence_removed(fence_key: String)
 signal fence_state_changed(fence_key: String, fence_state: String)
-signal fence_repair_queue_changed(broken_fences_in_queue: int)
 signal fence_crafted(fences_available: int)
 signal fence_workshop_action_failed(reason: String)
 signal fence_navigation_changed
@@ -24,7 +22,6 @@ signal nightlight_inventory_changed(nightlights_available: int)
 signal nightlight_placed(grid_cell: Vector2i)
 signal nightlight_removed(grid_cell: Vector2i)
 signal nightlight_condition_changed(nightlight_key: String, nightlight_state: String)
-signal nightlight_repair_queue_changed(broken_nightlights_in_queue: int)
 
 const FENCE_ORIENTATION_HORIZONTAL: String = "horizontal"
 const FENCE_ORIENTATION_VERTICAL: String = "vertical"
@@ -105,9 +102,6 @@ var placed_turrets: Dictionary = {}
 # }
 var placed_nightlights: Dictionary = {}
 
-var broken_pesticide_turrets_in_repair_queue: int = 0
-var broken_nightlights_in_repair_queue: int = 0
-
 # Example:
 # {
 #     "horizontal:10:5": {
@@ -120,7 +114,6 @@ var broken_nightlights_in_repair_queue: int = 0
 # }
 var placed_fences: Dictionary = {}
 
-var broken_fences_in_repair_queue: int = 0
 var active_farm_map: Node = null
 
 var base_max_pesticide_turrets: int = 2
@@ -392,7 +385,6 @@ func get_pesticide_turret_current_integrity(turret_key: String) -> float:
 		pesticide_turret_max_integrity
 	)
 
-
 func get_pesticide_turret_integrity_percent(turret_key: String) -> float:
 	if pesticide_turret_max_integrity <= 0.0:
 		return 0.0
@@ -421,7 +413,6 @@ func get_pesticide_turret_current_durability(turret_key: String) -> float:
 		pesticide_turret_max_durability
 	)
 
-
 func get_pesticide_turret_durability_percent(turret_key: String) -> float:
 	if pesticide_turret_max_durability <= 0.0:
 		return 0.0
@@ -432,7 +423,6 @@ func get_pesticide_turret_durability_percent(turret_key: String) -> float:
 		0.0,
 		1.0
 	)
-
 
 func get_damaged_pesticide_turret_repair_cost_scrap() -> int:
 	return maxi(0, damaged_pesticide_turret_repair_cost_scrap)
@@ -449,7 +439,6 @@ func get_pesticide_turret_repair_cost_scrap(turret_key: String) -> int:
 func get_pesticide_turret_repair_rate_per_second() -> float:
 	return maxf(0.0, pesticide_turret_repair_rate_per_second)
 
-
 func is_pesticide_turret_repair_cost_paid(turret_key: String) -> bool:
 	var turret_data: Dictionary = get_turret_data(turret_key)
 
@@ -458,7 +447,6 @@ func is_pesticide_turret_repair_cost_paid(turret_key: String) -> bool:
 
 	return bool(turret_data.get("repair_cost_paid", false))
 
-
 func mark_pesticide_turret_repair_cost_paid(turret_key: String) -> void:
 	if not placed_turrets.has(turret_key):
 		return
@@ -466,7 +454,6 @@ func mark_pesticide_turret_repair_cost_paid(turret_key: String) -> void:
 	var turret_data: Dictionary = placed_turrets[turret_key]
 	turret_data["repair_cost_paid"] = true
 	placed_turrets[turret_key] = turret_data
-
 
 func repair_pesticide_turret(
 	turret_key: String,
@@ -536,7 +523,6 @@ func repair_pesticide_turret(
 			"max_durability": pesticide_turret_max_durability
 		})
 
-
 func get_turret_state(turret_key: String) -> String:
 	var turret_data: Dictionary = get_turret_data(turret_key)
 
@@ -561,9 +547,6 @@ func get_turret_state(turret_key: String) -> String:
 		return PLACEABLE_STATE_DAMAGED
 
 	return PLACEABLE_STATE_PERFECT
-
-func get_broken_pesticide_turrets_in_repair_queue() -> int:
-	return broken_pesticide_turrets_in_repair_queue
 
 func can_place_pesticide_turret(grid_cell: Vector2i) -> bool:
 	if pesticide_turrets_available <= 0:
@@ -845,39 +828,6 @@ func consume_pesticide_turret_durability(
 		get_turret_state(turret_key)
 	)
 
-# Legacy compatibility only. Workshop repair is no longer exposed.
-func repair_broken_pesticide_turrets_in_workshop(amount: int) -> int:
-	if amount <= 0:
-		return 0
-
-	var repaired_count: int = mini(
-		amount,
-		broken_pesticide_turrets_in_repair_queue
-	)
-
-	if repaired_count <= 0:
-		return 0
-
-	broken_pesticide_turrets_in_repair_queue -= repaired_count
-	pesticide_turrets_available += repaired_count
-
-	turret_repair_queue_changed.emit(
-		broken_pesticide_turrets_in_repair_queue
-	)
-
-	inventory_changed.emit(pesticide_turrets_available)
-
-	_log_telemetry("turret_repair_queue_used", {
-		"repaired_count": repaired_count,
-		"broken_turrets_in_repair_queue": (
-			broken_pesticide_turrets_in_repair_queue
-		),
-		"turrets_available": pesticide_turrets_available
-	})
-
-	return repaired_count
-
-
 # -------------------------------------------------------------------
 # Nightlights
 # -------------------------------------------------------------------
@@ -946,9 +896,6 @@ func get_nightlight_state(nightlight_key: String) -> String:
 
 	return PLACEABLE_STATE_PERFECT
 
-func get_broken_nightlights_in_repair_queue() -> int:
-	return broken_nightlights_in_repair_queue
-
 func get_broken_nightlight_repair_scrap_cost() -> int:
 	return maxi(0, broken_nightlight_repair_scrap_cost)
 
@@ -963,70 +910,6 @@ func get_nightlight_repair_cost_scrap(nightlight_key: String) -> int:
 
 func get_nightlight_repair_rate_per_second() -> float:
 	return maxf(0.0, nightlight_repair_rate_per_second)
-
-
-func get_repairable_broken_nightlight_count(
-	requested_amount: int
-) -> int:
-	if requested_amount <= 0:
-		return 0
-
-	return mini(
-		requested_amount,
-		broken_nightlights_in_repair_queue
-	)
-
-func get_broken_nightlight_repair_total_cost(
-	requested_amount: int
-) -> int:
-	var repair_count: int = get_repairable_broken_nightlight_count(
-		requested_amount
-	)
-
-	return repair_count * get_broken_nightlight_repair_scrap_cost()
-
-func get_broken_nightlight_repair_failure_reason(
-	requested_amount: int
-) -> String:
-	if broken_nightlights_in_repair_queue <= 0:
-		return "No broken NightLights are waiting for repair."
-
-	var repair_count: int = get_repairable_broken_nightlight_count(
-		requested_amount
-	)
-
-	if repair_count <= 0:
-		return "No broken NightLights are waiting for repair."
-
-	var player_node: Node = _get_player_resource_node()
-
-	if player_node == null:
-		return "Player inventory is unavailable."
-
-	if not player_node.has_method("has_resource"):
-		return "Player inventory is unavailable."
-
-	var total_scrap_cost: int = (
-		get_broken_nightlight_repair_total_cost(repair_count)
-	)
-
-	if not bool(
-		player_node.call(
-			"has_resource",
-			"scrap",
-			total_scrap_cost
-		)
-	):
-		var current_scrap: int = int(
-			player_node.call("get_resource_amount", "scrap")
-		)
-
-		return "Need %d Scrap. You have %d." % [
-			total_scrap_cost,
-			current_scrap
-		]
-
-	return ""
 
 func can_place_nightlight(grid_cell: Vector2i) -> bool:
 	if nightlights_available <= 0:
@@ -1351,151 +1234,6 @@ func repair_nightlight(
 			"max_integrity": nightlight_max_integrity
 		})
 
-
-# Legacy compatibility only. Workshop repair is no longer exposed.
-func repair_broken_nightlights_in_workshop(amount: int) -> int:
-	if amount <= 0:
-		return 0
-
-	var repaired_count: int = mini(
-		amount,
-		broken_nightlights_in_repair_queue
-	)
-
-	if repaired_count <= 0:
-		return 0
-
-	broken_nightlights_in_repair_queue -= repaired_count
-	nightlights_available += repaired_count
-
-	nightlight_repair_queue_changed.emit(
-		broken_nightlights_in_repair_queue
-	)
-
-	nightlight_inventory_changed.emit(nightlights_available)
-
-	_log_telemetry("nightlight_repair_queue_used", {
-		"repaired_count": repaired_count,
-		"broken_nightlights_in_repair_queue": (
-			broken_nightlights_in_repair_queue
-		),
-		"nightlights_available": nightlights_available
-	})
-
-	return repaired_count
-
-func repair_broken_nightlights_with_materials(
-	requested_amount: int
-) -> int:
-	var failure_reason: String = (
-		get_broken_nightlight_repair_failure_reason(
-			requested_amount
-		)
-	)
-
-	if not failure_reason.is_empty():
-		fence_workshop_action_failed.emit(failure_reason)
-
-		_log_telemetry("nightlight_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"reason": failure_reason
-		})
-
-		return 0
-
-	var repair_count: int = get_repairable_broken_nightlight_count(
-		requested_amount
-	)
-
-	var total_scrap_cost: int = (
-		get_broken_nightlight_repair_total_cost(repair_count)
-	)
-
-	var player_node: Node = _get_player_resource_node()
-
-	if player_node == null:
-		var missing_inventory_reason: String = (
-			"Player inventory is unavailable."
-		)
-
-		fence_workshop_action_failed.emit(missing_inventory_reason)
-
-		_log_telemetry("nightlight_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"reason": missing_inventory_reason
-		})
-
-		return 0
-
-	var spent_scrap: bool = bool(
-		player_node.call(
-			"spend_resource",
-			"scrap",
-			total_scrap_cost
-		)
-	)
-
-	if not spent_scrap:
-		var scrap_failure_reason: String = "Not enough Scrap."
-
-		fence_workshop_action_failed.emit(scrap_failure_reason)
-
-		_log_telemetry("nightlight_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"repair_count": repair_count,
-			"total_scrap_cost": total_scrap_cost,
-			"reason": scrap_failure_reason
-		})
-
-		return 0
-
-	var repaired_count: int = repair_broken_nightlights_in_workshop(
-		repair_count
-	)
-
-	if repaired_count <= 0:
-		player_node.call(
-			"add_resource",
-			"scrap",
-			total_scrap_cost
-		)
-
-		var completion_failure_reason: String = (
-			"NightLight repair could not be completed."
-		)
-
-		fence_workshop_action_failed.emit(
-			completion_failure_reason
-		)
-
-		_log_telemetry("nightlight_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"repair_count": repair_count,
-			"total_scrap_cost": total_scrap_cost,
-			"reason": completion_failure_reason
-		})
-
-		return 0
-
-	_log_telemetry("nightlight_repair_queue_paid", {
-		"requested_amount": requested_amount,
-		"repaired_count": repaired_count,
-		"total_scrap_cost": total_scrap_cost,
-		"broken_nightlights_in_repair_queue": (
-			broken_nightlights_in_repair_queue
-		),
-		"nightlights_available": nightlights_available
-	})
-
-	print(
-		"[Workshop] Repaired ",
-		repaired_count,
-		" NightLight(s). Stored NightLights: ",
-		nightlights_available
-	)
-
-	return repaired_count
-
 func get_nightlight_position(grid_cell: Vector2i) -> Vector2:
 	return get_turret_position(grid_cell)
 
@@ -1575,11 +1313,7 @@ func get_fences_available() -> int:
 	return fences_available
 
 func get_total_owned_fence_count() -> int:
-	return (
-		fences_available
-		+ placed_fences.size()
-		+ broken_fences_in_repair_queue
-	)
+	return fences_available + placed_fences.size()
 
 func get_fence_damage_reduction_percent() -> int:
 	return int(round((1.0 - fence_damage_multiplier) * 100.0))
@@ -1643,7 +1377,6 @@ func apply_fence_repair_rate_multiplier(multiplier: float) -> void:
 		fence_repair_rate_per_second,
 		" HP per second."
 	)
-
 
 func apply_pesticide_turret_capacity_bonus(capacity_bonus: int) -> void:
 	if capacity_bonus <= 0:
@@ -2020,9 +1753,6 @@ func get_broken_fence_run_data(fence_key: String) -> Dictionary:
 		"segment_count": end_axis - start_axis + 1
 	}
 
-func get_broken_fences_in_repair_queue() -> int:
-	return broken_fences_in_repair_queue
-
 func get_fence_craft_scrap_cost() -> int:
 	return maxi(0, fence_craft_scrap_cost)
 
@@ -2037,26 +1767,6 @@ func get_fence_repair_cost_scrap(fence_key: String) -> int:
 		return get_broken_fence_repair_scrap_cost()
 
 	return maxi(0, damaged_fence_repair_cost_scrap)
-
-func get_repairable_broken_fence_count(
-	requested_amount: int
-) -> int:
-	if requested_amount <= 0:
-		return 0
-
-	return mini(
-		requested_amount,
-		broken_fences_in_repair_queue
-	)
-
-func get_broken_fence_repair_total_cost(
-	requested_amount: int
-) -> int:
-	var repair_count: int = get_repairable_broken_fence_count(
-		requested_amount
-	)
-
-	return repair_count * get_broken_fence_repair_scrap_cost()
 
 func _get_player_resource_node() -> Node:
 	return get_tree().get_first_node_in_group("player")
@@ -2091,49 +1801,6 @@ func get_fence_craft_failure_reason() -> String:
 		return "Need %d Seeds. You have %d." % [
 			seed_cost,
 			current_seeds
-		]
-
-	return ""
-
-func get_broken_fence_repair_failure_reason(
-	requested_amount: int
-) -> String:
-	if broken_fences_in_repair_queue <= 0:
-		return "No broken fences are waiting for repair."
-
-	var repair_count: int = get_repairable_broken_fence_count(
-		requested_amount
-	)
-
-	if repair_count <= 0:
-		return "No broken fences are waiting for repair."
-
-	var player_node: Node = _get_player_resource_node()
-
-	if player_node == null:
-		return "Player inventory is unavailable."
-
-	if not player_node.has_method("has_resource"):
-		return "Player inventory is unavailable."
-
-	var total_scrap_cost: int = get_broken_fence_repair_total_cost(
-		repair_count
-	)
-
-	if not bool(
-		player_node.call(
-			"has_resource",
-			"scrap",
-			total_scrap_cost
-		)
-	):
-		var current_scrap: int = int(
-			player_node.call("get_resource_amount", "scrap")
-		)
-
-		return "Need %d Scrap. You have %d." % [
-			total_scrap_cost,
-			current_scrap
 		]
 
 	return ""
@@ -2220,116 +1887,6 @@ func craft_fence_in_workshop() -> bool:
 	)
 
 	return true
-
-func repair_broken_fences_with_materials(
-	requested_amount: int
-) -> int:
-	var failure_reason: String = (
-		get_broken_fence_repair_failure_reason(
-			requested_amount
-		)
-	)
-
-	if not failure_reason.is_empty():
-		fence_workshop_action_failed.emit(failure_reason)
-
-		_log_telemetry("fence_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"reason": failure_reason
-		})
-
-		return 0
-
-	var repair_count: int = get_repairable_broken_fence_count(
-		requested_amount
-	)
-
-	var total_scrap_cost: int = get_broken_fence_repair_total_cost(
-		repair_count
-	)
-
-	var player_node: Node = _get_player_resource_node()
-
-	if player_node == null:
-		var missing_inventory_reason: String = "Player inventory is unavailable."
-
-		fence_workshop_action_failed.emit(missing_inventory_reason)
-
-		_log_telemetry("fence_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"reason": missing_inventory_reason
-		})
-
-		return 0
-
-	var spent_scrap: bool = bool(
-		player_node.call(
-			"spend_resource",
-			"scrap",
-			total_scrap_cost
-		)
-	)
-
-	if not spent_scrap:
-		var scrap_failure_reason: String = "Not enough Scrap."
-
-		fence_workshop_action_failed.emit(
-			scrap_failure_reason
-		)
-
-		_log_telemetry("fence_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"repair_count": repair_count,
-			"total_scrap_cost": total_scrap_cost,
-			"reason": scrap_failure_reason
-		})
-
-		return 0
-
-	var repaired_count: int = repair_broken_fences_in_workshop(
-		repair_count
-	)
-
-	if repaired_count <= 0:
-		player_node.call(
-			"add_resource",
-			"scrap",
-			total_scrap_cost
-		)
-
-		var completion_failure_reason: String = (
-			"Fence repair could not be completed."
-		)
-
-		fence_workshop_action_failed.emit(
-			completion_failure_reason
-		)
-
-		_log_telemetry("fence_repair_queue_failed", {
-			"requested_amount": requested_amount,
-			"repair_count": repair_count,
-			"total_scrap_cost": total_scrap_cost,
-			"reason": completion_failure_reason
-		})
-
-		return 0
-
-	_log_telemetry("fence_repair_queue_used", {
-		"requested_amount": requested_amount,
-		"repaired_count": repaired_count,
-		"total_scrap_cost": total_scrap_cost,
-		"broken_fences_in_repair_queue": broken_fences_in_repair_queue,
-		"fences_available": fences_available
-	})
-
-	print(
-		"[Workshop] Repaired ",
-		repaired_count,
-		" Fence(s). Stored fences: ",
-		fences_available
-	)
-
-	return repaired_count
 
 func is_fence_gap_passable(
 	fence_key: String,
@@ -2806,30 +2363,6 @@ func reposition_fence(
 
 	return true
 
-# Legacy compatibility only. Workshop repair is no longer exposed.
-func repair_broken_fences_in_workshop(amount: int) -> int:
-	if amount <= 0:
-		return 0
-
-	var repaired_count: int = mini(
-		amount,
-		broken_fences_in_repair_queue
-	)
-
-	if repaired_count <= 0:
-		return 0
-
-	broken_fences_in_repair_queue -= repaired_count
-	fences_available += repaired_count
-
-	fence_repair_queue_changed.emit(
-		broken_fences_in_repair_queue
-	)
-
-	fence_inventory_changed.emit(fences_available)
-
-	return repaired_count
-
 func get_fence_world_position(
 	orientation: String,
 	grid_edge: Vector2i
@@ -3209,7 +2742,6 @@ func load_save_data(data: Dictionary) -> void:
 		int(data.get("broken_pesticide_turrets_in_repair_queue", 0))
 	)
 	pesticide_turrets_available += legacy_broken_turret_queue
-	broken_pesticide_turrets_in_repair_queue = 0
 
 	damaged_pesticide_turret_repair_cost_scrap = int(
 		data.get(
@@ -3241,7 +2773,6 @@ func load_save_data(data: Dictionary) -> void:
 		int(data.get("broken_nightlights_in_repair_queue", 0))
 	)
 	nightlights_available += legacy_broken_nightlight_queue
-	broken_nightlights_in_repair_queue = 0
 
 	nightlight_max_integrity = float(
 		data.get("nightlight_max_integrity", nightlight_max_integrity)
@@ -3281,7 +2812,6 @@ func load_save_data(data: Dictionary) -> void:
 		int(data.get("broken_fences_in_repair_queue", 0))
 	)
 	fences_available += legacy_broken_fence_queue
-	broken_fences_in_repair_queue = 0
 
 	fence_max_health = float(
 		data.get("fence_max_health", fence_max_health)
@@ -3430,19 +2960,8 @@ func load_save_data(data: Dictionary) -> void:
 
 	inventory_changed.emit(pesticide_turrets_available)
 	nightlight_inventory_changed.emit(nightlights_available)
-	nightlight_repair_queue_changed.emit(
-		broken_nightlights_in_repair_queue
-	)
-
-	turret_repair_queue_changed.emit(
-		broken_pesticide_turrets_in_repair_queue
-	)
 
 	fence_inventory_changed.emit(fences_available)
-
-	fence_repair_queue_changed.emit(
-		broken_fences_in_repair_queue
-	)
 
 	fence_stats_changed.emit()
 	fence_navigation_changed.emit()
@@ -3466,7 +2985,6 @@ func reset_for_new_game() -> void:
 	pesticide_turret_max_integrity = base_pesticide_turret_max_integrity
 	pesticide_turret_max_durability = base_pesticide_turret_max_durability
 	pesticide_turrets_available = base_max_pesticide_turrets
-	broken_pesticide_turrets_in_repair_queue = 0
 	placed_turrets.clear()
 
 	damaged_pesticide_turret_repair_cost_scrap = (
@@ -3482,8 +3000,6 @@ func reset_for_new_game() -> void:
 
 	fences_available = base_starting_fences
 	nightlights_available = base_starting_nightlights
-	broken_nightlights_in_repair_queue = 0
-	broken_fences_in_repair_queue = 0
 	placed_fences.clear()
 	placed_nightlights.clear()
 
@@ -3508,15 +3024,8 @@ func reset_for_new_game() -> void:
 
 	inventory_changed.emit(pesticide_turrets_available)
 	nightlight_inventory_changed.emit(nightlights_available)
-	nightlight_repair_queue_changed.emit(
-		broken_nightlights_in_repair_queue
-	)
-	turret_repair_queue_changed.emit(
-		broken_pesticide_turrets_in_repair_queue
-	)
 
 	fence_inventory_changed.emit(fences_available)
-	fence_repair_queue_changed.emit(broken_fences_in_repair_queue)
 
 	fence_stats_changed.emit()
 	fence_navigation_changed.emit()

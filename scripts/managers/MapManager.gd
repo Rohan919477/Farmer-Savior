@@ -34,11 +34,24 @@ func _ready() -> void:
 	if map_menu != null:
 		if map_menu.has_signal("travel_requested"):
 			if not map_menu.travel_requested.is_connected(
-				travel_to_location
+				_on_map_menu_travel_requested
 			):
-				map_menu.travel_requested.connect(travel_to_location)
+				map_menu.travel_requested.connect(
+					_on_map_menu_travel_requested
+				)
 
 	load_location("farm", "DefaultSpawn")
+
+func _on_map_menu_travel_requested(location_id: String) -> void:
+	# Route player-selected Map Table travel through Main so global gameplay
+	# rules (including active-night restrictions) cannot be bypassed by the UI.
+	var main_node: Node = get_tree().get_first_node_in_group("main")
+
+	if main_node != null and main_node.has_method("travel_to_location"):
+		main_node.call("travel_to_location", location_id)
+		return
+
+	travel_to_location(location_id)
 
 func open_map_menu() -> void:
 	if map_menu == null:

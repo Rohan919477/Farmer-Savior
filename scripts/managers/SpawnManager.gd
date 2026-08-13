@@ -510,12 +510,31 @@ func clear_active_enemies() -> void:
 	active_enemies.clear()
 
 func _on_location_loaded(location_id: String, loaded_map: Node) -> void:
+	# Temporary safeguard for the single-map architecture. Until the Farm is
+	# kept loaded persistently, entering the House unloads every farm enemy.
+	# Return living enemies to the remaining quota before clearing their nodes
+	# so house entry cannot erase part of the night's required wave.
+	if normal_night_active and location_id != "farm":
+		var living_enemies_to_requeue: int = get_living_enemy_count()
+
+		if living_enemies_to_requeue > 0:
+			normal_night_spawns_remaining += living_enemies_to_requeue
+
+			print(
+				"[Night] Farm unloaded. Requeued ",
+				living_enemies_to_requeue,
+				" living enemies until persistent simulation is enabled."
+			)
+
 	clear_active_enemies()
 
 	if location_id == "farm":
 		active_farm_map = loaded_map
 	else:
 		active_farm_map = null
+
+	if normal_night_active:
+		_emit_normal_night_enemy_count()
 
 func _on_midnight_reached() -> void:
 	cleanup_cleared_emitted = false
@@ -592,6 +611,13 @@ func is_normal_night_finished() -> bool:
 
 func _process_normal_night(delta: float) -> void:
 	if not normal_night_active:
+		return
+
+	# During the temporary single-map phase, entering the House unloads the
+	# Farm. Keep the quota active but pause spawning until the Farm is loaded
+	# again. The next persistent-world phase will remove this pause.
+	if active_farm_map == null or not is_instance_valid(active_farm_map):
+		_emit_normal_night_enemy_count_if_changed()
 		return
 
 	normal_night_spawn_timer -= delta

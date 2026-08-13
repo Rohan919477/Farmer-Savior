@@ -36,8 +36,8 @@ const TAB_CONTENT: Dictionary = {
 	TAB_FENCE: {
 		"title": "FENCE SYSTEM",
 		"subtitle": (
-			"Choose whether your defences survive pressure "
-			+ "or recover faster between attacks."
+			"Upgrade fence durability and field-repair efficiency, "
+			+ "or craft new fence sections for the War Table."
 		)
 	},
 	TAB_TURRETS: {
@@ -147,10 +147,6 @@ const TAB_CONTENT: Dictionary = {
 
 @onready var craft_fence_button: Button = (
 	$RootControl/WorkshopPanel/ContentPanel/UpgradeInfoPanel/CraftFenceButton
-)
-
-@onready var fence_service_status_label: Label = (
-	$RootControl/WorkshopPanel/ContentPanel/UpgradeInfoPanel/FenceServiceStatusLabel
 )
 
 @onready var close_button: Button = (
@@ -349,32 +345,6 @@ func _find_defense_manager() -> void:
 
 	defense_manager = found_defense_manager
 
-	var inventory_callback := Callable(
-		self,
-		"_on_fence_inventory_changed"
-	)
-
-	if not defense_manager.fence_inventory_changed.is_connected(
-		inventory_callback
-	):
-		defense_manager.fence_inventory_changed.connect(
-			inventory_callback
-		)
-
-	if defense_manager.has_signal("nightlight_inventory_changed"):
-		var nightlight_inventory_callback := Callable(
-			self,
-			"_on_nightlight_inventory_changed"
-		)
-
-		if not defense_manager.nightlight_inventory_changed.is_connected(
-			nightlight_inventory_callback
-		):
-			defense_manager.nightlight_inventory_changed.connect(
-				nightlight_inventory_callback
-			)
-
-
 func _refresh_layout_and_content() -> void:
 	_apply_sidebar_layout()
 	_refresh_content()
@@ -536,15 +506,6 @@ func _layout_upgrade_info_panel() -> void:
 		38.0
 	)
 
-	fence_service_status_label.position = Vector2(
-		horizontal_padding,
-		210.0
-	)
-	fence_service_status_label.size = Vector2(
-		content_width,
-		44.0
-	)
-
 	var button_height: float = 34.0
 	var bottom_padding: float = 14.0
 
@@ -603,7 +564,6 @@ func _layout_upgrade_info_panel() -> void:
 			horizontal_padding,
 			craft_button_y
 		)
-
 
 func _layout_tab_button(
 	tab_button: Button,
@@ -784,8 +744,6 @@ func _refresh_content() -> void:
 		content_body_label.text = str(tab_data.get("body", ""))
 
 		craft_fence_button.visible = false
-		fence_service_status_label.visible = false
-
 
 		return
 
@@ -811,11 +769,9 @@ func _refresh_content() -> void:
 	var is_fence_tab: bool = current_tab == TAB_FENCE
 
 	craft_fence_button.visible = is_fence_tab
-	fence_service_status_label.visible = is_fence_tab
-
 
 	if is_fence_tab:
-		_refresh_fence_service_controls()
+		_refresh_fence_craft_controls()
 
 func _refresh_selected_upgrade_panel() -> void:
 	if upgrade_manager == null:
@@ -895,7 +851,7 @@ func _refresh_selected_upgrade_panel() -> void:
 		_:
 			purchase_button.text = "UNAVAILABLE"
 			
-func _refresh_fence_service_controls() -> void:
+func _refresh_fence_craft_controls() -> void:
 	if current_tab != TAB_FENCE:
 		return
 
@@ -904,24 +860,10 @@ func _refresh_fence_service_controls() -> void:
 	if defense_manager == null:
 		craft_fence_button.disabled = true
 		craft_fence_button.text = "SYSTEM UNAVAILABLE"
-		fence_service_status_label.text = (
+		craft_fence_button.tooltip_text = (
 			"Defense inventory data is unavailable."
 		)
 		return
-
-	var stored_fences: int = defense_manager.get_fences_available()
-	var stored_nightlights: int = 0
-
-	if defense_manager.has_method("get_nightlights_available"):
-		stored_nightlights = int(
-			defense_manager.call("get_nightlights_available")
-		)
-
-	fence_service_status_label.text = (
-		"Fences: %d stored\n"
-		+ "NightLights: %d stored\n\n"
-		+ "Damaged and broken defenses are repaired only in the field."
-	) % [stored_fences, stored_nightlights]
 
 	var craft_scrap_cost: int = (
 		defense_manager.get_fence_craft_scrap_cost()
@@ -955,19 +897,7 @@ func _on_craft_fence_pressed() -> void:
 		return
 
 	defense_manager.craft_fence_in_workshop()
-	_refresh_fence_service_controls()
-
-func _on_fence_inventory_changed(
-	_fences_available: int
-) -> void:
-	if workshop_open and current_tab == TAB_FENCE:
-		_refresh_fence_service_controls()
-
-func _on_nightlight_inventory_changed(
-	_nightlights_available: int
-) -> void:
-	if workshop_open and current_tab == TAB_FENCE:
-		_refresh_fence_service_controls()
+	_refresh_fence_craft_controls()
 
 func _get_default_upgrade_for_tree(tree_id: String) -> String:
 	match tree_id:
