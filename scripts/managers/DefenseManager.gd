@@ -1735,6 +1735,21 @@ func is_valid_fence_edge(
 		FENCE_ORIENTATION_HORIZONTAL, FENCE_ORIENTATION_VERTICAL
 	)
 
+func is_perimeter_fence_edge(
+	orientation: String,
+	grid_edge: Vector2i
+) -> bool:
+	if not is_valid_fence_edge(orientation, grid_edge):
+		return false
+
+	if orientation == FENCE_ORIENTATION_HORIZONTAL:
+		return grid_edge.y == 0 or grid_edge.y == grid_rows
+
+	if orientation == FENCE_ORIENTATION_VERTICAL:
+		return grid_edge.x == 0 or grid_edge.x == grid_columns
+
+	return false
+
 func get_fence_key(
 	orientation: String,
 	grid_edge: Vector2i
@@ -2555,16 +2570,16 @@ func damage_fence(
 		old_state != FENCE_STATE_BROKEN
 		and new_state == FENCE_STATE_BROKEN
 	):
-		var fence_data: Dictionary = get_fence_data(fence_key)
+		var broken_fence_data: Dictionary = get_fence_data(fence_key)
 
-		var grid_edge: Vector2i = fence_data.get(
+		var grid_edge: Vector2i = broken_fence_data.get(
 			"grid_edge",
 			Vector2i.ZERO
 		)
 
 		_log_telemetry("fence_broken", {
 			"fence_key": fence_key,
-			"orientation": str(fence_data.get("orientation", "")),
+			"orientation": str(broken_fence_data.get("orientation", "")),
 			"grid_x": grid_edge.x,
 			"grid_y": grid_edge.y,
 			"damage_amount": damage_amount,
