@@ -5,6 +5,7 @@ const SEED_BASIC: String = "basic"
 const SEED_MUTANT: String = "mutant"
 
 @onready var root_control: Control = $RootControl
+@onready var overlay: ColorRect = $RootControl/Overlay
 @onready var seed_panel: Control = $RootControl/SeedPanel
 
 @onready var title_label: Label = $RootControl/SeedPanel/TitleLabel
@@ -74,7 +75,11 @@ func _ready() -> void:
 	visible = false
 	_apply_ui_style()
 
+	# The planting UI is modal. The overlay catches every click outside the
+	# active planting/inspection panel so gameplay and HUD controls underneath
+	# remain visible but cannot be interacted with.
 	root_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	seed_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

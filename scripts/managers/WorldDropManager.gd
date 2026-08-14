@@ -13,11 +13,19 @@ var next_drop_serial: int = 1
 func _ready() -> void:
 	add_to_group("world_drop_manager")
 
-	if map_manager != null and map_manager.has_signal("location_loaded"):
-		if not map_manager.location_loaded.is_connected(_on_location_loaded):
-			map_manager.location_loaded.connect(_on_location_loaded)
+	if map_manager != null:
+		if map_manager.has_signal("persistent_map_loaded"):
+			if not map_manager.persistent_map_loaded.is_connected(
+				_on_persistent_map_loaded
+			):
+				map_manager.persistent_map_loaded.connect(
+					_on_persistent_map_loaded
+				)
+		elif map_manager.has_signal("location_loaded"):
+			if not map_manager.location_loaded.is_connected(_on_location_loaded):
+				map_manager.location_loaded.connect(_on_location_loaded)
 
-	call_deferred("_rebuild_current_location")
+	call_deferred("_rebuild_all_loaded_locations")
 
 
 func register_drop(
@@ -29,6 +37,10 @@ func register_drop(
 		return preferred_drop_id
 
 	var map_id: String = preferred_map_id
+
+	if map_id.is_empty():
+		map_id = _get_location_id_for_node(drop_node)
+
 	if map_id.is_empty():
 		map_id = _get_current_location_id()
 
@@ -42,7 +54,7 @@ func register_drop(
 		_advance_serial_past_drop_id(drop_id)
 
 	var map_drops: Dictionary = drops_by_map.get(map_id, {})
-	map_drops[drop_id] = _build_drop_record(drop_node)
+	map_drops[drop_id] = _build_drop_record(drop_node, map_id)
 	drops_by_map[map_id] = map_drops
 
 	return drop_id
@@ -58,9 +70,9 @@ func update_drop(
 
 	var map_drops: Dictionary = drops_by_map.get(map_id, {})
 	if not map_drops.has(drop_id):
-		map_drops[drop_id] = _build_drop_record(drop_node)
+		map_drops[drop_id] = _build_drop_record(drop_node, map_id)
 	else:
-		map_drops[drop_id] = _build_drop_record(drop_node)
+		map_drops[drop_id] = _build_drop_record(drop_node, map_id)
 
 	drops_by_map[map_id] = map_drops
 
@@ -84,7 +96,7 @@ func remove_drop(map_id: String, drop_id: String) -> void:
 func reset_for_new_game() -> void:
 	drops_by_map.clear()
 	next_drop_serial = 1
-	_clear_runtime_drops_from_current_map()
+	_clear_runtime_drops_from_all_loaded_maps()
 	print("[World Drops] Reset for new game.")
 
 
@@ -177,7 +189,7 @@ func load_save_data(data: Dictionary) -> void:
 		if not map_drops.is_empty():
 			drops_by_map[map_id] = map_drops
 
-	_rebuild_current_location()
+	_rebuild_all_loaded_locations()
 
 	print(
 		"[World Drops] Loaded persistent drops: ",
@@ -185,8 +197,46 @@ func load_save_data(data: Dictionary) -> void:
 	)
 
 
-func _on_location_loaded(location_id: String, loaded_map: Node) -> void:
+func _on_persistent_map_loaded(
+	location_id: String,
+	loaded_map: Node
+) -> void:
 	_rebuild_drops_for_location(location_id, loaded_map)
+
+
+func _on_location_loaded(location_id: String, loaded_map: Node) -> void:
+	# Compatibility path for the old single-map MapManager. Under the
+	# persistent manager this signal is intentionally not used for rebuilding,
+	# because revisiting a loaded map must not destroy/recreate live drops.
+	_rebuild_drops_for_location(location_id, loaded_map)
+
+
+func _rebuild_all_loaded_locations() -> void:
+	if map_manager == null:
+		return
+
+	if map_manager.has_method("get_loaded_location_ids"):
+		var location_ids_variant: Variant = map_manager.call(
+			"get_loaded_location_ids"
+		)
+
+		if location_ids_variant is Array:
+			for location_id_variant in location_ids_variant:
+				var location_id: String = str(location_id_variant)
+				var loaded_map: Node = null
+
+				if map_manager.has_method("get_loaded_map"):
+					loaded_map = map_manager.call(
+						"get_loaded_map",
+						location_id
+					) as Node
+
+				if loaded_map != null:
+					_rebuild_drops_for_location(location_id, loaded_map)
+
+		return
+
+	_rebuild_current_location()
 
 
 func _rebuild_current_location() -> void:
@@ -247,10 +297,22 @@ func _rebuild_drops_for_location(
 			)
 
 		drop_parent.add_child(drop_node)
-		drop_node.global_position = Vector2(
+
+		var map_local_position := Vector2(
 			float(drop_data.get("position_x", 0.0)),
 			float(drop_data.get("position_y", 0.0))
 		)
+
+		if map_manager != null and map_manager.has_method(
+			"map_to_world_position"
+		):
+			drop_node.global_position = map_manager.call(
+				"map_to_world_position",
+				location_id,
+				map_local_position
+			)
+		else:
+			drop_node.global_position = map_local_position
 
 
 func _clear_runtime_drops_from_current_map() -> void:
@@ -265,6 +327,14 @@ func _clear_runtime_drops_from_current_map() -> void:
 		_clear_runtime_drops_from_map(current_map)
 
 
+func _clear_runtime_drops_from_all_loaded_maps() -> void:
+	for drop_node in get_tree().get_nodes_in_group("resource_drop"):
+		if drop_node == null or not is_instance_valid(drop_node):
+			continue
+
+		drop_node.queue_free()
+
+
 func _clear_runtime_drops_from_map(loaded_map: Node) -> void:
 	if loaded_map == null:
 		return
@@ -277,7 +347,10 @@ func _clear_runtime_drops_from_map(loaded_map: Node) -> void:
 			drop_node.queue_free()
 
 
-func _build_drop_record(drop_node: Node2D) -> Dictionary:
+func _build_drop_record(
+	drop_node: Node2D,
+	map_id: String
+) -> Dictionary:
 	var resource_type: String = "seeds"
 	var amount: int = 1
 
@@ -287,11 +360,22 @@ func _build_drop_record(drop_node: Node2D) -> Dictionary:
 	if "amount" in drop_node:
 		amount = maxi(int(drop_node.get("amount")), 1)
 
+	var stored_position: Vector2 = drop_node.global_position
+
+	if map_manager != null and map_manager.has_method(
+		"world_to_map_position"
+	):
+		stored_position = map_manager.call(
+			"world_to_map_position",
+			map_id,
+			drop_node.global_position
+		)
+
 	return {
 		"resource_type": resource_type,
 		"amount": amount,
-		"position_x": drop_node.global_position.x,
-		"position_y": drop_node.global_position.y
+		"position_x": stored_position.x,
+		"position_y": stored_position.y
 	}
 
 
@@ -303,6 +387,18 @@ func _get_scene_for_resource_type(resource_type: String) -> PackedScene:
 			return SCRAP_DROP_SCENE
 
 	return null
+
+
+func _get_location_id_for_node(node: Node) -> String:
+	if map_manager == null or node == null:
+		return ""
+
+	if map_manager.has_method("get_location_id_for_node"):
+		return str(
+			map_manager.call("get_location_id_for_node", node)
+		)
+
+	return ""
 
 
 func _get_current_location_id() -> String:

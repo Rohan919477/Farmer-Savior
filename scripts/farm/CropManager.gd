@@ -95,11 +95,19 @@ func _bind_initial_farm_map() -> void:
 	rebuild_crop_slots()
 
 func _on_location_loaded(location_id: String, loaded_map: Node) -> void:
-	if location_id == "farm":
-		active_farm_map = loaded_map
-		rebuild_crop_slots()
-	else:
-		active_farm_map = null
+	# Keep the persistent Farm bound while the player visits another map.
+	if location_id != "farm":
+		return
+
+	if (
+		active_farm_map == loaded_map
+		and active_farm_map != null
+		and is_instance_valid(active_farm_map)
+	):
+		return
+
+	active_farm_map = loaded_map
+	rebuild_crop_slots()
 
 func _on_day_started(day_number: int) -> void:
 	crop_growth_updated.emit(day_number)

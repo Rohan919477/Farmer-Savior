@@ -12,11 +12,11 @@
 [ext_resource type="PackedScene" uid="uid://cui2n8gm2quba" path="res://scenes/enemies/TutorialBoss.tscn" id="9_m1khv"]
 [ext_resource type="PackedScene" uid="uid://cjbffm7mgxfw" path="res://scenes/player/player.tscn" id="9_ostsq"]
 [ext_resource type="PackedScene" uid="uid://c063t17x2gye3" path="res://scenes/maps/HouseInterior_Greybox.tscn" id="11_tck0d"]
-[ext_resource type="PackedScene" uid="uid://c08ccyc3an8ho" path="res://scenes/maps/NearbyField_Greybox.tscn" id="12_2tpxt"]
 [ext_resource type="Script" uid="uid://cra8q1k5xy7ur" path="res://scripts/system/TelemetryManager.gd" id="12_gwlw1"]
 [ext_resource type="Script" uid="uid://csxv3ieslc044" path="res://scripts/managers/MapManager.gd" id="12_p5fgu"]
 [ext_resource type="PackedScene" uid="uid://diuay65tqcn3n" path="res://scenes/ui/MapMenu.tscn" id="13_jsdfw"]
 [ext_resource type="PackedScene" uid="uid://7wa80ghpbegr" path="res://scenes/ui/HUD.tscn" id="13_tck0d"]
+[ext_resource type="PackedScene" uid="uid://dkvn00k5ys0ei" path="res://scenes/maps/ForestCamp_Greybox.tscn" id="14_gwlw1"]
 [ext_resource type="Script" uid="uid://ci3g6spfw4qu7" path="res://scripts/managers/DefenseManager.gd" id="16_hjnkw"]
 [ext_resource type="PackedScene" uid="uid://b0cqov81uwfb1" path="res://scenes/farm/PesticideTurret.tscn" id="17_rikml"]
 [ext_resource type="Script" uid="uid://b3ji3er4c3v0y" path="res://scripts/managers/WorldLightingManager.gd" id="18_d8523"]
@@ -67,7 +67,7 @@ script = ExtResource("12_gwlw1")
 script = ExtResource("12_p5fgu")
 farm_scene = ExtResource("8_ko0rf")
 house_scene = ExtResource("11_tck0d")
-nearby_field_scene = ExtResource("12_2tpxt")
+forest_camp_scene = ExtResource("14_gwlw1")
 map_container_path = NodePath("../MapContainer")
 player_path = NodePath("../Player")
 map_menu_path = NodePath("../MapMenu")

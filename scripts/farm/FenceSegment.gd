@@ -31,6 +31,7 @@ var health_ratio: float = 1.0
 var player_in_repair_range: Node = null
 
 var repair_debug_session_active: bool = false
+var repair_hold_cost_paid: bool = false
 var collision_enable_pending_until_player_clear: bool = false
 
 func _ready() -> void:
@@ -80,14 +81,21 @@ func _physics_process(delta: float) -> void:
 	_position_world_ui()
 	_update_repair_prompt()
 
+	var repair_input_held: bool = Input.is_action_pressed("repair_fence")
+
 	if not _can_repair_now():
 		repair_debug_session_active = false
+
+		if not repair_input_held:
+			repair_hold_cost_paid = false
+
 		return
 
-	if Input.is_action_pressed("repair_fence"):
+	if repair_input_held:
 		_repair_while_holding(delta)
 	else:
 		repair_debug_session_active = false
+		repair_hold_cost_paid = false
 
 func _setup_collision() -> void:
 	var rectangle_shape: RectangleShape2D = (
@@ -263,7 +271,6 @@ func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
 		fence_state != DefenseManager.FENCE_STATE_PERFECT
 		and player_in_repair_range == player_node
-		and _is_daytime()
 		and not _is_gameplay_input_blocked()
 	)
 
@@ -284,19 +291,6 @@ func _can_repair_now() -> bool:
 				player_in_repair_range
 			)
 		)
-
-	return true
-
-func _is_daytime() -> bool:
-	var time_manager: Node = get_tree().get_first_node_in_group(
-		"time_manager"
-	)
-
-	if time_manager == null:
-		return true
-
-	if time_manager.has_method("is_nighttime"):
-		return not bool(time_manager.call("is_nighttime"))
 
 	return true
 
@@ -372,7 +366,10 @@ func _repair_while_holding(delta: float) -> void:
 		defense_manager.is_fence_repair_cost_paid(fence_key)
 	)
 
-	if not repair_cost_was_paid:
+	if repair_cost_was_paid:
+		repair_hold_cost_paid = true
+
+	if not repair_cost_was_paid and not repair_hold_cost_paid:
 		var repair_cost: int = _get_repair_cost()
 
 		if repair_cost > 0:
@@ -404,6 +401,7 @@ func _repair_while_holding(delta: float) -> void:
 				repair_debug_session_active = false
 				return
 
+		repair_hold_cost_paid = true
 		defense_manager.mark_fence_repair_cost_paid(fence_key)
 
 	if not repair_debug_session_active:
@@ -479,6 +477,8 @@ func _on_repair_area_body_entered(body: Node2D) -> void:
 func _on_repair_area_body_exited(body: Node2D) -> void:
 	if body == player_in_repair_range:
 		player_in_repair_range = null
+		repair_debug_session_active = false
+		repair_hold_cost_paid = false
 
 func _on_fence_state_changed(
 	changed_fence_key: String,

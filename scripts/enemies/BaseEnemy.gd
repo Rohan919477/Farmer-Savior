@@ -73,6 +73,14 @@ func _ready() -> void:
 		as DefenseManager
 	)
 
+	if defense_manager != null:
+		if not defense_manager.fence_navigation_changed.is_connected(
+			_on_fence_navigation_changed
+		):
+			defense_manager.fence_navigation_changed.connect(
+				_on_fence_navigation_changed
+			)
+
 	# Fences remain on Collision Layer 3.
 	collision_mask |= FENCE_COLLISION_MASK
 
@@ -81,6 +89,16 @@ func _ready() -> void:
 	if damage_area != null:
 		damage_area.body_entered.connect(_on_damage_area_body_entered)
 		damage_area.body_exited.connect(_on_damage_area_body_exited)
+
+func _on_fence_navigation_changed() -> void:
+	# Fence placement/removal/repositioning can rebuild the physical fence
+	# nodes. Any cached node reference may therefore point to an instance that
+	# has just been queued for deletion. Clear those references immediately and
+	# force target selection to run again on the next physics tick.
+	current_fence_target = null
+	current_breach_target = null
+	current_breach_crossing = false
+	target_refresh_timer = 0.0
 
 func _physics_process(delta: float) -> void:
 	if _is_tutorial_world_soft_paused():
@@ -446,13 +464,25 @@ func _refresh_player_reference() -> void:
 	player = get_tree().get_first_node_in_group("player") as Node2D
 
 func _refresh_primary_target() -> void:
-	if player == null:
-		current_primary_target = _get_nearest_attackable_placeable()
-		return
-
 	var nearest_placeable: Node2D = (
 		_get_nearest_attackable_placeable()
 	)
+
+	# With persistent maps the Player node remains valid while physically
+	# located inside the House/Forest Camp. Enemies on the Farm must not chase
+	# that player across the large world-slot gap. Off-screen they continue
+	# attacking farm defenses, then advance toward the farm centre if no
+	# attackable placeable remains.
+	if not _is_player_on_farm():
+		if nearest_placeable != null:
+			current_primary_target = nearest_placeable
+		else:
+			current_primary_target = _get_persistent_farm_objective()
+		return
+
+	if player == null:
+		current_primary_target = nearest_placeable
+		return
 
 	if nearest_placeable == null:
 		current_primary_target = player
@@ -475,6 +505,35 @@ func _refresh_primary_target() -> void:
 		return
 
 	current_primary_target = player
+
+func _is_player_on_farm() -> bool:
+	if player == null or not is_instance_valid(player):
+		return false
+
+	var map_manager: Node = get_tree().get_first_node_in_group("map_manager")
+
+	if map_manager == null:
+		return true
+
+	if map_manager.has_method("get_current_location_id"):
+		return str(map_manager.call("get_current_location_id")) == "farm"
+
+	if "current_location_id" in map_manager:
+		return str(map_manager.get("current_location_id")) == "farm"
+
+	return true
+
+func _get_persistent_farm_objective() -> Node2D:
+	# FarmMap's root is centred at the defensive grid origin/extent midpoint,
+	# making it a safe non-damageable navigation objective while the player is
+	# elsewhere. Enemies can still break fences to reach it but cannot damage a
+	# player on another map.
+	var farm_map: Node = get_tree().get_first_node_in_group("farm_map")
+
+	if farm_map is Node2D:
+		return farm_map as Node2D
+
+	return null
 
 func _get_nearest_attackable_placeable() -> Node2D:
 	var nearest_placeable: Node2D = null
@@ -1079,8 +1138,17 @@ func _get_adjacent_intact_fence_to_expand_breach(
 
 	return best_fence
 
-func _is_broken_fence(fence: Node2D) -> bool:
+func _is_broken_fence(fence) -> bool:
+	# Keep this parameter untyped intentionally. A cached Godot Object can
+	# become a "previously freed" Variant between physics frames. A Node2D
+	# parameter would reject that Variant before this safety check can run.
 	if fence == null or not is_instance_valid(fence):
+		return false
+
+	if not (fence is Node2D):
+		return false
+
+	if fence.is_queued_for_deletion():
 		return false
 
 	if not fence.has_method("is_broken_for_navigation"):
@@ -1088,8 +1156,17 @@ func _is_broken_fence(fence: Node2D) -> bool:
 
 	return bool(fence.call("is_broken_for_navigation"))
 
-func _is_intact_fence(fence: Node2D) -> bool:
+func _is_intact_fence(fence) -> bool:
+	# Same stale-reference protection as _is_broken_fence(). This specifically
+	# prevents War Table fence changes from crashing an enemy that targeted a
+	# fence node immediately before DefenseManager rebuilt the fence visuals.
 	if fence == null or not is_instance_valid(fence):
+		return false
+
+	if not (fence is Node2D):
+		return false
+
+	if fence.is_queued_for_deletion():
 		return false
 
 	if not fence.has_method("is_broken_for_navigation"):

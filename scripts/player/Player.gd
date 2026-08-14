@@ -1048,9 +1048,31 @@ func show_game_over_after_death() -> void:
 # ---------------------------------------------------------
 
 func get_save_data() -> Dictionary:
+	var stored_position: Vector2 = global_position
+	var position_space: String = "world"
+
+	var map_manager: Node = get_tree().get_first_node_in_group("map_manager")
+
+	if (
+		map_manager != null
+		and map_manager.has_method("get_current_location_id")
+		and map_manager.has_method("world_to_map_position")
+	):
+		var location_id: String = str(
+			map_manager.call("get_current_location_id")
+		)
+
+		stored_position = map_manager.call(
+			"world_to_map_position",
+			location_id,
+			global_position
+		)
+		position_space = "map_local"
+
 	var save_data: Dictionary = {
-		"position_x": global_position.x,
-		"position_y": global_position.y,
+		"position_x": stored_position.x,
+		"position_y": stored_position.y,
+		"position_space": position_space,
 		"current_health": current_health,
 		"max_health": max_health,
 		"move_speed": move_speed,
@@ -1103,7 +1125,7 @@ func load_save_data(data: Dictionary) -> void:
 		max_health
 	)
 
-	global_position = Vector2(
+	var saved_position := Vector2(
 		float(
 			data.get(
 				"position_x",
@@ -1117,6 +1139,38 @@ func load_save_data(data: Dictionary) -> void:
 			)
 		)
 	)
+
+	var loaded_map_manager: Node = get_tree().get_first_node_in_group(
+		"map_manager"
+	)
+
+	if (
+		loaded_map_manager != null
+		and loaded_map_manager.has_method("get_current_location_id")
+		and loaded_map_manager.has_method("map_to_world_position")
+	):
+		var loaded_location_id: String = str(
+			loaded_map_manager.call("get_current_location_id")
+		)
+
+		var position_space: String = str(
+			data.get("position_space", "legacy_map_local")
+		)
+
+		# Old saves were made while only one map existed at world origin. Their
+		# saved world coordinates are therefore also valid map-local coordinates.
+		# Treating legacy positions this way migrates saves made away from the
+		# Farm to their new persistent world slots automatically.
+		if position_space != "world":
+			global_position = loaded_map_manager.call(
+				"map_to_world_position",
+				loaded_location_id,
+				saved_position
+			)
+		else:
+			global_position = saved_position
+	else:
+		global_position = saved_position
 
 	facing_direction = Vector2(
 		float(

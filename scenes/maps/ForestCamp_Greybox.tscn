@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://c08ccyc3an8ho"]
+[gd_scene format=3 uid="uid://dkvn00k5ys0ei"]
 
 [ext_resource type="Script" uid="uid://btln4qcdwmaeh" path="res://scripts/maps/InteractArea.gd" id="1_epjd6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_epjd6"]
 size = Vector2(120, 90)
 
-[node name="NearbyField_Greybox" type="Node2D" unique_id=968322687]
+[node name="ForestCamp_Greybox" type="Node2D" unique_id=968322687]
 
 [node name="Ground" type="ColorRect" parent="." unique_id=286360057]
 offset_left = -800.0

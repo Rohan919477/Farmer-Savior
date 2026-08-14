@@ -22,7 +22,7 @@ const HOUSE_LIGHT_Z_INDEX: int = 30
 @onready var map_manager: Node = $MapManager
 @onready var time_manager: Node = $TimeManager
 @onready var hud: CanvasLayer = $HUD
-@onready var map_menu: Control = $MapMenu
+@onready var map_menu: CanvasLayer = $MapMenu
 @onready var defense_manager: DefenseManager = $DefenseManager
 @onready var defense_placement_ui: DefensePlacementUI = $DefensePlacementUI
 @onready var spawn_manager: Node = $SpawnManager
@@ -865,8 +865,9 @@ func travel_to_location(location_id: String) -> void:
 
 	if normal_night_state == NIGHT_STATE_COMBAT:
 		# During an active normal defense wave the player may move freely
-		# between the Farm and House. Other map travel remains blocked until
-		# the later persistent-world/multi-scene redesign is in place.
+		# between the Farm and House. The Farm now keeps simulating while the
+		# player is indoors; longer-distance travel remains intentionally blocked
+		# by the night gameplay rule.
 		if location_id == "farm" or location_id == "house":
 			close_workshop()
 			close_defense_placement()

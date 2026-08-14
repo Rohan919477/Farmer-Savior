@@ -11,6 +11,13 @@ signal day_started(day_number: int)
 
 var day_number: int = 1
 var current_minutes: float = 0.0
+
+# Visual lighting time is deliberately separate from the gameplay clock.
+# Normal post-tutorial defense waves freeze the gameplay clock at 18:00 so
+# enemy quota, not midnight, decides when the night is cleared. Lighting still
+# advances toward deep night so the world continues becoming darker.
+var lighting_minutes: float = 0.0
+
 var phase: String = "day"
 var night_started_today: bool = false
 
@@ -18,6 +25,7 @@ func _ready() -> void:
 	add_to_group("time_manager")
 
 	current_minutes = float(start_hour * 60)
+	lighting_minutes = current_minutes
 	phase = "day"
 	night_started_today = false
 
@@ -27,23 +35,36 @@ func _process(delta: float) -> void:
 	if _is_tutorial_clock_paused():
 		return
 
-	# Normal defense nights are quota-based, not clock-based. Once the
-	# 18:00 handoff starts, the wave itself decides when the night is over.
+	# Normal defense nights are quota-based, not clock-based. The gameplay
+	# clock remains at the 18:00 handoff, but the lighting clock continues to
+	# progress independently until it reaches the deepest-night value at 24:00.
 	if _should_pause_for_normal_night():
+		_advance_normal_night_lighting(delta)
 		return
 
 	if phase == "night_cleanup":
 		return
 
 	current_minutes += minutes_per_real_second * delta
+	lighting_minutes = current_minutes
 
 	if current_minutes >= 24.0 * 60.0:
 		current_minutes = 24.0 * 60.0
+		lighting_minutes = current_minutes
 		start_night_cleanup()
 		return
 
 	check_phase_change()
 	emit_time_changed()
+
+func _advance_normal_night_lighting(delta: float) -> void:
+	if phase != "night":
+		return
+
+	lighting_minutes = minf(
+		24.0 * 60.0,
+		lighting_minutes + minutes_per_real_second * delta
+	)
 
 func check_phase_change() -> void:
 	if phase == "day" and current_minutes >= float(night_start_hour * 60):
@@ -53,6 +74,7 @@ func check_phase_change() -> void:
 func start_night() -> void:
 	phase = "night"
 	night_started_today = true
+	lighting_minutes = maxf(lighting_minutes, current_minutes)
 
 	print("Night started at 18:00.")
 	night_started.emit()
@@ -74,6 +96,7 @@ func complete_night_and_start_new_day() -> void:
 
 	day_number += 1
 	current_minutes = float(start_hour * 60)
+	lighting_minutes = current_minutes
 	phase = "day"
 	night_started_today = false
 
@@ -102,11 +125,15 @@ func get_current_day_number() -> int:
 func get_current_minutes() -> float:
 	return current_minutes
 
+func get_lighting_minutes() -> float:
+	return lighting_minutes
+
 func set_time_of_day(hour: int, minute: int = 0) -> void:
 	var clamped_hour: int = clampi(hour, 0, 24)
 	var clamped_minute: int = clampi(minute, 0, 59)
 
 	current_minutes = float(clamped_hour * 60 + clamped_minute)
+	lighting_minutes = current_minutes
 
 	if current_minutes >= 24.0 * 60.0:
 		current_minutes = 24.0 * 60.0
@@ -174,6 +201,7 @@ func get_save_data() -> Dictionary:
 	return {
 		"day_number": day_number,
 		"current_minutes": current_minutes,
+		"lighting_minutes": lighting_minutes,
 		"hour": get_hour(),
 		"minute": get_minute(),
 		"phase": phase,
@@ -192,6 +220,15 @@ func load_save_data(data: Dictionary) -> void:
 
 	current_minutes = clampf(
 		current_minutes,
+		0.0,
+		24.0 * 60.0
+	)
+
+	lighting_minutes = float(
+		data.get("lighting_minutes", current_minutes)
+	)
+	lighting_minutes = clampf(
+		lighting_minutes,
 		0.0,
 		24.0 * 60.0
 	)
@@ -223,6 +260,7 @@ func load_save_data(data: Dictionary) -> void:
 func reset_for_new_game() -> void:
 	day_number = 1
 	current_minutes = float(start_hour * 60)
+	lighting_minutes = current_minutes
 	phase = "day"
 	night_started_today = false
 

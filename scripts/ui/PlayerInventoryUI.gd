@@ -138,23 +138,45 @@ func _is_inventory_opening_blocked() -> bool:
 
 	return is_workshop_open()
 
+func _is_crop_planting_menu_open() -> bool:
+	var crop_manager: Node = get_tree().get_first_node_in_group(
+		"crop_manager"
+	)
+
+	if crop_manager == null:
+		return false
+
+	if not crop_manager.has_method("is_planting_menu_open"):
+		return false
+
+	return bool(crop_manager.call("is_planting_menu_open"))
+
 func _update_open_inventory_button_state() -> void:
 	if open_inventory_button == null:
 		return
 
+	var opening_blocked: bool = _is_inventory_opening_blocked()
+	var crop_modal_open: bool = _is_crop_planting_menu_open()
+
+	# During crop planting the bag remains visible underneath the planting
+	# modal so the HUD does not visually disappear. The planting overlay sits
+	# above it and catches mouse input, and the button itself is disabled as a
+	# second safeguard. Other blocking UIs retain the previous hide behavior.
 	var should_show_button: bool = (
 		not inventory_open
-		and not _is_inventory_opening_blocked()
+		and (not opening_blocked or crop_modal_open)
 	)
 
 	open_inventory_button.visible = should_show_button
-	open_inventory_button.disabled = not should_show_button
+	open_inventory_button.disabled = opening_blocked
 
-	if should_show_button:
+	if should_show_button and not opening_blocked:
 		open_inventory_button.mouse_filter = Control.MOUSE_FILTER_STOP
-		open_inventory_button.modulate = Color.WHITE
 	else:
 		open_inventory_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	if should_show_button:
+		open_inventory_button.modulate = Color.WHITE
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("Inventory"):

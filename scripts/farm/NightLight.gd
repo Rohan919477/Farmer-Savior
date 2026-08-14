@@ -36,6 +36,7 @@ var repair_area_shape: CollisionShape2D = null
 var repair_prompt: Label = null
 var player_in_repair_range: Node = null
 var repair_debug_session_active: bool = false
+var repair_hold_cost_paid: bool = false
 
 var base_energy: float = 1.35
 var flicker_time: float = 0.0
@@ -69,10 +70,18 @@ func _process(delta: float) -> void:
 	_update_health_bar()
 	_update_repair_prompt()
 
-	if _can_repair_now() and Input.is_action_pressed("repair_fence"):
+	var repair_input_held: bool = Input.is_action_pressed("repair_fence")
+
+	if _can_repair_now() and repair_input_held:
 		_repair_while_holding(delta)
 	else:
 		repair_debug_session_active = false
+
+	# A continuous hold is one repair attempt. Damage or passive NightLight
+	# wear may reset DefenseManager's persistent repair-cost flag while F is
+	# still held, but that must never charge the player again mid-hold.
+	if not repair_input_held:
+		repair_hold_cost_paid = false
 
 	if nightlight_state == "broken":
 		return
@@ -459,7 +468,6 @@ func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
 		nightlight_state != "perfect"
 		and player_in_repair_range == player_node
-		and _is_daytime()
 		and not _is_gameplay_input_blocked()
 	)
 
@@ -541,7 +549,10 @@ func _repair_while_holding(delta: float) -> void:
 			)
 		)
 
-	if not repair_cost_was_paid:
+	if repair_cost_was_paid:
+		repair_hold_cost_paid = true
+
+	if not repair_cost_was_paid and not repair_hold_cost_paid:
 		var repair_cost: int = _get_repair_cost()
 
 		if repair_cost > 0:
@@ -563,6 +574,8 @@ func _repair_while_holding(delta: float) -> void:
 				repair_prompt.text = "Need %d Scrap" % repair_cost
 				repair_debug_session_active = false
 				return
+
+		repair_hold_cost_paid = true
 
 		if defense_manager.has_method("mark_nightlight_repair_cost_paid"):
 			defense_manager.call(
@@ -647,19 +660,6 @@ func _get_repair_rate() -> float:
 
 	return 20.0
 
-func _is_daytime() -> bool:
-	var time_manager: Node = get_tree().get_first_node_in_group(
-		"time_manager"
-	)
-
-	if time_manager == null:
-		return true
-
-	if time_manager.has_method("is_nighttime"):
-		return not bool(time_manager.call("is_nighttime"))
-
-	return true
-
 func _is_gameplay_input_blocked() -> bool:
 	var main_node: Node = get_tree().get_first_node_in_group("main")
 
@@ -679,6 +679,7 @@ func _on_repair_area_body_exited(body: Node2D) -> void:
 	if body == player_in_repair_range:
 		player_in_repair_range = null
 		repair_debug_session_active = false
+		repair_hold_cost_paid = false
 
 func _update_health_bar() -> void:
 	if health_bar_root == null or health_bar_fill == null:

@@ -51,6 +51,7 @@ var base_modulate: Color = Color.WHITE
 var visual_token: int = 0
 var player_in_repair_range: Node = null
 var repair_debug_session_active: bool = false
+var repair_hold_cost_paid: bool = false
 var blocker_enable_pending_until_player_clear: bool = false
 
 
@@ -100,10 +101,15 @@ func _process(delta: float) -> void:
 	_position_world_ui()
 	_update_repair_prompt()
 
-	if _can_repair_now() and Input.is_action_pressed("repair_fence"):
+	var repair_input_held: bool = Input.is_action_pressed("repair_fence")
+
+	if _can_repair_now() and repair_input_held:
 		_repair_while_holding(delta)
 	else:
 		repair_debug_session_active = false
+
+	if not repair_input_held:
+		repair_hold_cost_paid = false
 
 
 func _setup_visual_layout() -> void:
@@ -238,7 +244,6 @@ func can_be_field_repair_candidate(player_node: Node) -> bool:
 	return (
 		turret_state != DefenseManager.PLACEABLE_STATE_PERFECT
 		and player_in_repair_range == player_node
-		and _is_daytime()
 		and not _is_gameplay_input_blocked()
 	)
 
@@ -322,7 +327,10 @@ func _repair_while_holding(delta: float) -> void:
 			)
 		)
 
-	if not repair_cost_was_paid:
+	if repair_cost_was_paid:
+		repair_hold_cost_paid = true
+
+	if not repair_cost_was_paid and not repair_hold_cost_paid:
 		var repair_cost: int = _get_repair_cost()
 
 		if repair_cost > 0:
@@ -344,6 +352,8 @@ func _repair_while_holding(delta: float) -> void:
 				repair_prompt.text = "Need %d Scrap" % repair_cost
 				repair_debug_session_active = false
 				return
+
+		repair_hold_cost_paid = true
 
 		if defense_manager.has_method(
 			"mark_pesticide_turret_repair_cost_paid"
@@ -431,20 +441,6 @@ func _get_repair_rate() -> float:
 		)
 
 	return 20.0
-
-
-func _is_daytime() -> bool:
-	var time_manager: Node = get_tree().get_first_node_in_group(
-		"time_manager"
-	)
-
-	if time_manager == null:
-		return true
-
-	if time_manager.has_method("is_nighttime"):
-		return not bool(time_manager.call("is_nighttime"))
-
-	return true
 
 
 func _is_gameplay_input_blocked() -> bool:
@@ -878,6 +874,7 @@ func _on_repair_area_body_exited(body: Node2D) -> void:
 	if body == player_in_repair_range:
 		player_in_repair_range = null
 		repair_debug_session_active = false
+		repair_hold_cost_paid = false
 
 
 func _on_turret_condition_changed(

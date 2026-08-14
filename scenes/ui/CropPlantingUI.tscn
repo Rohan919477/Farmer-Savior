@@ -3,14 +3,27 @@
 [ext_resource type="Script" uid="uid://bljm6s43a5ubm" path="res://scripts/ui/CropPlantingUI.gd" id="1_bjr8u"]
 
 [node name="CropPlantingUI" type="CanvasLayer" unique_id=320576508]
-layer = 20
+layer = 40
 script = ExtResource("1_bjr8u")
 
 [node name="RootControl" type="Control" parent="." unique_id=1834435346]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Overlay" type="ColorRect" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.62)
 
 [node name="SeedPanel" type="Panel" parent="RootControl" unique_id=1321861681]
 layout_mode = 0

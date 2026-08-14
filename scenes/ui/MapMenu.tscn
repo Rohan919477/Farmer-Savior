@@ -2,51 +2,77 @@
 
 [ext_resource type="Script" uid="uid://bn2067jurr6h8" path="res://scripts/ui/MapMenu.gd" id="1_eqlwo"]
 
-[node name="MapMenu" type="Control" unique_id=1345799289]
+[node name="MapMenu" type="CanvasLayer" unique_id=1345799289]
 visible = false
-layout_mode = 3
-anchors_preset = 0
+layer = 120
 script = ExtResource("1_eqlwo")
 
-[node name="Panel" type="Panel" parent="." unique_id=224131918]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="RootControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=561559901]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="Overlay" type="ColorRect" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
 
-[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1337884216]
+[node name="Panel" type="Panel" parent="RootControl" unique_id=224131918]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -155.0
+offset_right = 190.0
+offset_bottom = 155.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootControl/Panel" unique_id=561559901]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="RootControl/Panel/VBoxContainer" unique_id=1337884216]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "MAP TABLE"
+horizontal_alignment = 1
 
-[node name="CurrentLocationLabel" type="Label" parent="Panel/VBoxContainer" unique_id=465491244]
+[node name="CurrentLocationLabel" type="Label" parent="RootControl/Panel/VBoxContainer" unique_id=465491244]
 layout_mode = 2
+text = "Current Location: House"
+horizontal_alignment = 1
 
-[node name="FarmButton" type="Button" parent="Panel/VBoxContainer" unique_id=1833347688]
+[node name="FarmButton" type="Button" parent="RootControl/Panel/VBoxContainer" unique_id=1833347688]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Farm
-"
+text = "Farm"
 
-[node name="NearbyFieldButton" type="Button" parent="Panel/VBoxContainer" unique_id=1958779608]
+[node name="ForestCampButton" type="Button" parent="RootControl/Panel/VBoxContainer" unique_id=1958779608]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Neaby Field"
+text = "Forest Camp"
 
-[node name="MilitaryBaseButton" type="Button" parent="Panel/VBoxContainer" unique_id=1558663323]
+[node name="CloseButton" type="Button" parent="RootControl/Panel/VBoxContainer" unique_id=204489599]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-text = "Miliraty Base
-"
-
-[node name="CityButton" type="Button" parent="Panel/VBoxContainer" unique_id=1356577663]
-layout_mode = 2
-text = "City"
-
-[node name="SuburbsButton" type="Button" parent="Panel/VBoxContainer" unique_id=399885970]
-layout_mode = 2
-text = "Suburbs"
-
-[node name="CloseButton" type="Button" parent="Panel/VBoxContainer" unique_id=204489599]
-layout_mode = 2
-text = "Close
-"
+text = "Close"

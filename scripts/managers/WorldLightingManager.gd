@@ -108,15 +108,20 @@ func _get_current_minutes() -> float:
 	if time_manager == null:
 		return 720.0
 
+	# During quota-based normal nights the gameplay clock is intentionally
+	# frozen at 18:00, while TimeManager's lighting clock continues toward
+	# midnight. Prefer that visual clock when available.
+	if time_manager.has_method("get_lighting_minutes"):
+		return float(time_manager.call("get_lighting_minutes"))
+
 	if time_manager.has_method("get_current_minutes"):
 		return float(time_manager.call("get_current_minutes"))
 
 	return 720.0
 
 func _get_time_text() -> String:
-	if time_manager != null and time_manager.has_method("get_time_text"):
-		return str(time_manager.call("get_time_text"))
-
+	# This text is used only for lighting debug output, so report the visual
+	# lighting clock rather than the quota-night gameplay clock.
 	var minutes: int = int(_get_current_minutes())
 	return "%02d:%02d" % [
 		int(minutes / 60.0) % 24,

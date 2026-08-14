@@ -69,6 +69,28 @@ func _register_with_world_drop_manager() -> void:
 	if not world_drop_manager.has_method("register_drop"):
 		return
 
+	# In the persistent-world architecture an enemy may drop loot on the Farm
+	# while the player is physically inside the House. Determine ownership from
+	# this node's map ancestry before falling back to the player's location.
+	if persistent_map_id.is_empty():
+		var map_manager: Node = get_tree().get_first_node_in_group("map_manager")
+
+		if map_manager != null and map_manager.has_method(
+			"get_location_id_for_node"
+		):
+			persistent_map_id = str(
+				map_manager.call("get_location_id_for_node", self)
+			)
+
+		if (
+			persistent_map_id.is_empty()
+			and map_manager != null
+			and map_manager.has_method("get_current_location_id")
+		):
+			persistent_map_id = str(
+				map_manager.call("get_current_location_id")
+			)
+
 	persistent_drop_id = str(
 		world_drop_manager.call(
 			"register_drop",
@@ -77,14 +99,6 @@ func _register_with_world_drop_manager() -> void:
 			persistent_map_id
 		)
 	)
-
-	if persistent_map_id.is_empty():
-		var map_manager: Node = get_tree().get_first_node_in_group("map_manager")
-
-		if map_manager != null and map_manager.has_method("get_current_location_id"):
-			persistent_map_id = str(
-				map_manager.call("get_current_location_id")
-			)
 
 
 func _sync_persistent_state() -> void:

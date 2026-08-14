@@ -2385,14 +2385,22 @@ func _on_location_loaded(
 	location_id: String,
 	loaded_map: Node
 ) -> void:
-	if location_id == "farm":
-		active_farm_map = loaded_map
+	# The Farm is now persistent. Travelling into the House/Forest Camp must
+	# not discard the farm reference or rebuild live defense nodes.
+	if location_id != "farm":
+		return
 
-		rebuild_farm_turrets()
-		rebuild_farm_fences()
-		rebuild_farm_nightlights()
-	else:
-		active_farm_map = null
+	if (
+		active_farm_map == loaded_map
+		and active_farm_map != null
+		and is_instance_valid(active_farm_map)
+	):
+		return
+
+	active_farm_map = loaded_map
+	rebuild_farm_turrets()
+	rebuild_farm_fences()
+	rebuild_farm_nightlights()
 
 func rebuild_farm_turrets() -> void:
 	if pesticide_turret_scene == null:
